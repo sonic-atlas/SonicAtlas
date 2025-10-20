@@ -1,0 +1,26 @@
+{
+  "name": "sonic-atlas",
+  "version": "1.0.0",
+  "description": "Open-source music streaming for self-hosting",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "start": "npm run dev",
+    "db:migrate": "npm run db:migrate --workspace=packages/backend",
+    "db:push": "npm run db:push --workspace=packages/backend",
+    "type-check": "npm run type-check --workspaces --if-present"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  }
+}
