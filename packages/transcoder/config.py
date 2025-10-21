@@ -20,8 +20,8 @@ class TranscoderConfig(BaseModel):
     transcoder_port: int = 8000
 
     quality_tiers: Dict[str, Dict[str, str]] = {
-        "efficiency": {"codec": "aac", "bitrate": "128k", "extension": "mp4", "mime": "audio/aac"},
-        "high": {"codec": "aac", "bitrate": "320k", "extension": "mp4", "mime": "audio/aac"},
+        "efficiency": {"codec": "aac", "bitrate": "128k", "extension": "m4a", "mime": "audio/aac"},
+        "high": {"codec": "aac", "bitrate": "320k", "extension": "m4a", "mime": "audio/aac"},
         "cd": {"codec": "flac", "compression": "5", "extension": "flac", "mime": "audio/flac", "sample_rate": "44100", "bit_depth_format": "s16"},
         "hires": {"codec": "flac", "compression": "5", "extension": "flac", "mime": "audio/flac"},
     }

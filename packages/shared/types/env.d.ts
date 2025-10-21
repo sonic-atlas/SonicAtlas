@@ -14,7 +14,6 @@ declare namespace NodeJS {
         STORAGE_PATH?: string;
         CACHE_TTL?: `${number}`;
 
-        GPU_ENABLED?: `${boolean}`;
         TRANSCODER_URL?: string;
         FFMPEG_PATH?: string;
         MAX_CONCURRENT_TRANSCODES?: `${number}`;
