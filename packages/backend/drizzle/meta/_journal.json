@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1761033058003,
+      "tag": "0000_little_loki",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761033074566,
+      "tag": "0001_track_metadata_search_vector",
+      "breakpoints": true
+    }
+  ]
+}
