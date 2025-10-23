@@ -1,7 +1,7 @@
 import "express";
 
 export interface JwtUser {
-    id: number;
+    id: string;
 }
 
 declare module "express-serve-static-core" {

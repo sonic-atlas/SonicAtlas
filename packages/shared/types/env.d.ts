@@ -20,6 +20,7 @@ declare namespace NodeJS {
 
         CORS_ORIGIN?: `${'http' | 'https'}://${string}`;
         RATE_LIMIT_PER_MINUTE?: `${number}`;
+        USER_RATE_LIMIT_PER_HOUR?: `${number}`;
 
         MUSICBRAINZ_DELAY?: `${number}`;
     }

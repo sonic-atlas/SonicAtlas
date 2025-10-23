@@ -37,15 +37,15 @@ const preparedSearchQuery = db.query.trackMetadata.findMany({
     },
     where: sql`
         (
-        ${trackMetadata.searchVector} @@ websearch_to_tsquery('english', ${sql.placeholder('q')})
-        OR ${trackMetadata.searchVector} @@ to_tsquery('english', ${sql.placeholder('pq')})
-        OR track_metadata.title ILIKE '%' || ${sql.placeholder('q')} || '%'
-        OR track_metadata.artist ILIKE '%' || ${sql.placeholder('q')} || '%'
+          ${trackMetadata.searchVector} @@ websearch_to_tsquery('english', ${sql.placeholder('q')})
+          OR ${trackMetadata.searchVector} @@ to_tsquery('english', ${sql.placeholder('pq')})
+          OR track_metadata.title ILIKE '%' || ${sql.placeholder('q')} || '%'
+          OR track_metadata.artist ILIKE '%' || ${sql.placeholder('q')} || '%'
         )
     `,
     orderBy: sql`rank DEC`,
     limit: sql.placeholder('limit'),
-    offset: sql.placeholder('offset') // Number(sql.placeholder('page')) * Number(sql.placeholder('limit')) ?
+    offset: sql.placeholder('offset')
 }).prepare('track_query_search');
 
 export default router;

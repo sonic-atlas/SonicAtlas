@@ -1,6 +1,6 @@
 {
-  "id": "7fb4cc23-c7bb-417c-9a5f-3374f1ccfb5b",
-  "prevId": "f46d714e-cd50-4a0e-9a32-8c72d8d0cf9a",
+  "id": "ee3c7396-8602-4f78-a0a8-1d4afa846e0c",
+  "prevId": "b259758a-7864-49e4-9138-fa75f062c116",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -212,7 +212,7 @@
           "name": "playlist_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "track_id": {
           "name": "track_id",
@@ -392,9 +392,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "genre": {
-          "name": "genre",
-          "type": "text",
+        "genres": {
+          "name": "genres",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         },

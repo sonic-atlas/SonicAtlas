@@ -67,7 +67,7 @@ export const trackMetadata = pgTable('track_metdata', {
     artist: text(),
     album: text(),
     year: integer(),
-    genre: text(),
+    genres: text().array(),
     searchVector: tsvector('search_vector')
 });
 
@@ -95,7 +95,7 @@ export const playlists = pgTable('playlists', {
 
 export const playlistItems = pgTable('playlist_items', {
     id: uuid().defaultRandom().primaryKey(),
-    playlistId: uuid('playlist_id').references(() => playlists.id),
+    playlistId: uuid('playlist_id').references(() => playlists.id).notNull(),
     trackId: uuid('track_id').references(() => tracks.id),
     position: integer(),
     addedAt: timestamp('added_at').defaultNow()

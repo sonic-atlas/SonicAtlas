@@ -11,7 +11,8 @@
     "target": "esnext",
     "typeRoots": [
         "types",
-        "./node_modules/@types"
+        "./node_modules/@types",
+        "../shared/types"
     ],
     "lib": ["esnext"],
 

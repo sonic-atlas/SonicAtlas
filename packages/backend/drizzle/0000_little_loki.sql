@@ -26,7 +26,7 @@ CREATE TABLE "invites" (
 --> statement-breakpoint
 CREATE TABLE "playlist_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"playlist_id" uuid,
+	"playlist_id" uuid NOT NULL,
 	"track_id" uuid,
 	"position" integer,
 	"added_at" timestamp DEFAULT now()
@@ -48,7 +48,7 @@ CREATE TABLE "track_metdata" (
 	"artist" text,
 	"album" text,
 	"year" integer,
-	"genre" text,
+	"genres" text[],
 	"search_vector" "tsvector"
 );
 --> statement-breakpoint
