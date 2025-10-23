@@ -11,7 +11,7 @@ router.get('/', authMiddleware, async (req, res) => {
         let { q, limit, offset } = req.query;
 
         q = q as string;
-        
+
         const pq = q.split(/\s+/).map(word => `${word}:*`).join(' & ');
 
         const results = await preparedSearchQuery.execute({ q, pq });

@@ -4,7 +4,7 @@ import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { playlistItems, trackFormatEnum, trackMetadata, tracks } from '../../db/schema.js';
+import { playlistItems, trackMetadata, tracks } from '../../db/schema.js';
 import { parseFile } from 'music-metadata';
 import { eq } from 'drizzle-orm';
 
@@ -65,26 +65,32 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         }
 
         await db.transaction(async (tx) => {
-            const [track] = await tx.insert(tracks).values({
-                uploadedBy: req.user!.id,
-                filename: req.file!.filename,
-                originalFilename: req.file!.originalname,
-                duration: meta.duration,
-                sampleRate: meta.sampleRate,
-                fileSize: req.file!.size
-            }).returning();
+            const [track] = await tx
+                .insert(tracks)
+                .values({
+                    uploadedBy: req.user!.id,
+                    filename: req.file!.filename,
+                    originalFilename: req.file!.originalname,
+                    duration: meta.duration,
+                    sampleRate: meta.sampleRate,
+                    fileSize: req.file!.size
+                })
+                .returning();
 
             const fileExt = path.extname(req.file!.originalname);
             const newPath = path.join(uploadFolder, `${track!.id}${fileExt}`);
             await fsp.rename(req.file!.path, newPath);
 
-            await tx.update(tracks).set({ filename: `${track!.id}${fileExt}` }).where(eq(tracks.id, track!.id));
+            await tx
+                .update(tracks)
+                .set({ filename: `${track!.id}${fileExt}` })
+                .where(eq(tracks.id, track!.id));
 
             await tx.insert(trackMetadata).values({
                 trackId: track!.id,
                 title: meta.title,
                 artist: meta.artist,
-                album : meta.album,
+                album: meta.album,
                 year: meta.year,
                 genres: meta.genres
             });
@@ -94,7 +100,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             filename: req.file!.originalname,
             uploadedAt: Date.now()
         });
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         await fsp.unlink(req.file.path);
         return res.status(500);
     }
@@ -123,7 +130,8 @@ router.delete('/:trackId', async (req, res) => {
         });
 
         return res.status(204);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });

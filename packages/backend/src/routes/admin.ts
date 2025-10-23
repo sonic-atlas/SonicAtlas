@@ -24,14 +24,18 @@ router.post('/invites/generate', async (req, res) => {
     expiresAt.setDate(expiresAt.getDate() + Number(expiryDays));
 
     try {
-        const [created] = await db.insert(invites).values({
-            createdBy: req.user!.id,
-            expiresAt,
-            token
-        }).returning();
+        const [created] = await db
+            .insert(invites)
+            .values({
+                createdBy: req.user!.id,
+                expiresAt,
+                token
+            })
+            .returning();
 
         return res.status(201).json(created);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -41,7 +45,8 @@ router.get('/invites', async (req, res) => {
         const invites = await db.query.invites.findMany();
 
         return res.json(invites);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -63,7 +68,8 @@ router.post('/invites/:token/revoke', async (req, res) => {
         return res.status(200).json({
             message: 'Invite revoked'
         });
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });

@@ -21,9 +21,8 @@ export const redisClient = createClient({
 
 export let redisConnected = false;
 
-redisClient.connect()
-    .then(() => {
-        redisConnected = true;
-    });
+redisClient.connect().then(() => {
+    redisConnected = true;
+});
 
 redisClient.on('error', (err) => console.error('Redis Client Error:', err));

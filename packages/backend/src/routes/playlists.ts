@@ -15,14 +15,18 @@ router.post('/', uploaderPerms, async (req, res) => {
     }
 
     try {
-        const [created] = await db.insert(playlists).values({
-            name,
-            description,
-            userId: req.user?.id!
-        }).returning();
+        const [created] = await db
+            .insert(playlists)
+            .values({
+                name,
+                description,
+                userId: req.user?.id!
+            })
+            .returning();
 
         return res.status(201).json(created);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -44,7 +48,8 @@ router.get('/', async (req, res) => {
         return res.json({
             playlists
         });
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -58,14 +63,18 @@ router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
     }
 
     try {
-        const [created] = await db.insert(playlistItems).values({
-            playlistId: playlistId!,
-            trackId,
-            position
-        }).returning();
+        const [created] = await db
+            .insert(playlistItems)
+            .values({
+                playlistId: playlistId!,
+                trackId,
+                position
+            })
+            .returning();
 
         return res.status(201).json(created);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -82,7 +91,8 @@ router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) =>
             ));
 
         return res.status(204);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });
@@ -108,7 +118,8 @@ router.delete('/:playlistId', uploaderPerms, async (req, res) => {
         });
 
         return res.status(204);
-    } catch { // TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         return res.status(500);
     }
 });

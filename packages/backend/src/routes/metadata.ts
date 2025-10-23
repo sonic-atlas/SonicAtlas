@@ -8,7 +8,7 @@ const router = Router();
 
 router.get('/:trackId', authMiddleware, async (req, res) => {
     const { trackId } = req.params;
-    
+
     try {
         const metadataRaw = await db.query.trackMetadata.findFirst({
             where: eq(trackMetadata.trackId, trackId!),
@@ -55,7 +55,8 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
         const updated = await db.update(trackMetadata).set({ title, artist, album }).where(eq(trackMetadata.id, metadata.id)).returning();
 
         return res.json(200).json(updated);
-    } catch {// TODO: Send json with error information, maybe logging?
+    } catch {
+        // TODO: Send json with error information, maybe logging?
         res.status(500);
     }
 });

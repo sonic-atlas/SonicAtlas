@@ -77,11 +77,14 @@ router.post('/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, process.env.BCRYPT_SALT_ROUNDS ?? 10);
 
         await db.transaction(async (tx) => {
-            const [user] = await tx.insert(users).values({
-                username,
-                passwordHash,
-                lastLogin: new Date()
-            }).returning();
+            const [user] = await tx
+                .insert(users)
+                .values({
+                    username,
+                    passwordHash,
+                    lastLogin: new Date()
+                })
+                .returning();
 
             await tx.update(invites).set({ usedBy: user?.id, usedAt: new Date() });
         
@@ -92,7 +95,8 @@ router.post('/register', async (req, res) => {
                 user
             });
         });
-    } catch { // TODO: Send json with error information, and maybe logging
+    } catch {
+        // TODO: Send json with error information, and maybe logging
         return res.json(500);
     }
 });

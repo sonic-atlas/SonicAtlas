@@ -93,7 +93,8 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
         });
 
         file.pipe(res);
-    } catch { // TODO: Send json with error information, and maybe log.
+    } catch {
+        // TODO: Send json with error information, and maybe log.
         res.status(500);
     }
 });

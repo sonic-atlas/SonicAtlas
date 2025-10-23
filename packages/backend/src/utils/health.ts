@@ -60,7 +60,7 @@ async function checkTranscoder(): Promise<'ok' | 'not ok'> {
             throw new Error(`HTTP error. Status: ${response.status}`);
         }
 
-        const data = await response.json() as { status: string }
+        const data = (await response.json()) as { status: string };
 
         if (data.status === 'ok') {
             return 'ok';

@@ -15,13 +15,13 @@ const app = express();
 app.use(cors({
     origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
     methods: ['GET', 'POST', 'DELETE', 'PATCH']
-}))
+}));
 app.use(express.json());
 app.use('/api',
     //* IP rate limit
     rateLimit({
         windowMs: 1 * 60 * 1000,
-        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 100,
+        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 100
     }),
     //* User rate limit
     rateLimit({

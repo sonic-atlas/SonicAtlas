@@ -1,10 +1,10 @@
-import "express";
+import 'express';
 
 export interface JwtUser {
     id: string;
 }
 
-declare module "express-serve-static-core" {
+declare module 'express-serve-static-core' {
     interface Request {
         user?: JwtUser;
     }
