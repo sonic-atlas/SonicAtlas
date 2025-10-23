@@ -5,9 +5,10 @@ import { getLocalIp } from './utils/ip.js';
 import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { $envPath } from '@sonic-atlas/shared';
 import dotenv from 'dotenv';
-dotenv.config({ quiet: true });
+dotenv.config({ quiet: true, path: $envPath });
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
@@ -27,12 +28,17 @@ app.use('/api',
     rateLimit({
         windowMs: 60 * 60 * 1000,
         max: Number(process.env.USER_RATE_LIMIT_PER_HOUR) ?? 1000,
-        keyGenerator: (req) => req.user?.id ?? req.ip ?? ''
+        keyGenerator: (req) => {
+            if (req.user?.id) return req.user?.id;
+            
+            return ipKeyGenerator(req.ip!);
+        }
     })
 );
 
 //* Health route. Not auto loading to not use the /api prefix
 app.get('/health', healthRoute);
+console.log(`\x1b[1m\x1b[34m[Express]\x1b[0m Loaded route: /health`);
 
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');

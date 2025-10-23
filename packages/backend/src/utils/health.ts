@@ -1,21 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
-import { pgClient, redisClient, redisConnected } from '../../db/db.js';
+import { pgClient, /* redisClient, redisConnected */ } from '../../db/db.js';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {
     const [pgStatus, redisStatus, transcoderStatus] = await Promise.all([checkPg(), checkRedis(), checkTranscoder()]);
-    const allOk = pgStatus === 'ok' && redisStatus === 'ok' && transcoderStatus === 'ok' ? 'ok' : 'not ok';
+    const allOk = pgStatus === 'ok' /* && redisStatus === 'ok' */ && transcoderStatus === 'ok' ? 'ok' : 'not ok';
     const httpStatus = allOk === 'ok' ? 200 : 503;
 
     return res.status(httpStatus).json({
         status: allOk,
         backend: 'ok',
         database: pgStatus,
-        redis: redisStatus,
+        /* redis: redisStatus, */
         transcoder: transcoderStatus
     });
 }
 
 async function checkRedis(): Promise<'ok' | 'not ok'> {
+    /*
     if (!redisConnected || !redisClient.isOpen) {
         return 'not ok';
     }
@@ -27,20 +28,21 @@ async function checkRedis(): Promise<'ok' | 'not ok'> {
             return 'ok';
         }
     } catch { }
+    */
 
     return 'not ok';
 }
 
 async function checkPg(): Promise<'ok' | 'not ok'> {
     try {
-        const result = await pgClient`SELECT 1`;
+        const result = await pgClient`SELECT 1;`;
 
-        if (result.length > 0) {
+        if (result.columns.length > 0) {
             return 'ok';
         }
 
         return 'not ok';
-    } catch {
+    } catch (err) {
         return 'not ok';
     }
 }

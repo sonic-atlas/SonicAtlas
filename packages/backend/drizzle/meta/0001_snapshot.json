@@ -351,8 +351,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.track_metdata": {
-      "name": "track_metdata",
+    "public.track_metadata": {
+      "name": "track_metadata",
       "schema": "",
       "columns": {
         "id": {
@@ -407,9 +407,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "track_metdata_track_id_tracks_id_fk": {
-          "name": "track_metdata_track_id_tracks_id_fk",
-          "tableFrom": "track_metdata",
+        "track_metadata_track_id_tracks_id_fk": {
+          "name": "track_metadata_track_id_tracks_id_fk",
+          "tableFrom": "track_metadata",
           "columnsFrom": [
             "track_id"
           ],

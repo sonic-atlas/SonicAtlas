@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "main": "src/index.ts",
+  "exports": "./index.js",
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit"

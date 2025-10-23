@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { db } from '../../db/db.js';
 import { eq } from 'drizzle-orm';
-import { tracks } from '../../db/schema.js';
+import { tracks, transcodeJobs } from '../../db/schema.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import mime from 'mime-types';
@@ -31,6 +31,15 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
     }
 
     try {
+        await db
+            .insert(transcodeJobs)
+            .values({
+                trackId: track.id,
+                quality: quality,
+                status: 'transcoding',
+                startedAt: new Date()
+            });
+
         const transcodeUrl = `${process.env.TRANSCODER_PATH ?? 'http://localhost:8000'}/transcode/${track.id}`;
         const response = await fetch(transcodeUrl, {
             method: 'POST',
@@ -38,19 +47,25 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
             body: JSON.stringify({ quality })
         });
 
+        await db.update(transcodeJobs).set({ completedAt: new Date() }).where(eq(transcodeJobs.trackId, track.id));
+
         if (!response.ok) {
+            await db.update(transcodeJobs).set({ status: 'failed' }).where(eq(transcodeJobs.trackId, track.id));
             return res.status(500); // TODO: Send json with error information
         }
 
         const data = await response.json();
 
         if (!(data as any).cache_path) {
-            console.error(data);
+            await db.update(transcodeJobs).set({ status: 'failed' }).where(eq(transcodeJobs.trackId, track.id));
+
             return res.status(500).json({
                 code: 'TRANSCODE_001',
                 message: 'Transcoding failed'
             });
         }
+
+        await db.update(transcodeJobs).set({ status: 'completed' }).where(eq(transcodeJobs.trackId, track.id));
 
         const cachedPath = path.join(process.env.STORAGE_PATH || 'storage', (data as any).cache_path);
         if (!fs.existsSync(cachedPath)) {

@@ -3,6 +3,9 @@ import { db } from '../../db/db.js';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import { eq } from 'drizzle-orm';
 import { trackMetadata } from '../../db/schema.js';
+import path from 'node:path';
+import fsp from 'node:fs/promises';
+import { $rootDir } from '@sonic-atlas/shared';
 
 const router = Router();
 
@@ -61,8 +64,27 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
     }
 });
 
+// $rootdir
+const storagePath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
+
 router.get('/:trackId/cover', async (req, res) => {
-    // TODO
+    const { trackId } = req.params;
+    const coverFile = path.join(storagePath, `${trackId}_cover.jpg`);
+
+    try {
+        await fsp.access(coverFile);
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+
+        return res.sendFile(coverFile);
+    } catch (err) {
+        return res.status(404).json({
+            error: 'NOT_FOUND',
+            code: 'COVER_001',
+            message: 'No cover art found'
+        });
+    }
 });
 
 export default router;

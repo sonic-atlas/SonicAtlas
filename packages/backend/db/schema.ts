@@ -60,7 +60,7 @@ export const tracks = pgTable('tracks', {
     uploadedAt: timestamp('uploaded_at').defaultNow()
 });
 
-export const trackMetadata = pgTable('track_metdata', {
+export const trackMetadata = pgTable('track_metadata', {
     id: uuid().defaultRandom().primaryKey(),
     trackId: uuid('track_id').references(() => tracks.id),
     title: text(),

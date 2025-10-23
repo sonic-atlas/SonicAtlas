@@ -64,7 +64,9 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             genres: metadata.common.genre ?? null
         }
 
-        await db.transaction(async (tx) => {
+        let filename;
+
+        let trackInfo = await db.transaction(async (tx) => {
             const [track] = await tx
                 .insert(tracks)
                 .values({
@@ -78,26 +80,39 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                 .returning();
 
             const fileExt = path.extname(req.file!.originalname);
-            const newPath = path.join(uploadFolder, `${track!.id}${fileExt}`);
+            filename = `${track!.id}${fileExt}`;
+            const newPath = path.join(uploadFolder, filename);
             await fsp.rename(req.file!.path, newPath);
 
             await tx
                 .update(tracks)
-                .set({ filename: `${track!.id}${fileExt}` })
+                .set({ filename })
                 .where(eq(tracks.id, track!.id));
 
-            await tx.insert(trackMetadata).values({
+            const [metadata] = await tx.insert(trackMetadata).values({
                 trackId: track!.id,
                 title: meta.title,
                 artist: meta.artist,
                 album: meta.album,
                 year: meta.year,
                 genres: meta.genres
-            });
+            }).returning();
+
+            return track;
         });
 
         return res.status(201).json({
-            filename: req.file!.originalname,
+            id: trackInfo!.id,
+            filename,
+            metadata: {
+                title: meta.title,
+                artist: meta.artist,
+                album: meta.album,
+                year: meta.year,
+                duration: meta.duration,
+                sampleRate: meta.sampleRate
+            },
+            coverArtPath: `/api/metadata/${trackInfo!.id}/cover`,
             uploadedAt: Date.now()
         });
     } catch {
