@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(SonicAtlasApp VERSION 0.1 LANGUAGES CXX)
+project(SonicAtlas VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,11 +24,11 @@ set(PROJECT_SOURCES
     src/cpp/AudioFileManager.h src/cpp/AudioFileManager.cpp
 )
 
-qt_add_executable(appSonicAtlasApp
+qt_add_executable(SonicAtlas
     ${PROJECT_SOURCES}
 )
 
-qt_add_qml_module(appSonicAtlasApp
+qt_add_qml_module(SonicAtlas
     URI SonicAtlasApp
     VERSION 1.0
     QML_FILES
@@ -43,26 +43,26 @@ qt_add_qml_module(appSonicAtlasApp
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(appSonicAtlasApp PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appSonicAtlasApp
+set_target_properties(SonicAtlas PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.SonicAtlas
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(appSonicAtlasApp
+target_link_libraries(SonicAtlas
     PRIVATE
         Qt6::Quick
         Qt6::Multimedia
         Qt6::Network
 )
-target_link_libraries(appSonicAtlasApp PRIVATE Qt6::Core)
-target_link_libraries(appSonicAtlasApp PRIVATE Qt6::Core)
-target_link_libraries(appSonicAtlasApp PRIVATE Qt6::Core)
+target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
+target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
+target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
 
 include(GNUInstallDirs)
-install(TARGETS appSonicAtlasApp
+install(TARGETS SonicAtlas
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
