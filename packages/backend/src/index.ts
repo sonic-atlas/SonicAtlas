@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'node:path';
-import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import { getLocalIp } from './utils/ip.js';
 import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
@@ -44,28 +44,31 @@ logger.info('Loaded route: /health');
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');
 async function loadRoutes(dir: string) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const entries = fsp.readdir(dir, { withFileTypes: true });
 
-    for (const entry of entries) {
+    await Promise.all((await entries).map(async (entry) => {
         const fullPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-            loadRoutes(fullPath);
+            await loadRoutes(fullPath);
         } else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.startsWith('_')) {
             const relativePath = path.relative(apiDir, fullPath);
             const routePath = relativePath.replace(/\.ts/, '').replace(/\\/g, '/');
 
-            const routeModule = await import(pathToFileURL(fullPath).href);
-            const router = routeModule.default;
+            try {
+                const { default: router } = await import(pathToFileURL(fullPath).href);
 
-            if (router) {
-                app.use(`/api/${routePath}`, router);
-                logger.info(`Loaded route: /api/${routePath}`);
-            } else {
-                logger.warn(`No default export in ${relativePath}`);
+                if (router) {
+                    app.use(`/api/${routePath}`, router);
+                    logger.info(`Loaded route: /api/${routePath}`);
+                } else {
+                    logger.warn(`No default export in ${relativePath}`);
+                }
+            } catch (err) {
+                logger.error(`Failed to load ${relativePath}:\n${err}`);
             }
         }
-    }
+    }));
 }
 
 await loadRoutes(apiDir);
@@ -73,7 +76,6 @@ await loadRoutes(apiDir);
 const server = app.listen(PORT, '', () => {
     const ip = getLocalIp();
     logger.info(`Server is running at:
-    Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
-    Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m
-`);
+Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
+Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
 });
