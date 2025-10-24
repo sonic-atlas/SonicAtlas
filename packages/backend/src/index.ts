@@ -6,9 +6,11 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { $envPath } from '@sonic-atlas/shared';
+import { $envPath, Logger } from '@sonic-atlas/shared';
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
+
+export const logger = new Logger('Backend');
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
@@ -38,7 +40,7 @@ app.use('/api',
 
 //* Health route. Not auto loading to not use the /api prefix
 app.get('/health', healthRoute);
-console.log(`\x1b[1m\x1b[34m[Express]\x1b[0m Loaded route: /health`);
+logger.info('Loaded route: /health');
 
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');
@@ -59,9 +61,9 @@ async function loadRoutes(dir: string) {
 
             if (router) {
                 app.use(`/api/${routePath}`, router);
-                console.log(`\x1b[1m\x1b[34m[Express]\x1b[0m Loaded route: /api/${routePath}`);
+                logger.info(`Loaded route: /api/${routePath}`);
             } else {
-                console.warn(`\x1b[1m\x1b[34m[Express]\x1b[0m No default export in ${relativePath}`);
+                logger.warn(`No default export in ${relativePath}`);
             }
         }
     }
@@ -71,7 +73,7 @@ await loadRoutes(apiDir);
 
 const server = app.listen(PORT, '', () => {
     const ip = getLocalIp();
-    console.log(`\x1b[1m\x1b[34m[Express]\x1b[0m Server is running at:`);
+    logger.info('Server is running at:');
     console.log(`    Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m`);
     console.log(`    Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
 });
