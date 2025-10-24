@@ -1,10 +1,17 @@
 import type { Request, Response, NextFunction } from 'express';
 import { pgClient, /* redisClient, redisConnected */ } from '../../db/db.js';
+import { logger } from './logger.js';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {
     const [pgStatus, redisStatus, transcoderStatus] = await Promise.all([checkPg(), checkRedis(), checkTranscoder()]);
     const allOk = pgStatus === 'ok' /* && redisStatus === 'ok' */ && transcoderStatus === 'ok' ? 'ok' : 'not ok';
     const httpStatus = allOk === 'ok' ? 200 : 503;
+
+    if (pgStatus === 'not ok') {
+        logger.warn(`(GET /health) Postgres server is 'not ok'. This is most likely due to the server not currently running.`);
+    } else if (transcoderStatus === 'not ok') {
+        logger.warn(`(GET /health) Transcoder server is 'not ok'. This is because it isn't running.`);
+    }
 
     return res.status(httpStatus).json({
         status: allOk,

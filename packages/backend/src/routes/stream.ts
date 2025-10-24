@@ -6,6 +6,7 @@ import { tracks, transcodeJobs } from '../../db/schema.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import mime from 'mime-types';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -107,10 +108,11 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
             'Content-Type': contentType
         });
 
-        file.pipe(res);
-    } catch {
-        // TODO: Send json with error information, and maybe log.
-        res.status(500);
+        return file.pipe(res);
+    } catch (err) {
+        logger.error(`(GET /api/stream) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
+        return res.status(500);
     }
 });
 

@@ -30,7 +30,7 @@ export class Logger {
             : '';
         const color = this.options.color ? colors[level] : '';
         const reset = this.options.color ? colors.reset : '';
-        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}${reset}: ${message}`;
+        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}:${reset} ${message}`;
     }
 
     info(msg) {
@@ -42,7 +42,8 @@ export class Logger {
     }
 
     error(msg) {
-        console.error(this.format('error', msg));
+        const formatted = msg.replace(/\n(?!$)/g, '\n    ');
+        console.error(this.format('error', formatted));
     }
 
     debug(msg) {

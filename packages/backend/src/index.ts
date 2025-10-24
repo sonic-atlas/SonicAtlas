@@ -6,11 +6,10 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { $envPath, Logger } from '@sonic-atlas/shared';
+import { $envPath } from '@sonic-atlas/shared';
+import { logger } from './utils/logger.js';
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
-
-export const logger = new Logger('Backend');
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
@@ -73,7 +72,8 @@ await loadRoutes(apiDir);
 
 const server = app.listen(PORT, '', () => {
     const ip = getLocalIp();
-    logger.info('Server is running at:');
-    console.log(`    Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m`);
-    console.log(`    Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
+    logger.info(`Server is running at:
+    Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
+    Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m
+`);
 });

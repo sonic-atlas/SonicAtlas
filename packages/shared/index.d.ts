@@ -1,14 +1,14 @@
 // Types for index.js
 declare module '@sonic-atlas/shared' {
-    declare const $rootDir: string;
-    declare const $envPath: string;
+    const $rootDir: string;
+    const $envPath: string;
 
     // Logger
     interface LogOptions {
         timestamp?: boolean;
         color?: boolean;
     }
-    declare class Logger {
+    class Logger {
         private prefix;
         private options;
         constructor(prefix: string, options?: LogOptions);

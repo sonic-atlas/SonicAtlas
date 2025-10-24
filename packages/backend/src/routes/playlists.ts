@@ -3,6 +3,7 @@ import { db } from '../../db/db.js';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import { playlistItems, playlists } from '../../db/schema.js';
 import { sql, eq, and } from 'drizzle-orm';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 router.use(authMiddleware);
@@ -25,8 +26,9 @@ router.post('/', uploaderPerms, async (req, res) => {
             .returning();
 
         return res.status(201).json(created);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(POST /api/playlists) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -48,8 +50,9 @@ router.get('/', async (req, res) => {
         return res.json({
             playlists
         });
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(GET /api/playlists) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -73,8 +76,9 @@ router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
             .returning();
 
         return res.status(201).json(created);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(POST /api/playlists/${playlistId}/tracks) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -91,8 +95,9 @@ router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) =>
             ));
 
         return res.status(204);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(DELETE /api/playlists/${playlistId}/tracks/${trackId}) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -118,8 +123,9 @@ router.delete('/:playlistId', uploaderPerms, async (req, res) => {
         });
 
         return res.status(204);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(DELETE /api/playlists/${playlistId}) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });

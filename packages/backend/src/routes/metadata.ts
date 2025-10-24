@@ -6,6 +6,7 @@ import { trackMetadata } from '../../db/schema.js';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { $rootDir } from '@sonic-atlas/shared';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -37,7 +38,9 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
         const { track, ...rest } = metadataRaw;
 
         return res.json({ ...rest, ...track });
-    } catch {
+    } catch (err) {
+        logger.error(`(GET /api/metadata/${trackId}) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -58,8 +61,9 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
         const updated = await db.update(trackMetadata).set({ title, artist, album }).where(eq(trackMetadata.id, metadata.id)).returning();
 
         return res.json(200).json(updated);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(PATCH /api/metadata/${trackId}) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         res.status(500);
     }
 });
@@ -79,6 +83,9 @@ router.get('/:trackId/cover', async (req, res) => {
 
         return res.sendFile(coverFile);
     } catch (err) {
+        //? Maybe log here?
+        // logger.error(`(GET /api/metadata/${trackId}/cover) An Error Occured:\n${err}`);
+
         return res.status(404).json({
             error: 'NOT_FOUND',
             code: 'COVER_001',

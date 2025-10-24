@@ -3,6 +3,7 @@ import { db } from '../../db/db.js';
 import { trackMetadata } from '../../db/schema.js';
 import { sql } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -17,7 +18,8 @@ router.get('/', authMiddleware, async (req, res) => {
         const results = await preparedSearchQuery.execute({ q, pq });
 
         return res.json({ results, total: results.length, limit, offset });
-    } catch {
+    } catch (err) {
+        logger.error(`(GET /api/search) Unknown Error Occured:\n${err}`);
         return res.status(500);
     }
 });

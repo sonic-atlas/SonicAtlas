@@ -4,6 +4,7 @@ import { invites, users } from '../../db/schema.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { signJwt, JWT_EXPIRY } from '../utils/jwt.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -41,8 +42,10 @@ router.post('/login', async (req, res) => {
             expiresIn: JWT_EXPIRY,
             user
         });
-    } catch {
-        return res.status(500); // TODO: Send json with error information
+    } catch (err) {
+        logger.error(`(POST /api/auth/login) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
+        return res.status(500);
     }
 });
 
@@ -95,7 +98,8 @@ router.post('/register', async (req, res) => {
                 user
             });
         });
-    } catch {
+    } catch (err) {
+        logger.error(`(POST /api/auth/register) Unknown Error Occured:\n${err}`);
         // TODO: Send json with error information, and maybe logging
         return res.json(500);
     }

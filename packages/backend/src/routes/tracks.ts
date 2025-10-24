@@ -7,6 +7,7 @@ import fsp from 'node:fs/promises';
 import { playlistItems, trackMetadata, tracks } from '../../db/schema.js';
 import { parseFile } from 'music-metadata';
 import { eq } from 'drizzle-orm';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 router.use(authMiddleware, uploaderPerms);
@@ -115,8 +116,9 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             coverArtPath: `/api/metadata/${trackInfo!.id}/cover`,
             uploadedAt: Date.now()
         });
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(POST /api/tracks/upload) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         await fsp.unlink(req.file.path);
         return res.status(500);
     }
@@ -145,8 +147,9 @@ router.delete('/:trackId', async (req, res) => {
         });
 
         return res.status(204);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(DELETE /api/tracks/${trackId}) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });

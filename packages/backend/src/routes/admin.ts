@@ -4,6 +4,7 @@ import { db } from '../../db/db.js';
 import { invites } from '../../db/schema.js';
 import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 router.use(authMiddleware, adminPerms);
@@ -34,8 +35,9 @@ router.post('/invites/generate', async (req, res) => {
             .returning();
 
         return res.status(201).json(created);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(POST /api/admin/invites/generate) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -45,8 +47,9 @@ router.get('/invites', async (req, res) => {
         const invites = await db.query.invites.findMany();
 
         return res.json(invites);
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(GET /api/admin/invites) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
@@ -68,8 +71,9 @@ router.post('/invites/:token/revoke', async (req, res) => {
         return res.status(200).json({
             message: 'Invite revoked'
         });
-    } catch {
-        // TODO: Send json with error information, maybe logging?
+    } catch (err) {
+        logger.error(`(POST /api/admin/invites/${token}/revoke) Unknown Error Occured:\n${err}`);
+        // TODO: Send json with error information
         return res.status(500);
     }
 });
