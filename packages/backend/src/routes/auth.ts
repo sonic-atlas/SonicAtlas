@@ -12,7 +12,11 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400); // TODO: Send json with error information
+        return res.status(400).json({
+            error: 'BAD_REQUEST',
+            code: 'AUTH_008',
+            message: 'Username and password are required'
+        });
     }
 
     try {
@@ -21,14 +25,18 @@ router.post('/login', async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404); // TODO: Send json with error information
+            return res.status(401).json({
+                error: 'UNAUTHORIZED',
+                code: 'AUTH_006',
+                message: 'Invalid username or password'
+            });
         }
 
         const passwordMatch = await bcrypt.compare(password, user.passwordHash);
         if (!passwordMatch) {
-            return res.json(401).json({
+            return res.status(401).json({
                 error: 'UNAUTHORIZED',
-                code: 'AUTH_001',
+                code: 'AUTH_006',
                 message: 'Invalid username or password'
             });
         }
@@ -40,12 +48,18 @@ router.post('/login', async (req, res) => {
         return res.status(200).json({
             token,
             expiresIn: JWT_EXPIRY,
-            user
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+            }
         });
     } catch (err) {
         logger.error(`(POST /api/auth/login) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Login failed due to an internal error'
+        });
     }
 });
 
@@ -53,7 +67,11 @@ router.post('/register', async (req, res) => {
     const { inviteToken, username, password } = req.body;
 
     if (!inviteToken || !username || !password) {
-        return res.status(400); // TODO: Send json with error information
+        return res.status(400).json({
+            error: 'BAD_REQUEST',
+            code: 'AUTH_009',
+            message: 'Invite token, username and password are required'
+        });
     }
 
     try {
@@ -61,10 +79,10 @@ router.post('/register', async (req, res) => {
             where: eq(invites.token, inviteToken)
         });
 
-        if (!invite || invite.expiresAt! > new Date() || invite.usedAt) {
+        if (!invite || invite.expiresAt! < new Date() || invite.usedAt) {
             return res.status(400).json({
                 error: 'BAD_REQUEST',
-                code: 'AUTH_002',
+                code: 'AUTH_007',
                 message: 'Invite token expired or already used'
             });
         }
@@ -73,8 +91,12 @@ router.post('/register', async (req, res) => {
             where: eq(users.username, username)
         });
 
-        if (!existingUser) {
-            return res.status(409); // TODO: Send json with error information. Possibly change code?
+        if (existingUser) {
+            return res.status(409).json({
+                error: 'CONFLICT',
+                code: 'AUTH_010',
+                message: 'Username already taken'
+            });
         }
 
         const passwordHash = await bcrypt.hash(password, process.env.BCRYPT_SALT_ROUNDS ?? 10);
@@ -85,23 +107,34 @@ router.post('/register', async (req, res) => {
                 .values({
                     username,
                     passwordHash,
+                    role: 'viewer',
                     lastLogin: new Date()
                 })
                 .returning();
 
-            await tx.update(invites).set({ usedBy: user?.id, usedAt: new Date() });
+            await tx
+                .update(invites)
+                .set({ usedBy: user?.id, usedAt: new Date() })
+                .where(eq(invites.id, invite.id));
         
             const token = signJwt({ id: user!.id });
 
             return res.status(201).json({
                 token,
-                user
+                expiresIn: JWT_EXPIRY,
+                user: {
+                    id: user?.id,
+                    username: user?.username,
+                    role: user?.role,
+                }
             });
         });
     } catch (err) {
         logger.error(`(POST /api/auth/register) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information, and maybe logging
-        return res.json(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Registration failed due to an internal error'
+        });
     }
 });
 

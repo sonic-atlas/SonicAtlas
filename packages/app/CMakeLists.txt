@@ -11,8 +11,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Network
 )
 find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Core)
+
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -57,8 +56,6 @@ target_link_libraries(SonicAtlas
         Qt6::Multimedia
         Qt6::Network
 )
-target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
-target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
 target_link_libraries(SonicAtlas PRIVATE Qt6::Core)
 
 include(GNUInstallDirs)

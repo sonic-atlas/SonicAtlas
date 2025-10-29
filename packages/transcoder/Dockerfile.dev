@@ -1,0 +1,16 @@
+FROM python:3.14-slim
+
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . ./packages/transcoder
+
+EXPOSE 8000
+
+CMD ["python", "-m", "packages.transcoder.main"]

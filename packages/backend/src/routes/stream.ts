@@ -41,7 +41,7 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
                 startedAt: new Date()
             });
 
-        const transcodeUrl = `${process.env.TRANSCODER_PATH ?? 'http://localhost:8000'}/transcode/${track.id}`;
+        const transcodeUrl = `${process.env.TRANSCODER_URL}/transcode/${track.id}`;
         const response = await fetch(transcodeUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

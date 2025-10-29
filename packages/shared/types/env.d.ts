@@ -10,7 +10,6 @@ declare namespace NodeJS {
         ADMIN_PASSWORD?: string;
 
         DATABASE_URL?: `postgresql://${string}`;
-        REDIS_URL?: `redis://${string}`;
 
         STORAGE_PATH?: string;
         CACHE_TTL?: `${number}`;
