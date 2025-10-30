@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../../db/db.js';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import { playlistItems, playlists } from '../../db/schema.js';
-import { sql, eq, and } from 'drizzle-orm';
+import { sql, eq, and, count } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -37,13 +37,7 @@ router.get('/', async (req, res) => {
     try {
         const playlists = await db.query.playlists.findMany({
             extras: {
-                trackCount: sql<number>`
-                    (
-                      SELECT COUNT(*)
-                      FROM playlist_items
-                      WHERE playlist_items.playlist_id = playlist.id
-                    )
-                `.as('trackCount')
+                trackCount: count().as('trackCount')
             }
         });
 

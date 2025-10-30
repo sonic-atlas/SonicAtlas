@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --dev, --development    Setup for development (default)"
             echo "  --prod, --production    Setup for production"
-            echo "  -h, --help             Show this help message"
+            echo "  -h, --help              Show this help message"
             exit 0
             ;;
         *)

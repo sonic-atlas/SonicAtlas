@@ -1,29 +1,30 @@
 #!/bin/bash
 set -e
 
-RED='\033[0;31m'
-NC='\033[0m'
-
 BUILD_FLAG=false
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -b|--build)
-            BUILD_FLAG=true
+PARSED_OPTIONS=$(getopt -o "" -l "build" -n "$0" -- "$@")
+
+if [ $? != 0]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
+
+eval set -- "$PARSED_OPTIONS"
+
+while true; do
+    case "$1" in
+        --build)
+            BUILD_FLAG = true
             echo "Option --build was set. Forcing rebuild..."
             shift
             ;;
-        -h|--help)
-            echo "Usage: $0 [--build]"
-            echo ""
-            echo "Options:"
-            echo "  -b, --build    Build before running"
-            echo "  -h, --help     Show this help message"
-            exit 0
+        --)
+            shift
+            break
             ;;
         *)
-            echo -e "${RED}Unknown argument: $1${NC}"
-            echo "Use --help for usage information"
+            echo "Internal error: unexpected options '$1'" >&2
             exit 1
             ;;
     esac
