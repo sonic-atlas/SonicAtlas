@@ -4,6 +4,7 @@ import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import { playlistItems, playlists } from '../../db/schema.js';
 import { sql, eq, and, count } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
+import { isUUID } from '../utils/isUUID.js';
 
 const router = Router();
 router.use(authMiddleware);
@@ -12,7 +13,11 @@ router.post('/', uploaderPerms, async (req, res) => {
     const { name, description } = req.body;
 
     if (!name || !description) {
-        return res.status(400); // TODO: Send json with error information
+        return res.status(400).json({
+            error: 'BAD_REQUEST',
+            code: 'PLAYLISTS_001',
+            message: 'Name and description are required'
+        });
     }
 
     try {
@@ -28,8 +33,10 @@ router.post('/', uploaderPerms, async (req, res) => {
         return res.status(201).json(created);
     } catch (err) {
         logger.error(`(POST /api/playlists) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Playlist creation failed due to an internal error'
+        });
     }
 });
 
@@ -46,8 +53,10 @@ router.get('/', async (req, res) => {
         });
     } catch (err) {
         logger.error(`(GET /api/playlists) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Playlist fetching failed due to an internal error'
+        });
     }
 });
 
@@ -56,7 +65,19 @@ router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
     const { trackId, position } = req.body;
 
     if (!trackId) {
-        return res.status(400); // TODO: Send json with error information
+        return res.status(400).json({
+            error: 'BAD_REQUEST',
+            code: 'PLAYLISTS_002',
+            message: 'Track id is required'
+        });
+    }
+
+    if (!isUUID(trackId)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'PLAYLISTS_003',
+            message: 'Track id must be a valid UUID'
+        });
     }
 
     try {
@@ -72,13 +93,23 @@ router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
         return res.status(201).json(created);
     } catch (err) {
         logger.error(`(POST /api/playlists/${playlistId}/tracks) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to add track to playlist due to an internal error'
+        });
     }
 });
 
 router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) => {
     const { playlistId, trackId } = req.params;
+
+    if (!isUUID(playlistId!) || !isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'PLAYLISTS_004',
+            message: 'Playlist id and track id must be valid UUIDs'
+        });
+    }
 
     try {
         await db
@@ -88,16 +119,26 @@ router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) =>
                 eq(playlistItems.trackId, trackId!)
             ));
 
-        return res.status(204);
+        return res.sendStatus(204);
     } catch (err) {
         logger.error(`(DELETE /api/playlists/${playlistId}/tracks/${trackId}) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to remove track from playlist due to an internal error'
+        });
     }
 });
 
 router.delete('/:playlistId', uploaderPerms, async (req, res) => {
     const { playlistId } = req.params;
+
+    if (!isUUID(playlistId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'PLAYLISTS_005',
+            message: 'Playlist id must be a valid UUID'
+        });
+    }
 
     try {
         const playlist = await db.query.playlists.findFirst({
@@ -116,11 +157,13 @@ router.delete('/:playlistId', uploaderPerms, async (req, res) => {
             await tx.delete(playlistItems).where(eq(playlistItems.playlistId, playlist.id));
         });
 
-        return res.status(204);
+        return res.sendStatus(204);
     } catch (err) {
         logger.error(`(DELETE /api/playlists/${playlistId}) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Playlist deletion failed due to an internal error'
+        });
     }
 });
 

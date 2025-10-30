@@ -20,7 +20,10 @@ router.get('/', authMiddleware, async (req, res) => {
         return res.json({ results, total: results.length, limit, offset });
     } catch (err) {
         logger.error(`(GET /api/search) Unknown Error Occured:\n${err}`);
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Search failed due to an internal error'
+        });
     }
 });
 

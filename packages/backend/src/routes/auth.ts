@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { signJwt, JWT_EXPIRY } from '../utils/jwt.js';
 import { logger } from '../utils/logger.js';
+import { isUUID } from '../utils/isUUID.js';
 
 const router = Router();
 
@@ -74,14 +75,22 @@ router.post('/register', async (req, res) => {
         });
     }
 
+    if (!isUUID(inviteToken)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'AUTH_011',
+            message: 'Invite token must be a valid UUID'
+        });
+    }
+
     try {
         const invite = await db.query.invites.findFirst({
             where: eq(invites.token, inviteToken)
         });
 
         if (!invite || invite.expiresAt! < new Date() || invite.usedAt) {
-            return res.status(400).json({
-                error: 'BAD_REQUEST',
+            return res.status(410).json({
+                error: 'GONE',
                 code: 'AUTH_007',
                 message: 'Invite token expired or already used'
             });

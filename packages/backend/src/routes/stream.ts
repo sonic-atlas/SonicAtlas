@@ -7,11 +7,21 @@ import path from 'node:path';
 import fs from 'node:fs';
 import mime from 'mime-types';
 import { logger } from '../utils/logger.js';
+import { isUUID } from '../utils/isUUID.js';
 
 const router = Router();
 
 router.get('/:trackId', authMiddleware, async (req, res) => {
     const { trackId } = req.params;
+
+    if (!isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'TRACK_002',
+            message: 'Track id must be a valid UUID'
+        });
+    }
+    
     const quality = (req.query.quality as string) || 'high';
 
     const validQualities = ['efficiency', 'high', 'cd', 'hires'];
@@ -52,7 +62,10 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 
         if (!response.ok) {
             await db.update(transcodeJobs).set({ status: 'failed' }).where(eq(transcodeJobs.trackId, track.id));
-            return res.status(500); // TODO: Send json with error information
+            return res.status(500).json({
+                error: 'INTERNAL_SERVER_ERROR',
+                message: 'Track transcoding failed due to an internal error'
+            });
         }
 
         const data = await response.json();
@@ -111,8 +124,10 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
         return file.pipe(res);
     } catch (err) {
         logger.error(`(GET /api/stream) Unknown Error Occured:\n${err}`);
-        // TODO: Send json with error information
-        return res.status(500);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Track streaming failed due to an internal error'
+        });
     }
 });
 
