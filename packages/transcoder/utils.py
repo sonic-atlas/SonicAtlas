@@ -6,6 +6,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from .config import config
+from .logger import logger
 
 class TranscodeRequest(BaseModel):
     """Request body for a transcode operation."""
@@ -85,7 +86,7 @@ async def transcode_to_cache(job: TranscodeJob) -> Dict[str, str]:
 
     try:
         if output_filepath.exists() and output_filepath.stat().st_size > 0:
-            print(f"Cache hit for {output_filepath}, skipping transcode.")
+            logger.info(f"Cache hit for {output_filepath}, skipping transcode.")
             return {
                 "status": "completed",
                 "cached_file_path": str(output_filepath.relative_to(config.storage_path)),
@@ -100,7 +101,7 @@ async def transcode_to_cache(job: TranscodeJob) -> Dict[str, str]:
         pass
 
     ffmpeg_command = get_ffmpeg_command(job, quality_config, output_filepath)
-    print(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
+    logger.debug(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
 
     process = await asyncio.create_subprocess_exec(
         *ffmpeg_command,
@@ -112,7 +113,7 @@ async def transcode_to_cache(job: TranscodeJob) -> Dict[str, str]:
 
     if process.returncode != 0:
         decoded_output = (stderr or b"").decode('utf-8', errors='ignore')
-        print(f"FFmpeg failed with exit code {process.returncode}:\n{decoded_output}")
+        logger.error(f"FFmpeg failed with exit code {process.returncode}:\n{decoded_output}")
         raise RuntimeError(f"Transcoding failed. FFmpeg output:\n{decoded_output}")
 
     result = {

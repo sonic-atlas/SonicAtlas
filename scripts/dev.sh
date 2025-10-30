@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
 
-RED='\033[0;31m'
-NC='\033[0m'
+# Load color variables
+source "$(dirname "$0")/utils/colors.sh"
 
 BUILD_FLAG=false
 
+# flags
 while [[ $# -gt 0 ]]; do
     case $1 in
         -b|--build)

@@ -42,7 +42,7 @@ export class Logger {
     }
 
     error(msg) {
-        console.error(this.format('error', formatted));
+        console.error(this.format('error', msg));
     }
 
     debug(msg) {
