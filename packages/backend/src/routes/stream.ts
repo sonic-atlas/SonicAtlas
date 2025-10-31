@@ -8,13 +8,15 @@ import fs from 'node:fs';
 import mime from 'mime-types';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
+import { $rootDir } from '@sonic-atlas/shared';
 
 const router = Router();
 
-router.get('/:trackId', authMiddleware, async (req, res) => {
+router.get('/:trackId', async (req, res) => {
     const { trackId } = req.params;
 
     if (!isUUID(trackId!)) {
+        console.log(trackId);
         return res.status(422).json({
             error: 'UNPROCESSABLE_ENTITY',
             code: 'TRACK_002',
@@ -51,7 +53,7 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
                 startedAt: new Date()
             });
 
-        const transcodeUrl = `${process.env.TRANSCODER_URL}/transcode/${track.id}`;
+        const transcodeUrl = `${'http://localhost:8000'}/transcode/${track.id}`;
         const response = await fetch(transcodeUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -81,7 +83,7 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 
         await db.update(transcodeJobs).set({ status: 'completed' }).where(eq(transcodeJobs.trackId, track.id));
 
-        const cachedPath = path.join(process.env.STORAGE_PATH || 'storage', (data as any).cache_path);
+        const cachedPath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', (data as any).cache_path);
         if (!fs.existsSync(cachedPath)) {
             return res.status(404).json({
                 error: 'TRANSCODE_CACHE_MISSING',

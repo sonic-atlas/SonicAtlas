@@ -15,13 +15,13 @@ class Logger:
         self.color = color
     
     def _format(self, level: str, message: str) -> str:
-        time_str = f"[${datetime.now().strftime('%H:%M:%S')}] " if self.timestamp else ""
+        time_str = f"[{datetime.now().strftime('%H:%M:%S')}] " if self.timestamp else ""
         color = COLORS[level] if self.color else ""
-        reset = COLORS[reset] if self.color else ""
+        reset = COLORS['reset'] if self.color else ""
 
         indented = message.replace("\n", "\n    ")
 
-        return f"{time_str}${color}[Transcoder] {level.upper()}:{reset} {indented}"
+        return f"{time_str}{color}[Transcoder] {level.upper()}:{reset} {indented}"
     
     def info(self, msg: str):
         print(self._format("info", msg))
