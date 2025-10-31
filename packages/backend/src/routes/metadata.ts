@@ -11,6 +11,27 @@ import { isUUID } from '../utils/isUUID.js';
 
 const router = Router();
 
+type Quality = 'efficiency' | 'high' | 'cd' | 'hires';
+
+function determineSourceQuality(track: any): Quality {
+    const format = track.format?.toLowerCase();
+    const bitrate = track.bitDepth || 16;
+    const sampleRate = track.sampleRate || 44100;
+
+    if (format === 'flac') {
+        if (bitrate > 16 || sampleRate > 48000) {
+            return 'hires';
+        }
+        return 'cd';
+    }
+
+    if (format === 'mp3' || format === 'aac') {
+        return 'high';
+    }
+
+    return 'cd';
+}
+
 router.get('/:trackId', authMiddleware, async (req, res) => {
     const { trackId } = req.params;
 
@@ -46,7 +67,9 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 
         const { track, ...rest } = metadataRaw;
 
-        return res.json({ ...rest, ...track });
+        const sourceQuality = determineSourceQuality(track);
+
+        return res.json({ ...rest, ...track, sourceQuality });
     } catch (err) {
         logger.error(`(GET /api/metadata/${trackId}) Unknown Error Occured:\n${err}`);
         return res.status(500).json({
@@ -93,7 +116,7 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
     }
 });
 
-const storagePath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
+const storagePath = path.join(process.env.STORAGE_PATH || '/storage', 'metadata');
 
 router.get('/:trackId/cover', async (req, res) => {
     const { trackId } = req.params;
@@ -106,22 +129,35 @@ router.get('/:trackId/cover', async (req, res) => {
         })
     }
 
-    const coverFile = path.join(storagePath, `${trackId}_cover.jpg`);
+    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    
+    for (const ext of extensions) {
+        const coverFile = path.join(storagePath, `${trackId}_cover.${ext}`);
+        
+        try {
+            await fsp.access(coverFile);
+            
+            const contentTypes: Record<string, string> = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'webp': 'image/webp'
+            };
 
-    try {
-        await fsp.access(coverFile);
+            res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-        res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-
-        return res.sendFile(coverFile);
-    } catch (err) {
-        return res.status(404).json({
-            error: 'NOT_FOUND',
-            code: 'COVER_001',
-            message: 'No cover art found'
-        });
+            return res.sendFile(coverFile);
+        } catch (err) {
+            continue;
+        }
     }
+    
+    return res.status(404).json({
+        error: 'NOT_FOUND',
+        code: 'COVER_001',
+        message: 'No cover art found'
+    });
 });
 
 export default router;

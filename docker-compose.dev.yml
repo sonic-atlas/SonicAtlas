@@ -3,16 +3,16 @@ services:
     image: postgres:18-bookworm
     container_name: sonic-db-dev
     environment:
-      POSTGRES_USER: sonic
-      POSTGRES_PASSWORD: devpassword
-      POSTGRES_DB: sonic_atlas
+      POSTGRES_USER: ${POSTGRES_USER:-sonic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-sonic_atlas}
     ports:
       - '5432:5432'
     volumes:
       - postgres-data-dev:/var/lib/postgresql
       - ./packages/backend/drizzle:/docker-entrypoint-initdb.d/migrations:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U sonic -d sonic_atlas']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-sonic} -d ${POSTGRES_DB:-sonic_atlas}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,14 +29,11 @@ services:
     environment:
       NODE_ENV: development
       BACKEND_PORT: 3000
-      DATABASE_URL: postgresql://sonic:devpassword@db:5432/sonic_atlas
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sonic}:${POSTGRES_PASSWORD:-devpassword}@db:5432/${POSTGRES_DB:-sonic_atlas}
       TRANSCODER_URL: http://transcoder:8000
       STORAGE_PATH: /storage
-      JWT_SECRET: dev-secret-change-in-production
-      JWT_EXPIRY: 7d
+      SERVER_PASSWORD: ${SERVER_PASSWORD:-devpassword123}
       CORS_ORIGIN: http://localhost:5173
-      ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: admin123
     volumes:
       - ./packages/backend:/app/packages/backend
       - ./packages/shared:/app/packages/shared

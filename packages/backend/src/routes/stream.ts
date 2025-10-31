@@ -2,19 +2,129 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { db } from '../../db/db.js';
 import { eq } from 'drizzle-orm';
-import { tracks, transcodeJobs } from '../../db/schema.js';
+import { tracks } from '../../db/schema.js';
 import path from 'node:path';
-import fs from 'node:fs';
-import fsp from 'node:fs/promises';
-import mime from 'mime-types';
+import { spawn } from 'node:child_process';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { $rootDir } from '@sonic-atlas/shared';
-import { pipeline } from 'node:stream/promises';
+import { verifyJwt } from '../utils/jwt.js';
 
 const router = Router();
 
 type ValidQualities = 'efficiency' | 'high' | 'cd' | 'hires';
+
+// Custom auth middleware for streaming (supports token in query param)
+router.use((req, res, next) => {
+    const tokenParam = req.query.token as string;
+    
+    if (tokenParam) {
+        // Verify JWT token from query param
+        const decoded = verifyJwt(tokenParam);
+        if (decoded && decoded.authenticated) {
+            req.user = decoded;
+            return next();
+        }
+    }
+    
+    // Fall back to standard auth middleware
+    return authMiddleware(req, res, next);
+});
+
+// Quality settings for FFmpeg transcoding
+const qualitySettings: Record<ValidQualities, string[]> = {
+    efficiency: ['-c:a', 'aac', '-b:a', '128k'],
+    high: ['-c:a', 'aac', '-b:a', '320k'],
+    cd: ['-c:a', 'flac', '-sample_fmt', 's16', '-ar', '44100'],
+    hires: ['-c:a', 'flac']
+};
+
+const qualityMimeTypes: Record<ValidQualities, string> = {
+    efficiency: 'audio/aac',
+    high: 'audio/aac',
+    cd: 'audio/flac',
+    hires: 'audio/flac'
+};
+
+const qualityHierarchy: ValidQualities[] = ['efficiency', 'high', 'cd', 'hires'];
+
+// Determine source quality based on track metadata
+function getSourceQuality(track: any): ValidQualities {
+    const format = track.format?.toLowerCase();
+    const bitDepth = track.bitDepth;
+    const sampleRate = track.sampleRate || 44100;
+    const fileSize = track.fileSize || 0;
+    const duration = track.duration || 1;
+    
+    // Calculate approximate bitrate from file size if not provided
+    const estimatedBitrate = (fileSize * 8) / duration;
+
+    if (format === 'flac') {
+        if (bitDepth && bitDepth > 16 || sampleRate > 48000) {
+            return 'hires';
+        }
+        return 'cd';
+    }
+
+    if (format === 'mp3' || format === 'aac' || format === 'ogg' || format === 'opus') {
+        if (estimatedBitrate >= 320000) {
+            return 'high';
+        }
+        return 'efficiency';
+    }
+
+    if (format === 'wav') {
+        if (sampleRate > 48000) return 'hires';
+        return 'cd';
+    }
+
+    return 'cd';
+}
+
+function shouldDownsample(requested: ValidQualities, source: ValidQualities): boolean {
+    const requestedIndex = qualityHierarchy.indexOf(requested);
+    const sourceIndex = qualityHierarchy.indexOf(source);
+    return requestedIndex > sourceIndex;
+}
+
+router.get('/:trackId/quality', async (req, res) => {
+    const { trackId } = req.params;
+
+    if (!isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'TRACK_002',
+            message: 'Track id must be a valid UUID'
+        });
+    }
+
+    const track = await db.query.tracks.findFirst({
+        where: eq(tracks.id, trackId!)
+    });
+
+    if (!track) {
+        return res.status(404).json({
+            error: 'NOT_FOUND',
+            code: 'TRACK_001',
+            message: 'Track not found'
+        });
+    }
+
+    const sourceQuality = getSourceQuality(track);
+    const sourceIndex = qualityHierarchy.indexOf(sourceQuality);
+    
+    const availableQualities = qualityHierarchy.slice(0, sourceIndex + 1);
+
+    return res.json({
+        sourceQuality,
+        availableQualities,
+        track: {
+            format: track.format,
+            sampleRate: track.sampleRate,
+            bitDepth: track.bitDepth
+        }
+    });
+});
 
 router.get('/:trackId', async (req, res) => {
     const { trackId } = req.params;
@@ -41,100 +151,65 @@ router.get('/:trackId', async (req, res) => {
     }
 
     try {
-        await db
-            .insert(transcodeJobs)
-            .values({
-                trackId: track.id,
-                quality: quality,
-                status: 'transcoding',
-                startedAt: new Date()
-            });
+        const sourceQuality = getSourceQuality(track);
+        const requestedQuality = quality;
+        
+        const actualQuality = shouldDownsample(requestedQuality, sourceQuality) ? sourceQuality : requestedQuality;
+        
+        if (actualQuality !== requestedQuality) {
+            logger.info(`Quality ${requestedQuality} exceeds source at ${actualQuality}`);
+        }
 
-        const transcodeUrl = `${'http://localhost:8000'}/transcode/${track.id}`;
-        const response = await fetch(transcodeUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quality })
+        const storagePath = process.env.STORAGE_PATH || '/storage';
+        const originalPath = path.join(storagePath, 'originals', track.filename);
+
+        // Build FFmpeg command based on quality
+        const ffmpegArgs = [
+            '-i', originalPath,
+            '-vn',
+            '-map', '0:a',
+            ...qualitySettings[actualQuality],
+            '-f', actualQuality === 'efficiency' || actualQuality === 'high' ? 'adts' : 'flac',
+            'pipe:1'
+        ];
+
+        const ffmpeg = spawn('ffmpeg', ffmpegArgs);
+
+        res.setHeader('Content-Type', qualityMimeTypes[actualQuality]);
+        res.setHeader('Accept-Ranges', 'none');
+        res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:5173');
+        res.setHeader('Cache-Control', 'no-cache');
+
+        ffmpeg.stdout.pipe(res);
+
+        ffmpeg.stderr.on('data', (data) => {
+            logger.debug(`FFmpeg: ${data.toString()}`);
         });
 
-        await db.update(transcodeJobs).set({ completedAt: new Date() }).where(eq(transcodeJobs.trackId, track.id));
-
-        if (!response.ok) {
-            await db.update(transcodeJobs).set({ status: 'failed' }).where(eq(transcodeJobs.trackId, track.id));
-            return res.status(500).json({
-                error: 'INTERNAL_SERVER_ERROR',
-                message: 'Track transcoding failed due to an internal error'
-            });
-        }
-
-        const data = await response.json();
-
-        if (!(data as any).cache_path) {
-            await db.update(transcodeJobs).set({ status: 'failed' }).where(eq(transcodeJobs.trackId, track.id));
-
-            return res.status(500).json({
-                code: 'TRANSCODE_001',
-                message: 'Transcoding failed'
-            });
-        }
-
-        await db.update(transcodeJobs).set({ status: 'completed' }).where(eq(transcodeJobs.trackId, track.id));
-
-        const cachedPath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', (data as any).cache_path);
-
-        // No fs.existsSync needed to check if path exists.
-        // fsp.stat will throw if the file isn't found.
-        let stat;
-        try {
-            stat = await fsp.stat(cachedPath);
-        } catch {
-            return res.status(404).json({
-                error: 'TRANSCODE_CACHE_MISSING',
-                code: 'TRANSCODE_002',
-                message: 'Cached transcoded file not found'
-            });
-        }
-
-        const contentType = mime.lookup(cachedPath) || 'application/octet-stream';
-        const range = req.headers.range;
-
-        if (!range) {
-            res.writeHead(200, {
-                'Content-Length': stat.size,
-                'Content-Type': contentType
-            });
-            return await pipeline(fs.createReadStream(cachedPath), res);
-        }
-
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0]!, 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-
-        if (isNaN(start) || start >= stat.size) {
-            return res.status(416).set('Content-Range', `bytes */${stat.size}`).end();
-        }
-
-        const chunkSize = end - start + 1;
-
-        res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunkSize,
-            'Content-Type': contentType
+        ffmpeg.on('error', (err) => {
+            logger.error(`FFmpeg process error: ${err.message}`);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    error: 'INTERNAL_SERVER_ERROR',
+                    message: 'Transcoding failed'
+                });
+            }
         });
 
-        res.setHeaders(new Map([
-            ['Cache-Control', 'public, max-age=86400'],
-            ['ETag', `"${track.id}-${quality}-${stat.mtimeMs}"`]
-        ]));
+        ffmpeg.on('close', (code) => {
+            if (code !== 0 && code !== null) {
+                logger.error(`FFmpeg exited with code ${code}`);
+            }
+        });
 
-        try {
-            return await pipeline(fs.createReadStream(cachedPath, { start, end, highWaterMark: 512 * 1024 }), res);
-        } catch (e) {
-            if (!res.headersSent) res.status(500).end();
-        }
+        req.on('close', () => {
+            if (!ffmpeg.killed) {
+                ffmpeg.kill('SIGKILL');
+            }
+        });
+
     } catch (err) {
-        logger.error(`(GET /api/stream) Unknown Error Occured:\n${err}`);
+        logger.error(`(GET /api/stream) Unknown Error Occurred:\n${err}`);
         return res.status(500).json({
             error: 'INTERNAL_SERVER_ERROR',
             message: 'Track streaming failed due to an internal error'

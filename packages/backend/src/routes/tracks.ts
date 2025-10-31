@@ -13,7 +13,27 @@ import { isUUID } from '../utils/isUUID.js';
 const router = Router();
 router.use(authMiddleware, uploaderPerms);
 
-const uploadFolder = path.join(process.env.STORAGE_PATH ?? 'storage', 'uploads');
+const uploadFolder = path.join(process.env.STORAGE_PATH ?? 'storage', 'originals');
+
+// GET all tracks
+router.get('/', async (req, res) => {
+    try {
+        const allTracks = await db.query.tracks.findMany({
+            with: {
+                metadata: true
+            },
+            orderBy: (tracks, { desc }) => [desc(tracks.uploadedAt)]
+        });
+
+        return res.json(allTracks);
+    } catch (err) {
+        logger.error(`(GET /api/tracks) Unknown Error Occurred:\n${err}`);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to fetch tracks'
+        });
+    }
+});
 
 class UnsupportedMediaTypeError extends Error {
     statusCode = 415;
@@ -62,41 +82,52 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         });
     }
 
+    let filename;
+    let fileRenamed = false;
+    let newPath = '';
+
     try {
         const metadata = await parseFile(req.file.path);
 
+        const format = (metadata.format.codec?.toLowerCase() || 
+                       path.extname(req.file.originalname).slice(1).toLowerCase()) as any;
+
         const meta = {
             // tracks
-            duration: metadata.format.duration ?? null,
+            duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
             sampleRate: metadata.format.sampleRate ?? null,
+            bitDepth: metadata.format.bitsPerSample ?? null,
+            format: format,
 
             // track_metadata
             title: metadata.common.title ?? path.parse(req.file.originalname).name,
             artist: metadata.common.artist ?? 'Unknown Artist',
             album: metadata.common.album ?? 'Unknown Album',
             year: metadata.common.year ?? null,
-            genres: metadata.common.genre ?? null
+            genres: metadata.common.genre ?? null,
+            bitrate: metadata.format.bitrate ?? null,
+            codec: metadata.format.codec ?? null
         }
-
-        let filename;
 
         let trackInfo = await db.transaction(async (tx) => {
             const [track] = await tx
                 .insert(tracks)
                 .values({
-                    uploadedBy: req.user!.id,
                     filename: req.file!.filename,
                     originalFilename: req.file!.originalname,
                     duration: meta.duration,
                     sampleRate: meta.sampleRate,
+                    bitDepth: meta.bitDepth,
+                    format: meta.format,
                     fileSize: req.file!.size
                 })
                 .returning();
 
             const fileExt = path.extname(req.file!.originalname);
             filename = `${track!.id}${fileExt}`;
-            const newPath = path.join(uploadFolder, filename);
+            newPath = path.join(uploadFolder, filename);
             await fsp.rename(req.file!.path, newPath);
+            fileRenamed = true;
 
             await tx
                 .update(tracks)
@@ -115,6 +146,37 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             return track;
         });
 
+        if (metadata.common.picture && metadata.common.picture.length > 0) {
+            try {
+                const picture = metadata.common.picture[0];
+                if (picture && picture.data) {
+                    const metadataFolder = path.join(process.env.STORAGE_PATH || 'storage', 'metadata');
+                    await fsp.mkdir(metadataFolder, { recursive: true });
+                    
+                    let ext = 'jpg';
+                    if (picture.format) {
+                        if (picture.format.includes('png')) ext = 'png';
+                        else if (picture.format.includes('jpeg') || picture.format.includes('jpg')) ext = 'jpg';
+                        else if (picture.format.includes('webp')) ext = 'webp';
+                    }
+                    
+                    const coverPath = path.join(metadataFolder, `${trackInfo!.id}_cover.${ext}`);
+                    await fsp.writeFile(coverPath, picture.data);
+                    
+                    await db
+                        .update(tracks)
+                        .set({ coverArtPath: `/api/metadata/${trackInfo!.id}/cover` })
+                        .where(eq(tracks.id, trackInfo!.id));
+                        
+                    logger.info(`Extracted cover art for track ${trackInfo!.id} (${ext}, ${picture.data.length} bytes)`);
+                }
+            } catch (coverErr) {
+                logger.warn(`Failed to extract cover art: ${coverErr}`);
+            }
+        } else {
+            logger.info(`No cover art found in metadata for track ${trackInfo!.id}`);
+        }
+
         return res.status(201).json({
             id: trackInfo!.id,
             filename,
@@ -131,7 +193,17 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         });
     } catch (err) {
         logger.error(`(POST /api/tracks/upload) Unknown Error Occured:\n${err}`);
-        await fsp.unlink(req.file.path);
+        
+        try {
+            if (fileRenamed && newPath) {
+                await fsp.unlink(newPath);
+            } else if (req.file?.path) {
+                await fsp.unlink(req.file.path);
+            }
+        } catch (unlinkErr) {
+            logger.error(`Failed to clean up file after error: ${unlinkErr}`);
+        }
+        
         return res.status(500).json({
             error: 'INTERNAL_SERVER_ERROR',
             message: 'Track uploading failed due to an internal error'

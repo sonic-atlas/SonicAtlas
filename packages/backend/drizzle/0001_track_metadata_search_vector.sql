@@ -7,7 +7,7 @@ BEGIN
     setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
     setweight(to_tsvector('english', coalesce(NEW.artist, '')), 'A') ||
     setweight(to_tsvector('english', coalesce(NEW.album, '')), 'B') ||
-    setweight(to_tsvector('english', coalesce(NEW.genre, '')), 'C') ||
+    setweight(to_tsvector('english', coalesce(array_to_string(NEW.genres, ' '), '')), 'C') ||
     setweight(to_tsvector('english', coalesce(NEW.year::text, '')), 'D');
   RETURN NEW;
 END
