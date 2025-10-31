@@ -9,16 +9,22 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { $envPath } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
 import dotenv from 'dotenv';
+import compression from 'compression';
 dotenv.config({ quiet: true, path: $envPath });
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
 const app = express();
+app.disable('x-powered-by');
+app.use(compression({ filter: req => !req.path.startsWith('/api/stream') }));
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
     methods: ['GET', 'POST', 'DELETE', 'PATCH']
 }));
+
 app.use(express.json());
+
 app.use('/api',
     //* IP rate limit
     rateLimit({
@@ -44,14 +50,14 @@ logger.info('Loaded route: /health');
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');
 async function loadRoutes(dir: string) {
-    const entries = fsp.readdir(dir, { withFileTypes: true });
+    const entries = await fsp.readdir(dir, { withFileTypes: true });
 
-    await Promise.all((await entries).map(async (entry) => {
+    await Promise.all(entries.map(async (entry) => {
         const fullPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
             await loadRoutes(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith('.ts') && !entry.name.startsWith('_')) {
+        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.startsWith('_')) {
             const relativePath = path.relative(apiDir, fullPath);
             const routePath = relativePath.replace(/\.ts/, '').replace(/\\/g, '/');
 

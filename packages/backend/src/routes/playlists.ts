@@ -26,7 +26,7 @@ router.post('/', uploaderPerms, async (req, res) => {
             .values({
                 name,
                 description,
-                userId: req.user?.id!
+                userId: req.user!.id
             })
             .returning();
 

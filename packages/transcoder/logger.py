@@ -21,7 +21,7 @@ class Logger:
 
         indented = message.replace("\n", "\n    ")
 
-        return f"{time_str}{color}[Transcoder] {level.upper()}:{reset} {indented}"
+        return f"{time_str}{color}[Transcoder] {level.upper()}:\033[0m {indented}"
     
     def info(self, msg: str):
         print(self._format("info", msg))

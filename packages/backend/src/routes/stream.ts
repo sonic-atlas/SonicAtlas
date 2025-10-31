@@ -5,30 +5,27 @@ import { eq } from 'drizzle-orm';
 import { tracks, transcodeJobs } from '../../db/schema.js';
 import path from 'node:path';
 import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import mime from 'mime-types';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { $rootDir } from '@sonic-atlas/shared';
+import { pipeline } from 'node:stream/promises';
 
 const router = Router();
 
+type ValidQualities = 'efficiency' | 'high' | 'cd' | 'hires';
+
 router.get('/:trackId', async (req, res) => {
     const { trackId } = req.params;
+    const quality = (req.query.quality as ValidQualities) || 'high';
 
     if (!isUUID(trackId!)) {
-        console.log(trackId);
         return res.status(422).json({
             error: 'UNPROCESSABLE_ENTITY',
             code: 'TRACK_002',
             message: 'Track id must be a valid UUID'
         });
-    }
-    
-    const quality = (req.query.quality as string) || 'high';
-
-    const validQualities = ['efficiency', 'high', 'cd', 'hires'];
-    if (!validQualities.includes(quality)) {
-        return res.status(400).json({ error: 'INVALID_QUALITY', message: `Unknown quality tier: ${quality}` });
     }
 
     const track = await db.query.tracks.findFirst({
@@ -84,16 +81,21 @@ router.get('/:trackId', async (req, res) => {
         await db.update(transcodeJobs).set({ status: 'completed' }).where(eq(transcodeJobs.trackId, track.id));
 
         const cachedPath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', (data as any).cache_path);
-        if (!fs.existsSync(cachedPath)) {
+
+        // No fs.existsSync needed to check if path exists.
+        // fsp.stat will throw if the file isn't found.
+        let stat;
+        try {
+            stat = await fsp.stat(cachedPath);
+        } catch {
             return res.status(404).json({
                 error: 'TRANSCODE_CACHE_MISSING',
                 code: 'TRANSCODE_002',
                 message: 'Cached transcoded file not found'
             });
         }
-        const contentType = mime.lookup(cachedPath) || 'application/octet-stream';
 
-        const stat = fs.statSync(cachedPath);
+        const contentType = mime.lookup(cachedPath) || 'application/octet-stream';
         const range = req.headers.range;
 
         if (!range) {
@@ -101,8 +103,7 @@ router.get('/:trackId', async (req, res) => {
                 'Content-Length': stat.size,
                 'Content-Type': contentType
             });
-            fs.createReadStream(cachedPath).pipe(res);
-            return;
+            return await pipeline(fs.createReadStream(cachedPath), res);
         }
 
         const parts = range.replace(/bytes=/, '').split('-');
@@ -114,7 +115,6 @@ router.get('/:trackId', async (req, res) => {
         }
 
         const chunkSize = end - start + 1;
-        const file = fs.createReadStream(cachedPath, { start, end });
 
         res.writeHead(206, {
             'Content-Range': `bytes ${start}-${end}/${stat.size}`,
@@ -123,7 +123,16 @@ router.get('/:trackId', async (req, res) => {
             'Content-Type': contentType
         });
 
-        return file.pipe(res);
+        res.setHeaders(new Map([
+            ['Cache-Control', 'public, max-age=86400'],
+            ['ETag', `"${track.id}-${quality}-${stat.mtimeMs}"`]
+        ]));
+
+        try {
+            return await pipeline(fs.createReadStream(cachedPath, { start, end, highWaterMark: 512 * 1024 }), res);
+        } catch (e) {
+            if (!res.headersSent) res.status(500).end();
+        }
     } catch (err) {
         logger.error(`(GET /api/stream) Unknown Error Occured:\n${err}`);
         return res.status(500).json({
