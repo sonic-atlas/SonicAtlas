@@ -11,8 +11,6 @@ import {
     uuid
 } from 'drizzle-orm/pg-core';
 
-export const userRoleEnum = pgEnum('user_role_enum', ['viewer', 'uploader', 'admin']);
-
 export const trackFormatEnum = pgEnum('track_format_enum', ['flac', 'mp3', 'wav', 'aac']);
 
 export const transcodeJobsStatusEnum = pgEnum('transcode_jobs_status_enum', ['queued', 'transcoding', 'completed', 'failed']);
@@ -25,30 +23,8 @@ const tsvector = customType<{ data: string; notNull: false; default: false }>({
     }
 });
 
-export const users = pgTable('users', {
-    id: uuid().defaultRandom().primaryKey(),
-    username: text().unique().notNull(),
-    passwordHash: text('password_hash').notNull(),
-    role: userRoleEnum().default('viewer'),
-    createdAt: timestamp('createdAt').defaultNow(),
-    lastLogin: timestamp('created_at')
-}, (table) => [
-    index('users_username_idx').on(table.username)
-]);
-
-export const invites = pgTable('invites', {
-    id: uuid().defaultRandom().primaryKey(),
-    token: text().unique().notNull(),
-    createdBy: uuid('created_by').references(() => users.id),
-    usedBy: uuid('used_by').references(() => users.id),
-    expiresAt: timestamp('expires_at'),
-    usedAt: timestamp('used_at'),
-    createdAt: timestamp('created_at').defaultNow()
-});
-
 export const tracks = pgTable('tracks', {
     id: uuid().defaultRandom().primaryKey(),
-    uploadedBy: uuid('uploaded_by').references(() => users.id),
     filename: text().notNull(),
     originalFilename: text('original_filename').notNull(),
     format: trackFormatEnum(),
@@ -68,6 +44,8 @@ export const trackMetadata = pgTable('track_metadata', {
     album: text(),
     year: integer(),
     genres: text().array(),
+    bitrate: integer(),
+    codec: text(),
     searchVector: tsvector('search_vector')
 });
 
@@ -86,7 +64,6 @@ export const cacheEntries = pgTable('cache_entries', {
 
 export const playlists = pgTable('playlists', {
     id: uuid().defaultRandom().primaryKey(),
-    userId: uuid('user_id').references(() => users.id),
     name: text().notNull(),
     description: text().notNull(),
     createdAt: timestamp('created_at').defaultNow(),
@@ -121,32 +98,7 @@ export const transcodeJobs = pgTable('transcode_jobs', {
 
 //#region RELATIONS
 
-export const userRelations = relations(users, ({ many, one }) => ({
-    createdInvites: many(invites),
-    usedInvite: one(invites, {
-        fields: [users.id],
-        references: [invites.usedBy]
-    }),
-    uploadedTracks: many(tracks),
-    createdPlaylists: many(playlists)
-}));
-
-export const inviteRelations = relations(invites, ({ one }) => ({
-    createdBy: one(users, {
-        fields: [invites.createdBy],
-        references: [users.id]
-    }),
-    usedBy: one(users, {
-        fields: [invites.usedBy],
-        references: [users.id]
-    })
-}));
-
 export const trackRelations = relations(tracks, ({ many, one }) => ({
-    uploadedBy: one(users, {
-        fields: [tracks.uploadedBy],
-        references: [users.id]
-    }),
     metadata: one(trackMetadata, {
         fields: [tracks.id],
         references: [trackMetadata.trackId]
@@ -161,11 +113,7 @@ export const trackMetadataRelations = relations(trackMetadata, ({ one }) => ({
     })
 }));
 
-export const playlistRelations = relations(playlists, ({ many, one }) => ({
-    createdBy: one(users, {
-        fields: [playlists.userId],
-        references: [users.id]
-    }),
+export const playlistRelations = relations(playlists, ({ many }) => ({
     items: many(playlistItems)
 }));
 
