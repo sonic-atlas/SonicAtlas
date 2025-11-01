@@ -1,4 +1,6 @@
 <script lang="ts">
+    import '@material/web/progress/linear-progress.js';
+    import "@material/web/progress/circular-progress.js";
     import type { Track, TrackMetadata, Quality, QualityInfo } from '$lib/types';
     import QualitySelector from './QualitySelector.svelte';
     import { apiGet, getStreamUrl, API_BASE_URL } from '$lib/api';
@@ -14,6 +16,7 @@
     let isPlaying = $state(false);
     let currentTime = $state(0);
     let duration = $state(0);
+    let progress = $derived(duration > 0 ? currentTime / duration : 0);
     let loading = $state(false);
     let metadata = $state<TrackMetadata | null>(null);
 
@@ -62,6 +65,7 @@
             audio.pause();
         } else {
             loading = true;
+            // TODO: Handle playing a bit better (easing the volume).
             audio.play().catch(err => {
                 console.error('Play failed:', err);
                 loading = false;
@@ -154,7 +158,7 @@
 
     <QualitySelector bind:quality {metadata} trackId={track.id} />
 
-    <div class="quality-badge">
+    <div class="qualityBadge">
         <strong>{currentQualityInfo.label}</strong>
         <div class="quality-details">
             {currentQualityInfo.codec}
@@ -186,19 +190,27 @@
                 togglePlay();
             }} 
             disabled={loading}
+            aria-label={isPlaying ? "Pause" : "Play"}
         >
-            {loading ? '⏳' : isPlaying ? '⏸' : '▶'}
-        </button>
-    </div>
+        {#if loading}
+            <md-circular-progress 
+                indeterminate
+                aria-label="Loading"
+            ></md-circular-progress>
+        {:else}
+            {isPlaying ? '⏸' : '▶'}
+        {/if}
+    </button>
+</div>
+
 
     <div class="progress">
-        <input
-            type="range"
-            min="0"
-            max={duration || 100}
-            value={currentTime}
-            oninput={handleSeek}
-        />
+        <div class="progress-container">
+        <md-linear-progress 
+            value={progress}
+            aria-label="Playback progress"
+        ></md-linear-progress>
+        </div>
         <div class="time">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
@@ -260,7 +272,7 @@
         margin-bottom: 4px;
     }
 
-    .quality-badge {
+    .qualityBadge {
         background: var(--surface-color);
         border: 1px solid var(--primary-color);
         padding: 12px;
@@ -268,7 +280,7 @@
         margin-bottom: 20px;
     }
 
-    .quality-badge strong {
+    .qualityBadge strong {
         display: block;
         color: var(--primary-color);
         margin-bottom: 4px;
@@ -295,6 +307,14 @@
         color: var(--text-primary-color);
         cursor: pointer;
         transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .controls button md-circular-progress {
+        --md-circular-progress-size: 48px;
+        --md-circular-progress-active-indicator-color: var(--secondary-color);
     }
 
     .controls button:hover:not(:disabled) {
@@ -310,9 +330,22 @@
         margin-top: 20px;
     }
 
-    .progress input[type="range"] {
-        width: 100%;
+    .progress-container {
+        position: relative;
         margin-bottom: 8px;
+        height: 8px;
+    }
+
+    .progress-container md-linear-progress {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        --md-linear-progress-track-height: 8px;
+        --md-linear-progress-track-shape: 4px;
+        --md-linear-progress-track-color: var(--surface-color);
+        --md-linear-progress-active-indicator-height: 8px;
+        --md-linear-progress-active-indicator-color: var(--primary-color);
     }
 
     .time {

@@ -31,5 +31,8 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.2",
 		"vite": "^7.1.12"
+	},
+	"dependencies": {
+		"@material/web": "^2.4.1"
 	}
 }

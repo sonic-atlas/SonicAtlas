@@ -17,8 +17,10 @@
         { value: 'hires', label: 'Hi-Res', description: 'FLAC Original' }
     ];
 
-    let sourceQuality = $state<Quality | null>(null);
+    let sourceQuality = $state<Quality>(quality);
     let availableQualities = $state<Quality[]>([]);
+    let preferredQuality = $state<Quality>(quality);
+    let isTemporarilyDowngraded = $state<boolean>(false);
 
     async function loadAvailableQualities() {
         try {
@@ -34,9 +36,38 @@
         }
     }
 
+    function findBestAvailableQuality(preferred: Quality): Quality {
+        const qualityOrder: Quality[] = ['hires', 'cd', 'high', 'efficiency'];
+        const preferredIndex = qualityOrder.indexOf(preferred);
+        
+        for (let i = preferredIndex; i < qualityOrder.length; i++) {
+            if (availableQualities.includes(qualityOrder[i])) {
+                return qualityOrder[i];
+            }
+        }
+        
+        return availableQualities[0] || 'efficiency';
+    }
+
+
     $effect(() => {
         if (trackId) {
             loadAvailableQualities();
+        }
+    });
+
+    $effect(() => {
+        if (availableQualities.length > 0) {
+            if (!availableQualities.includes(preferredQuality)) {
+                const bestAvailable = findBestAvailableQuality(preferredQuality);
+                quality = bestAvailable;
+                isTemporarilyDowngraded = true;
+            } else {
+                if (isTemporarilyDowngraded && availableQualities.includes(preferredQuality)) {
+                    quality = preferredQuality;
+                    isTemporarilyDowngraded = false;
+                }
+            }
         }
     });
 
