@@ -9,6 +9,7 @@ import { parseFile } from 'music-metadata';
 import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
+import { stripCoverArt } from '../utils/stripCoverArt.js';
 
 const router = Router();
 router.use(authMiddleware, uploaderPerms);
@@ -128,6 +129,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             newPath = path.join(uploadFolder, filename);
             await fsp.rename(req.file!.path, newPath);
             fileRenamed = true;
+
+            await stripCoverArt(newPath);
 
             await tx
                 .update(tracks)
