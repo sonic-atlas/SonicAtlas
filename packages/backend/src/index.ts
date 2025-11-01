@@ -8,8 +8,8 @@ import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { $envPath } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
-import dotenv from 'dotenv';
 import compression from 'compression';
+import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
