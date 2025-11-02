@@ -16,20 +16,41 @@ const PORT = Number(process.env.BACKEND_PORT) || 3000;
 
 const app = express();
 app.disable('x-powered-by');
+
+const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+    .split(',')
+    .map(origin => origin.trim());
+
+
+const corsOptions = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        if (!origin) {
+            return callback(null, true);
+        }
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, false);
+        }
+    },
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 app.use(compression({ filter: req => !req.path.startsWith('/api/stream') }));
-
-app.use(cors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-    methods: ['GET', 'POST', 'DELETE', 'PATCH']
-}));
-
 app.use(express.json());
 
 app.use('/api',
     //* IP rate limit
     rateLimit({
         windowMs: 1 * 60 * 1000,
-        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 100
+        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 100,
+        skip: (req) => req.method === "OPTIONS",
     }),
     //* User rate limit
     rateLimit({
@@ -39,7 +60,8 @@ app.use('/api',
             if (req.user?.id) return req.user?.id;
             
             return ipKeyGenerator(req.ip!);
-        }
+        },
+        skip: (req) => req.method === "OPTIONS",
     })
 );
 
@@ -79,7 +101,12 @@ async function loadRoutes(dir: string) {
 
 await loadRoutes(apiDir);
 
-const server = app.listen(PORT, '', () => {
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error(`Error: ${err.message}`);
+    res.status(err.status || 500).json({ error: err.message });
+});
+
+const server = app.listen(PORT, '0.0.0.0', () => {
     const ip = getLocalIp();
     logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m

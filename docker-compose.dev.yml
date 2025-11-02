@@ -33,11 +33,11 @@ services:
       TRANSCODER_URL: http://transcoder:8000
       STORAGE_PATH: /storage
       SERVER_PASSWORD: ${SERVER_PASSWORD:-devpassword123}
-      CORS_ORIGIN: http://localhost:5173
     volumes:
       - ./packages/backend:/app/packages/backend
       - ./packages/shared:/app/packages/shared
       - ./storage:/storage
+      - ./.env:/app/.env:ro
       - /app/packages/backend/node_modules
       - /app/node_modules
     depends_on:
