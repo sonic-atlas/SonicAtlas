@@ -25,6 +25,8 @@
     let metadata = $state<TrackMetadata | null>(null);
 
     let isAdaptive = $state(false);
+    let hoverTime = $state<number | null>(null);
+    let progressBarElement: HTMLDivElement;
 
     $effect(() => {
         console.log('Loading state changed:', loading);
@@ -135,6 +137,61 @@
         }
     }
 
+    function handleProgressHover(e: MouseEvent) {
+        if (!progressBarElement || !duration) return;
+        
+        const rect = progressBarElement.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, x / rect.width));
+        hoverTime = percentage * duration;
+    }
+
+    function handleProgressLeave() {
+        hoverTime = null;
+    }
+
+    function handleProgressClick(e: MouseEvent) {
+        if (!progressBarElement || !audio || !duration) return;
+        
+        const rect = progressBarElement.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, x / rect.width));
+        const newTime = percentage * duration;
+        
+        audio.currentTime = newTime;
+        currentTime = newTime;
+    }
+
+    function handleProgressKeyDown(e: KeyboardEvent) {
+        if (!audio || !duration) return;
+        
+        const step = 5;
+        
+        switch (e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                audio.currentTime = Math.max(0, audio.currentTime - step);
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                audio.currentTime = Math.min(duration, audio.currentTime + step);
+                break;
+            case 'Home':
+                e.preventDefault();
+                audio.currentTime = 0;
+                break;
+            case 'End':
+                e.preventDefault();
+                audio.currentTime = duration;
+                break;
+            case ' ':
+            case 'Enter':
+                e.preventDefault();
+                togglePlay();
+                break;
+        }
+    }
+
     function formatTime(seconds: number): string {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
@@ -162,7 +219,6 @@
                 /* maxBufferLength: 15,
                 maxMaxBufferLength: 30, */
                 xhrSetup: (xhr) => {
-                    console.log(auth.token);
                     xhr.setRequestHeader('Authorization', `Bearer ${auth.token}`);
                 }
             });
@@ -379,21 +435,36 @@
 
 
     <div class="progress">
-        <div class="progress-container">
-            <!--<md-linear-progress 
-                value={progress}
-                aria-label="Playback progress"
-            ></md-linear-progress> -->
-            <input
-                type="range"
-                min="0"
-                max={duration}
-                step="0.01"
-                value={currentTime}
-                oninput={handleScrub}
-                onchange={handleSeekCommit}
-                aria-label="Seek"
-            />
+        <div 
+            class="progressContainer"
+            bind:this={progressBarElement}
+            onmousemove={handleProgressHover}
+            onmouseleave={handleProgressLeave}
+            onclick={handleProgressClick}
+            onkeydown={handleProgressKeyDown}
+            role="slider"
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={duration}
+            aria-valuenow={currentTime}
+            tabindex="0"
+        >
+            <div class="progressTrack">
+                <div 
+                    class="progressFilled" 
+                    style="width: {duration > 0 ? (currentTime / duration) * 100 : 0}%"
+                ></div>
+                {#if hoverTime !== null}
+                    <div 
+                        class="progressHover" 
+                        style="left: {duration > 0 ? (hoverTime / duration) * 100 : 0}%"
+                    >
+                        <div class="hoverTimeTooltip">
+                            {formatTime(hoverTime)}
+                        </div>
+                    </div>
+                {/if}
+            </div>
         </div>
         <div class="time">
             <span>{formatTime(currentTime)}</span>
@@ -514,49 +585,74 @@
         margin-top: 20px;
     }
 
-    .progress-container {
+    .progressContainer {
         position: relative;
         margin-bottom: 8px;
-        height: 8px;
+        padding: 8px 0;
+        cursor: pointer;
     }
 
-    /* .progress-container md-linear-progress {
+    .progressTrack {
+        position: relative;
         width: 100%;
-        height: 8px;
-        border-radius: 4px;
-        overflow: hidden;
-        --md-linear-progress-track-height: 8px;
-        --md-linear-progress-track-shape: 4px;
-        --md-linear-progress-track-color: var(--surface-color);
-        --md-linear-progress-active-indicator-height: 8px;
-        --md-linear-progress-active-indicator-color: var(--primary-color);
-    } */
-
-    .progress-container input[type="range"] {
-        width: 100%;
-        appearance: none;
-        height: 8px;
-        border-radius: 4px;
+        height: 6px;
         background: var(--surface-color);
-        outline: none;
-        cursor: pointer;
+        border-radius: 3px;
+        overflow: visible;
+        transition: height 0.2s ease;
     }
 
-    .progress-container input[type="range"]::-webkit-slider-thumb {
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: var(--primary-color);
-        cursor: pointer;
+    .progressContainer:hover .progressTrack {
+        height: 8px;
     }
 
-    .progress-container input[type="range"]::-moz-range-thumb {
+    .progressFilled {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: var(--primary-color);
+        border-radius: 3px;
+        transition: width 0.1s linear;
+        pointer-events: none;
+    }
+
+    .progressHover {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
         width: 14px;
         height: 14px;
-        border-radius: 50%;
         background: var(--primary-color);
-        cursor: pointer;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hoverTimeTooltip {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--surface-color);
+        color: var(--text-primary-color);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        border: 1px solid var(--primary-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .hoverTimeTooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: var(--primary-color);
     }
 
     .time {

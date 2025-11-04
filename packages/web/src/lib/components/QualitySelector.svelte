@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Quality, TrackMetadata } from '$lib/types';
     import { apiGet } from '$lib/api';
+    import { onMount } from 'svelte';
 
     interface Props {
         quality: Quality;
@@ -20,6 +21,11 @@
 
     let sourceQuality = $state<Quality>(quality);
     let availableQualities = $state<Quality[]>([]);
+    let isFirefox = $state<boolean>(false);
+
+    onMount(() => {
+        isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+    });
 
     async function loadAvailableQualities() {
         try {
@@ -42,11 +48,17 @@
                 if (quality !== 'auto' && !availableQualities.includes(quality)) {
                     quality = 'auto';
                 }
+                if (isFirefox && (quality === 'hires')) {
+                    quality = 'cd';
+                }
             });
         }
     });
 
     function isQualityAvailable(q: Quality): boolean {
+        if (isFirefox && (q === 'hires')) {
+            return false; 
+        }
         if (q === 'auto') {
             return availableQualities.length > 0;
         }
@@ -73,6 +85,12 @@
 
 <div class="qualitySelector">
     <div class="labelText">Playback Quality</div>
+
+    {#if isFirefox}
+        <div class="firefox-notice">
+            Hi-Res streaming is not fully supported on Firefox and is disabled.
+        </div>
+    {/if}
     
     <div class="options" role="group" aria-label="Playback Quality">
         {#each qualities as q (q.value)}
@@ -103,6 +121,17 @@
 <style>
     .qualitySelector {
         margin-bottom: 20px;
+    }
+
+    .firefox-notice {
+        font-size: 12px;
+        background-color: var(--surface-color);
+        border: 1px solid #ff9800;
+        color: #ff9800;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        text-align: center;
     }
 
     .labelText{

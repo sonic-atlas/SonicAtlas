@@ -46,11 +46,6 @@ export async function generateHLS(trackId: string, inputFile: string) {
         // set current working directory to qualityDir and use just the filename above
         const ffmpeg = spawn('ffmpeg', ffmpegArgs, { cwd: qualityDir });
 
-        ffmpeg.stderr.on('data', (data) => {
-            logger.error(`FFmpeg [${quality}] stderr: ${data.toString()}`);
-        });
-
-
         await new Promise((resolve, reject) => {
             ffmpeg.on('close', (code) => {
                 if (code === 0) {
