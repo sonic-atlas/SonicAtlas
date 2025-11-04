@@ -116,7 +116,7 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
     }
 });
 
-const storagePath = path.join(process.env.STORAGE_PATH || '/storage', 'metadata');
+const storagePath = path.join($rootDir, process.env.STORAGE_PATH || '/storage', 'metadata');
 
 router.get('/:trackId/cover', async (req, res) => {
     const { trackId } = req.params;
@@ -142,7 +142,7 @@ router.get('/:trackId/cover', async (req, res) => {
                 'jpeg': 'image/jpeg',
                 'png': 'image/png',
                 'webp': 'image/webp'
-            };
+            }
 
             res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
             res.setHeader('Cache-Control', 'public, max-age=31536000');

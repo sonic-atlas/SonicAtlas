@@ -6,15 +6,19 @@ import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { playlistItems, trackMetadata, tracks } from '../../db/schema.js';
 import { parseFile } from 'music-metadata';
-import { eq } from 'drizzle-orm';
+import { eq, type InferSelectModel } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
+import { $envPath, $rootDir } from '@sonic-atlas/shared';
+import { generateHLS } from '../utils/pretranscode.js';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true, path: $envPath });
 
 const router = Router();
 router.use(authMiddleware, uploaderPerms);
 
-const uploadFolder = path.join(process.env.STORAGE_PATH ?? 'storage', 'originals');
+const uploadFolder = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals');
 
 // GET all tracks
 router.get('/', async (req, res) => {
@@ -45,9 +49,7 @@ class UnsupportedMediaTypeError extends Error {
 }
 
 const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, uploadFolder);
-    },
+    destination: uploadFolder,
     filename(req, file, cb) {
         cb(null, Date.now() + '-' + file.originalname);
     }
@@ -86,19 +88,18 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
     let filename;
     let fileRenamed = false;
     let newPath = '';
+    let trackInfo: InferSelectModel<typeof tracks> | undefined = undefined;
 
     try {
         const metadata = await parseFile(req.file.path);
-
-        const format = (metadata.format.codec?.toLowerCase() || 
-                       path.extname(req.file.originalname).slice(1).toLowerCase()) as any;
+        const format = (metadata.format.codec?.toLowerCase() || path.extname(req.file.originalname).slice(1).toLowerCase()) as any;
 
         const meta = {
             // tracks
             duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
             sampleRate: metadata.format.sampleRate ?? null,
             bitDepth: metadata.format.bitsPerSample ?? null,
-            format: format,
+            format,
 
             // track_metadata
             title: metadata.common.title ?? path.parse(req.file.originalname).name,
@@ -110,7 +111,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             codec: metadata.format.codec ?? null
         }
 
-        let trackInfo = await db.transaction(async (tx) => {
+        trackInfo = await db.transaction(async (tx) => {
             const [track] = await tx
                 .insert(tracks)
                 .values({
@@ -153,7 +154,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             try {
                 const picture = metadata.common.picture[0];
                 if (picture && picture.data) {
-                    const metadataFolder = path.join(process.env.STORAGE_PATH || 'storage', 'metadata');
+                    const metadataFolder = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'metadata');
                     await fsp.mkdir(metadataFolder, { recursive: true });
                     
                     let ext = 'jpg';
@@ -179,6 +180,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         } else {
             logger.info(`No cover art found in metadata for track ${trackInfo!.id}`);
         }
+
+        await generateHLS(trackInfo!.id, newPath);
 
         return res.status(201).json({
             id: trackInfo!.id,
@@ -214,6 +217,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
     }
 });
 
+// Custom error middleware for /upload route
 router.use((err: any, req: Request, res: Response, next: NextFunction) => {
     if (err instanceof UnsupportedMediaTypeError) {
         return res.status(err.statusCode).json({

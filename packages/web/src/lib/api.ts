@@ -1,5 +1,6 @@
 import { PUBLIC_API_URL } from '$env/static/public';
 import { auth } from './stores/auth.svelte';
+import type { Quality } from './types';
 
 const API_BASE_URL = PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -50,12 +51,15 @@ export async function login(password: string): Promise<{ success: boolean; error
     }
 }
 
-export function getStreamUrl(trackId: string, quality: string): string {
-    const token = auth.token;
-    if (!token) {
+export function getStreamUrl(trackId: string, quality: Quality): string {
+    if (!auth.token) {
         throw new Error('Not authenticated');
     }
-    return `${API_BASE_URL}/api/stream/${trackId}?quality=${quality}&token=${encodeURIComponent(token)}`;
+
+    if (quality === 'auto') {
+        return `${API_BASE_URL}/api/stream/${trackId}/master.m3u8`
+    }
+    return `${API_BASE_URL}/api/stream/${trackId}/${quality}/${quality}.m3u8`;
 }
 
 export { API_BASE_URL };

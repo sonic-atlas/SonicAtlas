@@ -30,7 +30,7 @@ export interface TrackMetadata {
     sourceQuality?: 'efficiency' | 'high' | 'cd' | 'hires';
 }
 
-export type Quality = 'efficiency' | 'high' | 'cd' | 'hires';
+export type Quality = 'auto' | 'efficiency' | 'high' | 'cd' | 'hires';
 
 export interface QualityInfo {
     label: string;

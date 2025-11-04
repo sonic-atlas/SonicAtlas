@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { $envPath } from '@sonic-atlas/shared';
+import { $envPath, $rootDir } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
 import compression from 'compression';
 import dotenv from 'dotenv';
@@ -20,7 +20,6 @@ app.disable('x-powered-by');
 const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
     .split(',')
     .map(origin => origin.trim());
-
 
 const corsOptions = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -37,13 +36,22 @@ const corsOptions = {
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 204
-};
+}
 
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 
 app.use(compression({ filter: req => !req.path.startsWith('/api/stream') }));
-app.use(express.json());
+
+app.use(express.json({
+    limit: '10mb',
+    type: ['application/json'],
+    verify: (req) => {
+        if (req.url?.startsWith('/api/stream') || req.url?.startsWith('/hls')) {
+            throw new Error('Skip body parsing for stream');
+        }
+    },
+}));
 
 app.use('/api',
     //* IP rate limit
@@ -64,6 +72,26 @@ app.use('/api',
         skip: (req) => req.method === "OPTIONS",
     })
 );
+
+/* Keeping as a backup, or for testing without auth idk
+// HLS headers
+const hlsPath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
+app.use('/hls', express.static(hlsPath, {
+    fallthrough: false,
+    setHeaders(res, path) {
+        if (path.endsWith('.m3u8')) {
+            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } else if (path.endsWith('.ts')) {
+            res.setHeader('Content-Type', 'video/mp2t');
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+        }
+        res.setHeader('Accept-Ranges', 'bytes');
+    },
+}));
+app.head('/hls{/*path}', (req, res) => res.sendStatus(200));
+*/
+app.head('/api/stream/:trackId{/*path}', (req, res) => res.sendStatus(200));
 
 //* Health route. Not auto loading to not use the /api prefix
 app.get('/health', healthRoute);

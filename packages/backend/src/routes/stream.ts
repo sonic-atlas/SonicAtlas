@@ -4,47 +4,15 @@ import { db } from '../../db/db.js';
 import { eq } from 'drizzle-orm';
 import { tracks } from '../../db/schema.js';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
-import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { $rootDir } from '@sonic-atlas/shared';
-import { verifyJwt } from '../utils/jwt.js';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 
 const router = Router();
+router.use(authMiddleware);
 
 type ValidQualities = 'efficiency' | 'high' | 'cd' | 'hires';
-
-// Custom auth middleware for streaming (supports token in query param)
-router.use((req, res, next) => {
-    const tokenParam = req.query.token as string;
-    
-    if (tokenParam) {
-        // Verify JWT token from query param
-        const decoded = verifyJwt(tokenParam);
-        if (decoded && decoded.authenticated) {
-            req.user = decoded;
-            return next();
-        }
-    }
-    
-    // Fall back to standard auth middleware
-    return authMiddleware(req, res, next);
-});
-
-// Quality settings for FFmpeg transcoding
-const qualitySettings: Record<ValidQualities, string[]> = {
-    efficiency: ['-c:a', 'aac', '-b:a', '128k'],
-    high: ['-c:a', 'aac', '-b:a', '320k'],
-    cd: ['-c:a', 'flac', '-sample_fmt', 's16', '-ar', '44100'],
-    hires: ['-c:a', 'flac']
-};
-
-const qualityMimeTypes: Record<ValidQualities, string> = {
-    efficiency: 'audio/aac',
-    high: 'audio/aac',
-    cd: 'audio/flac',
-    hires: 'audio/flac'
-};
 
 const qualityHierarchy: ValidQualities[] = ['efficiency', 'high', 'cd', 'hires'];
 
@@ -79,12 +47,6 @@ function getSourceQuality(track: any): ValidQualities {
     }
 
     return 'cd';
-}
-
-function shouldDownsample(requested: ValidQualities, source: ValidQualities): boolean {
-    const requestedIndex = qualityHierarchy.indexOf(requested);
-    const sourceIndex = qualityHierarchy.indexOf(source);
-    return requestedIndex > sourceIndex;
 }
 
 router.get('/:trackId/quality', async (req, res) => {
@@ -126,95 +88,67 @@ router.get('/:trackId/quality', async (req, res) => {
     });
 });
 
-router.get('/:trackId', async (req, res) => {
+const hlsRoot = path.join($rootDir, process.env.STORAGE || 'storage', 'hls');
+
+// I don't think there's any need to check if trackId is a UUID here. Don't need to add unnecessary latency.
+// Master playlist, for ABR
+router.get('/:trackId/master.m3u8', (req, res) => {
     const { trackId } = req.params;
-    const quality = (req.query.quality as ValidQualities) || 'high';
+    const filepath = path.join(hlsRoot, trackId!, 'master.m3u8');
 
-    if (!isUUID(trackId!)) {
-        return res.status(422).json({
-            error: 'UNPROCESSABLE_ENTITY',
-            code: 'TRACK_002',
-            message: 'Track id must be a valid UUID'
-        });
-    }
-
-    const track = await db.query.tracks.findFirst({
-        where: eq(tracks.id, trackId!)
-    });
-
-    if (!track) {
+    if (!fs.existsSync(filepath)) {
         return res.status(404).json({
             error: 'NOT_FOUND',
-            code: 'TRACK_001',
-            message: 'Track not found'
+            code: 'STREAM_001',
+            message: "Playlist 'master' not found"
         });
     }
 
-    try {
-        const sourceQuality = getSourceQuality(track);
-        const requestedQuality = quality;
-        
-        const actualQuality = shouldDownsample(requestedQuality, sourceQuality) ? sourceQuality : requestedQuality;
-        
-        if (actualQuality !== requestedQuality) {
-            logger.info(`Quality ${requestedQuality} exceeds source at ${actualQuality}`);
-        }
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-        const storagePath = process.env.STORAGE_PATH || '/storage';
-        const originalPath = path.join(storagePath, 'originals', track.filename);
+    fs.createReadStream(filepath).pipe(res);
+});
 
-        // Build FFmpeg command based on quality
-        const ffmpegArgs = [
-            '-i', originalPath,
-            '-vn',
-            '-map', '0:a',
-            ...qualitySettings[actualQuality],
-            '-f', actualQuality === 'efficiency' || actualQuality === 'high' ? 'adts' : 'flac',
-            'pipe:1'
-        ];
+// Routes for individual qualities
+router.get('/:trackId/:quality/:filename.m3u8', (req, res) => {
+    const { trackId, quality, filename } = req.params;
+    const filepath = path.join(hlsRoot, trackId!, quality!, `${filename}.m3u8`);
 
-        const ffmpeg = spawn('ffmpeg', ffmpegArgs);
-
-        res.setHeader('Content-Type', qualityMimeTypes[actualQuality]);
-        res.setHeader('Accept-Ranges', 'none');
-        res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:5173');
-        res.setHeader('Cache-Control', 'no-cache');
-
-        ffmpeg.stdout.pipe(res);
-
-        ffmpeg.stderr.on('data', (data) => {
-            logger.debug(`FFmpeg: ${data.toString()}`);
-        });
-
-        ffmpeg.on('error', (err) => {
-            logger.error(`FFmpeg process error: ${err.message}`);
-            if (!res.headersSent) {
-                res.status(500).json({
-                    error: 'INTERNAL_SERVER_ERROR',
-                    message: 'Transcoding failed'
-                });
-            }
-        });
-
-        ffmpeg.on('close', (code) => {
-            if (code !== 0 && code !== null) {
-                logger.error(`FFmpeg exited with code ${code}`);
-            }
-        });
-
-        req.on('close', () => {
-            if (!ffmpeg.killed) {
-                ffmpeg.kill('SIGKILL');
-            }
-        });
-
-    } catch (err) {
-        logger.error(`(GET /api/stream) Unknown Error Occurred:\n${err}`);
-        return res.status(500).json({
-            error: 'INTERNAL_SERVER_ERROR',
-            message: 'Track streaming failed due to an internal error'
+    if (!fs.existsSync(filepath)) {
+        return res.status(404).json({
+            error: 'NOT_FOUND',
+            code: 'STREAM_001',
+            message: `Playlist '${quality}/${filename}' not found`
         });
     }
+
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    fs.createReadStream(filepath).pipe(res);
+});
+
+router.get('/:trackId/:quality/:segment', async (req, res) => {
+    const { trackId, quality, segment } = req.params;
+    const filepath = path.join(hlsRoot, trackId!, quality!, `${segment}`!);
+
+    if (!fs.existsSync(filepath)) {
+        return res.status(404).json({
+            error: 'NOT_FOUND',
+            code: 'STREAM_002',
+            message: `Track segment '${segment}' not found`
+        });
+    }
+
+    res.setHeader('Content-Type', segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Accept-Ranges', 'bytes');
+    
+    const stat = await fsp.stat(filepath);
+    res.setHeader('Content-Length', stat.size);
+
+    fs.createReadStream(filepath).pipe(res);
 });
 
 export default router;

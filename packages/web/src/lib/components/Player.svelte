@@ -4,6 +4,8 @@
     import type { Track, TrackMetadata, Quality, QualityInfo } from '$lib/types';
     import QualitySelector from './QualitySelector.svelte';
     import { apiGet, getStreamUrl, API_BASE_URL } from '$lib/api';
+    import { auth } from '$lib/stores/auth.svelte';
+    import Hls from 'hls.js';
 
     interface Props {
         track: Track;
@@ -13,36 +15,30 @@
     let { track, quality = $bindable() }: Props = $props();
 
     let audio: HTMLAudioElement;
+    let hls: Hls | null = null;
     let isPlaying = $state(false);
     let currentTime = $state(0);
     let duration = $state(0);
-    let progress = $derived(duration > 0 ? currentTime / duration : 0);
+    let isScrubbing = false;
+    let lastUpdate = 0;
     let loading = $state(false);
     let metadata = $state<TrackMetadata | null>(null);
+
+    let isAdaptive = $state(false);
 
     $effect(() => {
         console.log('Loading state changed:', loading);
     });
 
     let streamUrl = $state('');
-    
-    $effect(() => {
-        try {
-            console.log('Getting stream URL for track:', track.id, 'quality:', quality);
-            streamUrl = getStreamUrl(track.id, quality);
-            console.log('Stream URL generated:', streamUrl);
-        } catch (err) {
-            console.error('Failed to get stream URL:', err);
-            streamUrl = '';
-        }
-    });
 
     const qualityInfoMap: Record<Quality, QualityInfo> = {
+        auto: { label: 'Auto (ABR)', codec: 'Adaptive', bitrate: 'Varies' },
         efficiency: { label: 'Efficiency', codec: 'AAC', bitrate: '128k' },
         high: { label: 'High', codec: 'AAC', bitrate: '320k' },
         cd: { label: 'CD', codec: 'FLAC', sampleRate: '44.1kHz' },
         hires: { label: 'Hi-Res', codec: 'FLAC', sampleRate: 'Original' }
-    };
+    }
 
     let currentQualityInfo = $derived(qualityInfoMap[quality]);
 
@@ -65,7 +61,6 @@
             audio.pause();
         } else {
             loading = true;
-            // TODO: Handle playing a bit better (easing the volume).
             audio.play().catch(err => {
                 console.error('Play failed:', err);
                 loading = false;
@@ -83,9 +78,13 @@
     }
 
     function handleTimeUpdate() {
-        if (audio) {
-            currentTime = audio.currentTime;
-        }
+        if (!audio || isScrubbing) return;
+
+        const now = performance.now();
+        if (now - lastUpdate < 250) return;
+        lastUpdate = now;
+
+        currentTime = audio.currentTime;
     }
 
     function handleLoadedMetadata() {
@@ -110,10 +109,29 @@
         console.error('Stream URL:', streamUrl);
     }
 
-    function handleSeek(e: Event) {
+    function handleScrub(e: Event) {
         const target = e.target as HTMLInputElement;
-        if (audio) {
-            audio.currentTime = parseFloat(target.value);
+        const value = parseFloat(target.value);
+        isScrubbing = true;
+        currentTime = value;
+    }
+
+    function handleSeekCommit(e: Event) {
+        const target = e.target as HTMLInputElement;
+        const value = parseFloat(target.value);
+
+        if (!audio || isNaN(value)) return;
+
+        isScrubbing = false;
+
+        try {
+            audio.currentTime = value;
+            if (hls) {
+                hls.startLoad();
+            }
+        } catch (err) {
+            console.warn('Seek failed, retrying once...', err);
+            setTimeout(() => (audio.currentTime = value), 200);
         }
     }
 
@@ -123,13 +141,166 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    $effect(() => {
-        loadMetadata();
-        if (track && audio) {
+    // HLS
+    function loadHlsStream(url: string, useHlsjs: boolean) {
+        if (hls) {
+            hls.destroy();
+            hls = null;
+        }
+
+        if (audio) {
+            audio.pause();
+            audio.removeAttribute('src');
             audio.load();
-            isPlaying = false;
-            currentTime = 0;
-            duration = track.duration || 0;
+        }
+
+        const isHlsNativelySupported = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
+
+        if (useHlsjs && Hls.isSupported()) {
+            hls = new Hls({
+                lowLatencyMode: true,
+                /* maxBufferLength: 15,
+                maxMaxBufferLength: 30, */
+                xhrSetup: (xhr) => {
+                    console.log(auth.token);
+                    xhr.setRequestHeader('Authorization', `Bearer ${auth.token}`);
+                }
+            });
+            hls.attachMedia(audio);
+
+            hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+                console.log(`ABR switch to level index: ${data.level}`);
+            });
+
+            hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+                console.log('HLS media attached, loading manifest:', url);
+                hls?.loadSource(url);
+            });
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error('HLS Fatal Error:', data.details, data.error);
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.log('Trying to recover from network error...');
+                            hls?.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log('Trying to recover from media error...');
+                            hls?.recoverMediaError();
+                            break;
+                        default:
+                            hls?.destroy();
+                            loading = false;
+                            break;
+                    }
+                }
+            });
+        } else if (isHlsNativelySupported) {
+            console.log('Using native HLS support');
+            audio.src = url;
+            audio.load();
+        } else {
+            console.error('HLS is not supported in this environment.');
+            audio.src = '';
+        }
+    }
+
+    $effect(() => {
+        if (!track || !audio) return;
+
+        isAdaptive = quality === 'auto';
+        streamUrl = getStreamUrl(track.id, quality);
+        const museUseHlsJs = isAdaptive || !audio.canPlayType('application/vnd.apple.mpegurl');
+
+        console.log(`Loading Stream. Quality: ${quality}, Adaptive: ${isAdaptive}, URL: ${streamUrl}`);
+
+        loadHlsStream(streamUrl, museUseHlsJs);
+
+        isPlaying = false;
+        currentTime = 0;
+        duration = track.duration || 0;
+    });
+
+    $effect(() => {
+        if (track) loadMetadata();
+    });
+
+    $effect(() => {
+        return () => {
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+
+            if (audio) {
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+            }
+        }
+    });
+
+    // PWA metadata, like bluetooth control via car or speaker
+    function setupMediaSessionHandlers() {
+        if (!('mediaSession' in navigator) || !audio) return;
+
+        navigator.mediaSession.setActionHandler('pause' ,() => {
+            audio.pause();
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => {
+            audio.play();
+        });
+
+        navigator.mediaSession.setActionHandler('seekbackward', (event) => {
+            const skipTime = event.seekOffset || 10;
+            audio.currentTime = Math.max(audio.currentTime - skipTime, 0);
+        });
+
+        navigator.mediaSession.setActionHandler('seekforward', (event) => {
+            const skipTime = event.seekOffset || 10;
+            audio.currentTime = Math.min(audio.currentTime + skipTime, audio.duration);
+        });
+
+        navigator.mediaSession.setActionHandler('seekto', (event) => {
+            if (event.fastSeek && ('faskSeek' in audio)) {
+                audio.fastSeek(event.seekTime!);
+            } else {
+                audio.currentTime = event.seekTime!;
+            }
+        });
+    }
+
+    function updateMediaSessionMetadata() {
+        if (!('mediaSession' in navigator) || !track) return;
+
+        const title = metadata?.title || track.originalFilename || track.filename;
+        const artist = metadata?.artist || 'Unknown Artist';
+        const album = metadata?.album || '';
+
+        const artwork: MediaImage[] = track.coverArtPath ? [{
+            src: track.coverArtPath,
+            sizes: '512x512',
+            type: 'image/jpeg'
+        }] : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title,
+            artist,
+            album,
+            artwork
+        });
+    }
+
+    $effect(() => {
+        if (track) {
+            updateMediaSessionMetadata();
+        }
+    });
+
+    $effect(() => {
+        if (audio) {
+            setupMediaSessionHandlers();
         }
     });
 </script>
@@ -161,19 +332,22 @@
     <div class="qualityBadge">
         <strong>{currentQualityInfo.label}</strong>
         <div class="quality-details">
-            {currentQualityInfo.codec}
-            {#if currentQualityInfo.bitrate}
-                · {currentQualityInfo.bitrate}
-            {/if}
-            {#if currentQualityInfo.sampleRate}
-                · {currentQualityInfo.sampleRate}
+            {#if isAdaptive}
+                {currentQualityInfo.codec} · ABR Active
+            {:else}
+                {currentQualityInfo.codec}
+                {#if currentQualityInfo.bitrate}
+                    · {currentQualityInfo.bitrate}
+                {/if}
+                {#if currentQualityInfo.sampleRate}
+                    · {currentQualityInfo.sampleRate}
+                {/if}
             {/if}
         </div>
     </div>
 
     <audio
         bind:this={audio}
-        src={streamUrl}
         onplay={handlePlay}
         onpause={handlePause}
         ontimeupdate={handleTimeUpdate}
@@ -206,10 +380,20 @@
 
     <div class="progress">
         <div class="progress-container">
-        <md-linear-progress 
-            value={progress}
-            aria-label="Playback progress"
-        ></md-linear-progress>
+            <!--<md-linear-progress 
+                value={progress}
+                aria-label="Playback progress"
+            ></md-linear-progress> -->
+            <input
+                type="range"
+                min="0"
+                max={duration}
+                step="0.01"
+                value={currentTime}
+                oninput={handleScrub}
+                onchange={handleSeekCommit}
+                aria-label="Seek"
+            />
         </div>
         <div class="time">
             <span>{formatTime(currentTime)}</span>
@@ -336,7 +520,7 @@
         height: 8px;
     }
 
-    .progress-container md-linear-progress {
+    /* .progress-container md-linear-progress {
         width: 100%;
         height: 8px;
         border-radius: 4px;
@@ -346,6 +530,33 @@
         --md-linear-progress-track-color: var(--surface-color);
         --md-linear-progress-active-indicator-height: 8px;
         --md-linear-progress-active-indicator-color: var(--primary-color);
+    } */
+
+    .progress-container input[type="range"] {
+        width: 100%;
+        appearance: none;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--surface-color);
+        outline: none;
+        cursor: pointer;
+    }
+
+    .progress-container input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+    }
+
+    .progress-container input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
     }
 
     .time {

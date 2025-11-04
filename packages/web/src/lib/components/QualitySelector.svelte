@@ -11,6 +11,7 @@
     let { quality = $bindable(), metadata, trackId }: Props = $props();
 
     const qualities: { value: Quality; label: string; description: string }[] = [
+        { value: 'auto', label: 'Auto', description: 'Adaptive Bitrate' },
         { value: 'efficiency', label: 'Efficiency', description: 'AAC 128k' },
         { value: 'high', label: 'High', description: 'AAC 320k' },
         { value: 'cd', label: 'CD Quality', description: 'FLAC 44.1kHz' },
@@ -19,16 +20,15 @@
 
     let sourceQuality = $state<Quality>(quality);
     let availableQualities = $state<Quality[]>([]);
-    let preferredQuality = $state<Quality>(quality);
-    let isTemporarilyDowngraded = $state<boolean>(false);
 
     async function loadAvailableQualities() {
         try {
             const res = await apiGet(`/api/stream/${trackId}/quality`);
             if (res.ok) {
                 const data = await res.json();
-                sourceQuality = data.sourceQuality;
-                availableQualities = data.availableQualities;
+                sourceQuality = data.sourceQuality || 'auto';
+
+                availableQualities = data.availableQualities || [];
             }
         } catch (err) {
             console.error('Failed to load quality info:', err);
@@ -36,43 +36,21 @@
         }
     }
 
-    function findBestAvailableQuality(preferred: Quality): Quality {
-        const qualityOrder: Quality[] = ['hires', 'cd', 'high', 'efficiency'];
-        const preferredIndex = qualityOrder.indexOf(preferred);
-        
-        for (let i = preferredIndex; i < qualityOrder.length; i++) {
-            if (availableQualities.includes(qualityOrder[i])) {
-                return qualityOrder[i];
-            }
-        }
-        
-        return availableQualities[0] || 'efficiency';
-    }
-
-
     $effect(() => {
         if (trackId) {
-            loadAvailableQualities();
-        }
-    });
-
-    $effect(() => {
-        if (availableQualities.length > 0) {
-            if (!availableQualities.includes(preferredQuality)) {
-                const bestAvailable = findBestAvailableQuality(preferredQuality);
-                quality = bestAvailable;
-                isTemporarilyDowngraded = true;
-            } else {
-                if (isTemporarilyDowngraded && availableQualities.includes(preferredQuality)) {
-                    quality = preferredQuality;
-                    isTemporarilyDowngraded = false;
+            loadAvailableQualities().then(() => {
+                if (quality !== 'auto' && !availableQualities.includes(quality)) {
+                    quality = 'auto';
                 }
-            }
+            });
         }
     });
 
     function isQualityAvailable(q: Quality): boolean {
-        if (availableQualities.length === 0) return true;
+        if (q === 'auto') {
+            return availableQualities.length > 0;
+        }
+
         return availableQualities.includes(q);
     }
 
@@ -80,10 +58,16 @@
         if (q === sourceQuality) {
             return 'Source Quality';
         }
-        if (!isQualityAvailable(q)) {
+        if (q !== 'auto' && !isQualityAvailable(q)) {
             return 'Not available for this file';
         }
         return null;
+    }
+
+    function handleQualityClick(q: Quality) {
+        if (isQualityAvailable(q)) {
+            quality = q;
+        }
     }
 </script>
 
@@ -99,7 +83,7 @@
                 class:active={quality === q.value}
                 class:disabled={!available}
                 disabled={!available}
-                onclick={() => available && (quality = q.value)}
+                onclick={() => handleQualityClick(q.value)}
             >
                 <div class="label">
                     {q.label}

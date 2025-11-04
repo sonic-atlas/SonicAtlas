@@ -25,8 +25,7 @@ router.post('/', uploaderPerms, async (req, res) => {
             .insert(playlists)
             .values({
                 name,
-                description,
-                userId: req.user!.id
+                description
             })
             .returning();
 

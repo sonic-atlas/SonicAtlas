@@ -33,6 +33,7 @@
 		"vite": "^7.1.12"
 	},
 	"dependencies": {
-		"@material/web": "^2.4.1"
+		"@material/web": "^2.4.1",
+		"hls.js": "^1.6.14"
 	}
 }
