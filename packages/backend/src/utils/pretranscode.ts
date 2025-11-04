@@ -36,14 +36,20 @@ export async function generateHLS(trackId: string, inputFile: string) {
             '-hls_playlist_type', 'vod',
             ...(useFmp4 ? [
                 '-hls_segment_type', 'fmp4',
-                '-hls_fmp4_init_filename', path.join(qualityDir, 'init.m4a')
+                '-hls_fmp4_init_filename', 'init.m4a'
             ] : []),
-            '-hls_segment_filename', path.join(qualityDir, `segment_%04d.${useFmp4 ? 'm4s' : 'ts'}`),
-            playlistFile
+            '-hls_segment_filename', `segment_%04d.${useFmp4 ? 'm4s' : 'ts'}`,
+            `${quality}.m3u8`
         ];
 
         logger.debug(`Transcoding ${quality} for ${trackId} in directory: ${qualityDir}`);
-        const ffmpeg = spawn('ffmpeg', ffmpegArgs);
+        // set current working directory to qualityDir and use just the filename above
+        const ffmpeg = spawn('ffmpeg', ffmpegArgs, { cwd: qualityDir });
+
+        ffmpeg.stderr.on('data', (data) => {
+            logger.error(`FFmpeg [${quality}] stderr: ${data.toString()}`);
+        });
+
 
         await new Promise((resolve, reject) => {
             ffmpeg.on('close', (code) => {
