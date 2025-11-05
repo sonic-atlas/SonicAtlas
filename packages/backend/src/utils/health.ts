@@ -3,7 +3,7 @@ import { pgClient, /* redisClient, redisConnected */ } from '../../db/db.js';
 import { logger } from './logger.js';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {
-    const [pgStatus, redisStatus, transcoderStatus] = await Promise.all([checkPg(), checkRedis(), checkTranscoder()]);
+    const [pgStatus, /* redisStatus, */ transcoderStatus] = await Promise.all([checkPg(), /* checkRedis(), */ checkTranscoder()]);
     const allOk = pgStatus === 'ok' /* && redisStatus === 'ok' */ && transcoderStatus === 'ok' ? 'ok' : 'not ok';
     const httpStatus = allOk === 'ok' ? 200 : 503;
 
@@ -22,8 +22,7 @@ export async function healthRoute(req: Request, res: Response, next: NextFunctio
     });
 }
 
-async function checkRedis(): Promise<'ok' | 'not ok'> {
-    /*
+/* async function checkRedis(): Promise<'ok' | 'not ok'> {
     if (!redisConnected || !redisClient.isOpen) {
         return 'not ok';
     }
@@ -35,10 +34,9 @@ async function checkRedis(): Promise<'ok' | 'not ok'> {
             return 'ok';
         }
     } catch { }
-    */
 
     return 'not ok';
-}
+} */
 
 async function checkPg(): Promise<'ok' | 'not ok'> {
     try {

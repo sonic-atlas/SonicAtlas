@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../../db/db.js';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import { playlistItems, playlists } from '../../db/schema.js';
-import { sql, eq, and, count } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 

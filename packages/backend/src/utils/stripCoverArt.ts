@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process';
 import { logger } from './logger.js';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { $rootDir } from '@sonic-atlas/shared';
 
 export async function stripCoverArt(inputPath: string): Promise<string> {
     const ext = path.extname(inputPath);

@@ -9,16 +9,19 @@
     "packages/shared"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently \"npm run dev -w packages/web\" \"npm run dev -w packages/backend\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "start": "npm run dev",
     "db:migrate": "npm run db:migrate --workspace=packages/backend",
     "db:push": "npm run db:push --workspace=packages/backend",
-    "type-check": "npm run type-check --workspaces --if-present"
+    "check": "npm run check --workspaces --if-present"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
   }
 }

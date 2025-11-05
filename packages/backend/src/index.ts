@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
 import cors from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { $envPath, $rootDir } from '@sonic-atlas/shared';
+import { $envPath } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
 import compression from 'compression';
 import dotenv from 'dotenv';
@@ -134,7 +134,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     res.status(err.status || 500).json({ error: err.message });
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     const ip = getLocalIp();
     logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m

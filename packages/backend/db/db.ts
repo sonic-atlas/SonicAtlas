@@ -1,6 +1,5 @@
 // Drizzle & postgres
 import { drizzle } from 'drizzle-orm/postgres-js';
-import path from 'node:path';
 import postgres from 'postgres';
 import * as schema from './schema.js';
 import { $envPath } from '@sonic-atlas/shared';
