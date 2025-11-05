@@ -35,6 +35,11 @@
 		currentTrack = track;
 	}
 
+	function handleClosePlayer() {
+		console.log('Player error, closing player.');
+		currentTrack = null;
+	}
+
 	function handleLogout() {
 		auth.clearToken();
 		tracks = [];
@@ -67,7 +72,11 @@
 			<TrackList {tracks} onTrackSelect={handleTrackSelected} currentTrackId={currentTrack?.id} />
 
 			{#if currentTrack}
-				<Player track={currentTrack} bind:quality={selectedQuality} />
+				<Player
+					bind:track={currentTrack}
+					bind:quality={selectedQuality}
+					oncloseplayer={handleClosePlayer}
+				/>
 			{/if}
 		</div>
 	</main>
