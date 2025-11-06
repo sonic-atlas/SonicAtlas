@@ -10,29 +10,33 @@
 	interface Props {
 		track: Track;
 		quality: Quality;
+		oncloseplayer?: () => void;
 	}
 
-	let { track, quality = $bindable() }: Props = $props();
+	let { track = $bindable(), quality = $bindable(), oncloseplayer = $bindable() }: Props = $props();
 
 	let audio: HTMLAudioElement;
 	let hls: Hls | null = null;
-	let isPlaying = $state(false);
-	let currentTime = $state(0);
-	let duration = $state(0);
+	let isPlaying = $state<boolean>(false);
+	let currentTime = $state<number>(0);
+	let duration = $state<number>(0);
 	let isScrubbing = false;
 	let lastUpdate = 0;
-	let loading = $state(false);
+	let loading = $state<boolean>(false);
 	let metadata = $state<TrackMetadata | null>(null);
 
-	let isAdaptive = $state(false);
+	let isAdaptive = $state<boolean>(false);
 	let hoverTime = $state<number | null>(null);
 	let progressBarElement: HTMLDivElement;
+
+	let nativeHlsErrorCount = $state<number>(0);
+	const MAX_NATIVE_HLS_ERRORS = 2;
 
 	$effect(() => {
 		console.log('Loading state changed:', loading);
 	});
 
-	let streamUrl = $state('');
+	let streamUrl = $state<string>('');
 
 	const qualityInfoMap: Record<Quality, QualityInfo> = {
 		auto: { label: 'Auto (ABR)', codec: 'Adaptive', bitrate: 'Varies' },
@@ -105,10 +109,50 @@
 		loading = false;
 	}
 
+	function showErrorAndClose(message: string) {
+		console.error(`Fatal Playback Error: ${message}`);
+		alert(`Error: Playback failed.\n${message}`);
+
+		if (oncloseplayer) {
+			oncloseplayer();
+		}
+
+		if (hls) {
+			hls.destroy();
+			hls = null;
+		}
+		if (audio) {
+			audio.pause();
+			audio.removeAttribute('src');
+			audio.load();
+		}
+		isPlaying = false;
+		loading = false;
+	}
+
 	function handleError(e: Event) {
 		loading = false;
 		console.error('Audio error:', audio?.error);
 		console.error('Stream URL:', streamUrl);
+
+		const isHlsNativelySupported = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
+
+		if (!hls && isHlsNativelySupported && quality !== 'auto') {
+			nativeHlsErrorCount++;
+			console.warn(`Native HLS error count: ${nativeHlsErrorCount}`);
+
+			if (nativeHlsErrorCount >= MAX_NATIVE_HLS_ERRORS) {
+				console.error('Native HLS failed 2 times. Retrying with hls.js...');
+				loadHlsStream(streamUrl, true);
+			} else {
+				console.warn('Retrying native HLS load...');
+				setTimeout(() => audio.load(), 500);
+			}
+		} else if (hls) {
+			console.error('Media element error during hls.js playback.');
+		} else {
+			showErrorAndClose('Playback failed. HLS is not supported or an unknown error occurred.');
+		}
 	}
 
 	function handleScrub(e: Event) {
@@ -214,6 +258,7 @@
 		const isHlsNativelySupported = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
 
 		if (useHlsjs && Hls.isSupported()) {
+			console.log('Using hls.js for playback');
 			hls = new Hls({
 				lowLatencyMode: true,
 				/* maxBufferLength: 15,
@@ -247,28 +292,36 @@
 						default:
 							hls?.destroy();
 							loading = false;
+							showErrorAndClose(`Playback failed: ${data.details}`);
 							break;
 					}
 				}
 			});
-		} else if (isHlsNativelySupported) {
+		} else if (isHlsNativelySupported && !useHlsjs) {
 			console.log('Using native HLS support');
 			audio.src = url;
 			audio.load();
 		} else {
 			console.error('HLS is not supported in this environment.');
 			audio.src = '';
+			showErrorAndClose('HLS playback is not supported on this device.');
 		}
 	}
 
 	$effect(() => {
 		if (!track || !audio) return;
 
+		nativeHlsErrorCount = 0;
+
 		isAdaptive = quality === 'auto';
 		streamUrl = getStreamUrl(track.id, quality);
-		const museUseHlsJs = isAdaptive || !audio.canPlayType('application/vnd.apple.mpegurl');
 
-		console.log(`Loading Stream. Quality: ${quality}, Adaptive: ${isAdaptive}, URL: ${streamUrl}`);
+		const isHlsNativelySupported = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
+		const museUseHlsJs = isAdaptive || !isHlsNativelySupported;
+
+		console.log(
+			`Loading Stream. Quality: ${quality}, Adaptive: ${isAdaptive}, URL: ${streamUrl}, UseHlsJS: ${museUseHlsJs}, NativeSupport: ${isHlsNativelySupported}`
+		);
 
 		loadHlsStream(streamUrl, museUseHlsJs);
 
