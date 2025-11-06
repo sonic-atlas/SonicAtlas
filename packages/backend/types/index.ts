@@ -1,3 +1,4 @@
+/// <reference path="../../shared/types/env.d.ts" />
 import 'express';
 
 export interface JwtUser {

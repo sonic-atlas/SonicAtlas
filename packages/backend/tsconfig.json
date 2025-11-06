@@ -1,46 +1,50 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
+  // aka.ms/tsconfig
   "compilerOptions": {
-    // File Layout
-    // "rootDir": "./src",
     "outDir": "./dist",
 
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
+    // Environment
     "module": "nodenext",
+    "moduleResolution": "nodenext",
     "target": "esnext",
     "typeRoots": [
-        "types",
-        "./node_modules/@types",
-        "../shared/types"
+      // "types",
+      "./node_modules/@types",
+      "../shared/types"
     ],
-    "lib": ["esnext"],
+    "lib": [
+      "esnext"
+    ],
+    "esModuleInterop": true, // Also enables allowSyntheticDefaultImports
 
-    // Other Outputs
+    // Output
     "sourceMap": false,
     "declaration": true,
     "declarationMap": false,
+    "removeComments": true,
+    "newLine": "lf",
 
-    // Stricter Typechecking Options
+    // Type Safety
+    "strict": true,
+    "noImplicitAny": true,
+    // "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmitOnError": true,
 
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
+    // Behaviour/Performance
+    "incremental": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["db", "src"]
+  "include": [
+    "db",
+    "src",
+    "types"
+  ]
 }
