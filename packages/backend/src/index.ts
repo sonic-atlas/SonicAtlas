@@ -4,7 +4,7 @@ import fsp from 'node:fs/promises';
 import { getLocalIp } from './utils/ip.js';
 import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.js';
-import cors from 'cors';
+import cors, { type CorsOptions } from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { $envPath } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
@@ -13,15 +13,16 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
+const ip = getLocalIp();
 
 const app = express();
 app.disable('x-powered-by');
 
-const allowedOrigins = (process.env.CORS_ORIGIN ?? `http://localhost:5173,http://${getLocalIp()}:5173`)
+const allowedOrigins = (process.env.CORS_ORIGIN ?? `http://localhost:5173,http://${ip}:5173`)
     .split(',')
     .map(origin => origin.trim());
 
-const corsOptions = {
+const corsOptions: CorsOptions = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin) {
             return callback(null, true);
@@ -135,7 +136,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    const ip = getLocalIp();
     logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
 Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);

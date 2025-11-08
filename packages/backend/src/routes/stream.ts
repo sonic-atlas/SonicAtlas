@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { db } from '../../db/db.js';
-import { eq } from 'drizzle-orm';
+import { eq, type InferSelectModel } from 'drizzle-orm';
 import { tracks } from '../../db/schema.js';
 import path from 'node:path';
 import { isUUID } from '../utils/isUUID.js';
@@ -14,10 +14,10 @@ router.use(authMiddleware);
 
 type ValidQualities = 'efficiency' | 'high' | 'cd' | 'hires';
 
-const qualityHierarchy: ValidQualities[] = ['efficiency', 'high', 'cd', 'hires'];
+export const qualityHierarchy: ValidQualities[] = ['efficiency', 'high', 'cd', 'hires'];
 
 // Determine source quality based on track metadata
-function getSourceQuality(track: any): ValidQualities {
+export function getSourceQuality(track: InferSelectModel<typeof tracks>): ValidQualities {
     const format = track.format?.toLowerCase();
     const bitDepth = track.bitDepth;
     const sampleRate = track.sampleRate || 44100;

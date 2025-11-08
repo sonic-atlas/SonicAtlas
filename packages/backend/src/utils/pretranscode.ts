@@ -1,26 +1,35 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { $rootDir } from '@sonic-atlas/shared';
+import { $rootDir, type Quality } from '@sonic-atlas/shared';
 import { logger } from './logger.js';
+import type { InferSelectModel } from 'drizzle-orm';
+import type { tracks } from '../../db/schema.js';
+import { getSourceQuality, qualityHierarchy } from '../routes/stream.js';
 
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
 
-const qualities: Record<string, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
+const qualities: Record<Quality, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
     efficiency: { bitrate: '128k', codec: 'aac', maxRate: '128k', bufsize: '256k' },
     high: { bitrate: '320k', codec: 'aac', maxRate: '320k', bufsize: '640k' },
     cd: { codec: 'flac', sampleRate: '44100', audioBitrate: null },
     hires: { codec: 'flac', sampleRate: '96000', audioBitrate: null }
 }
 
-export async function generateHLS(trackId: string, inputFile: string) {
-    const outputDir = path.join(STORAGE_PATH, trackId);
+export async function generateHLS(track: InferSelectModel<typeof tracks>, inputFile: string) {
+    const outputDir = path.join(STORAGE_PATH, track.id);
     fs.mkdirSync(outputDir, { recursive: true });
 
     const variantPlaylists: string[] = [];
 
+    const sourceQuality = getSourceQuality(track);
+    const sourceIndex = qualityHierarchy.indexOf(sourceQuality);
+    const availableQualities = qualityHierarchy.slice(0, sourceIndex + 1);
+
     for (const [quality, opts] of Object.entries(qualities)) {
+        if (availableQualities.indexOf(quality as Quality) === -1) continue;
+
         const qualityDir = path.join(outputDir, quality);
         fs.mkdirSync(qualityDir, { recursive: true });
         const playlistFile = path.join(qualityDir, `${quality}.m3u8`);
@@ -42,7 +51,7 @@ export async function generateHLS(trackId: string, inputFile: string) {
             `${quality}.m3u8`
         ];
 
-        logger.debug(`Transcoding ${quality} for ${trackId} in directory: ${qualityDir}`);
+        logger.debug(`Transcoding ${quality} for ${track.id} in directory: ${qualityDir}`);
         // set current working directory to qualityDir and use just the filename above
         const ffmpeg = spawn('ffmpeg', ffmpegArgs, { cwd: qualityDir });
 

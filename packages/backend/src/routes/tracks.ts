@@ -181,7 +181,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             logger.info(`No cover art found in metadata for track ${trackInfo!.id}`);
         }
 
-        await generateHLS(trackInfo!.id, newPath);
+        await generateHLS(trackInfo!, newPath);
 
         return res.status(201).json({
             id: trackInfo!.id,
