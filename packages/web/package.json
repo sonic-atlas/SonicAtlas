@@ -1,39 +1,39 @@
 {
-	"name": "@sonic-atlas/web",
-	"version": "1.0.0",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"dev": "vite dev --host",
-		"build": "vite build",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
-	},
-	"devDependencies": {
-		"@eslint/compat": "^1.4.0",
-		"@eslint/js": "^9.38.0",
-		"@sveltejs/adapter-node": "^5.4.0",
-		"@sveltejs/kit": "^2.48.3",
-		"@sveltejs/vite-plugin-svelte": "^6.2.1",
-		"@types/node": "^24",
-		"eslint": "^9.38.0",
-		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-svelte": "^3.12.5",
-		"globals": "^16.4.0",
-		"prettier": "^3.6.2",
-		"prettier-plugin-svelte": "^3.4.0",
-		"svelte": "^5.43.0",
-		"svelte-check": "^4.3.3",
-		"typescript": "^5.9.3",
-		"typescript-eslint": "^8.46.2",
-		"vite": "^7.1.12"
-	},
-	"dependencies": {
-		"@material/web": "^2.4.1",
-		"hls.js": "^1.6.14"
-	}
+  "name": "@sonic-atlas/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "format": "prettier --write .",
+    "lint": "prettier --check . && eslint ."
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1.4.0",
+    "@eslint/js": "^9.38.0",
+    "@sveltejs/adapter-node": "^5.4.0",
+    "@sveltejs/kit": "^2.48.3",
+    "@sveltejs/vite-plugin-svelte": "^6.2.1",
+    "@types/node": "^24",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.12.5",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "svelte": "^5.43.0",
+    "svelte-check": "^4.3.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2",
+    "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "@material/web": "^2.4.1",
+    "hls.js": "^1.6.14"
+  }
 }
