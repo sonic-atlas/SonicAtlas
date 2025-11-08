@@ -17,7 +17,7 @@ const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const app = express();
 app.disable('x-powered-by');
 
-const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+const allowedOrigins = (process.env.CORS_ORIGIN ?? `http://localhost:5173,http://${getLocalIp()}:5173`)
     .split(',')
     .map(origin => origin.trim());
 

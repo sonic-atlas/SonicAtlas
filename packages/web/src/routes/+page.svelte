@@ -69,7 +69,11 @@
 		<UploadForm onUploaded={handleTrackUploaded} />
 
 		<div class="content">
-			<TrackList {tracks} onTrackSelect={handleTrackSelected} currentTrackId={currentTrack?.id} />
+			<TrackList
+				{tracks}
+				onTrackSelect={handleTrackSelected}
+				currentTrackId={currentTrack?.id}
+			/>
 
 			{#if currentTrack}
 				<Player

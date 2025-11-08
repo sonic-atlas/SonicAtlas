@@ -13,7 +13,11 @@
 		oncloseplayer?: () => void;
 	}
 
-	let { track = $bindable(), quality = $bindable(), oncloseplayer = $bindable() }: Props = $props();
+	let {
+		track = $bindable(),
+		quality = $bindable(),
+		oncloseplayer = $bindable()
+	}: Props = $props();
 
 	let audio: HTMLAudioElement;
 	let hls: Hls | null = null;
@@ -151,33 +155,9 @@
 		} else if (hls) {
 			console.error('Media element error during hls.js playback.');
 		} else {
-			showErrorAndClose('Playback failed. HLS is not supported or an unknown error occurred.');
-		}
-	}
-
-	function handleScrub(e: Event) {
-		const target = e.target as HTMLInputElement;
-		const value = parseFloat(target.value);
-		isScrubbing = true;
-		currentTime = value;
-	}
-
-	function handleSeekCommit(e: Event) {
-		const target = e.target as HTMLInputElement;
-		const value = parseFloat(target.value);
-
-		if (!audio || isNaN(value)) return;
-
-		isScrubbing = false;
-
-		try {
-			audio.currentTime = value;
-			if (hls) {
-				hls.startLoad();
-			}
-		} catch (err) {
-			console.warn('Seek failed, retrying once...', err);
-			setTimeout(() => (audio.currentTime = value), 200);
+			showErrorAndClose(
+				'Playback failed. HLS is not supported or an unknown error occurred.'
+			);
 		}
 	}
 
@@ -349,7 +329,7 @@
 		};
 	});
 
-	// PWA metadata, like bluetooth control via car or speaker
+	// Metadata, like control via bluetooth speaker
 	function setupMediaSessionHandlers() {
 		if (!('mediaSession' in navigator) || !audio) return;
 
@@ -390,9 +370,7 @@
 		const artwork: MediaImage[] = track.coverArtPath
 			? [
 					{
-						src: track.coverArtPath,
-						sizes: '512x512',
-						type: 'image/jpeg'
+						src: `${API_BASE_URL}${track.coverArtPath}`
 					}
 				]
 			: [];
@@ -405,6 +383,19 @@
 		});
 	}
 
+	function updatePositionState() {
+		if (!('setPositionState' in navigator.mediaSession) || !audio) return;
+
+		try {
+			navigator.mediaSession.setPositionState({
+				duration: audio.duration || 0,
+				position: audio.currentTime || 0
+			});
+		} catch (err) {
+			console.warn('Failed to update position state:', err);
+		}
+	}
+
 	$effect(() => {
 		if (track) {
 			updateMediaSessionMetadata();
@@ -414,6 +405,7 @@
 	$effect(() => {
 		if (audio) {
 			setupMediaSessionHandlers();
+			audio.addEventListener('timeupdate', updatePositionState);
 		}
 	});
 </script>
@@ -683,6 +675,37 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
+	.hoverTimeTooltip {
+		position: absolute;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: var(--surface-color);
+		color: var(--text-primary-color);
+		padding: 4px 8px;
+		border-radius: 4px;
+		font-size: 12px;
+		white-space: nowrap;
+		border: 1px solid var(--primary-color);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.hoverTimeTooltip::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 5px solid transparent;
+		border-top-color: var(--primary-color);
+	}
+
+	.time {
+		display: flex;
+		justify-content: space-between;
+		font-size: 12px;
+		color: var(--text-secondary-color);
+	}
 	.hoverTimeTooltip {
 		position: absolute;
 		bottom: 24px;

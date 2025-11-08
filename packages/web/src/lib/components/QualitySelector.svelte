@@ -8,7 +8,7 @@
 		metadata: TrackMetadata | null;
 		trackId: string;
 	}
-
+	// @ts-expect-error
 	let { quality = $bindable(), metadata, trackId }: Props = $props();
 
 	const qualities: { value: Quality; label: string; description: string }[] = [

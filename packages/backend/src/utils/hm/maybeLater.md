@@ -1,4 +1,4 @@
-// https://discord.com/channels/@me/1335710827403284550/1434019748638887978
+<!-- https://discord.com/channels/@me/1335710827403284550/1434019748638887978 -->
 
 **Option 1**
 *index.ts*
@@ -57,7 +57,7 @@ import path from 'node:path';
 import os from 'node:os';
 
 export const transcoderPool = new Piscina({
-    filename: path.resolve('./transcodeWorker.js),
+    filename: path.resolve('./transcodeWorker.js'),
     maxThreads: Math.max(1, os.cpus().length - 1) // Possibly use .env opt. This is max
 });
 ```
