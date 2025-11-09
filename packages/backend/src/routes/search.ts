@@ -15,7 +15,10 @@ router.get('/', authMiddleware, async (req, res) => {
 
         const pq = q.split(/\s+/).map(word => `${word}:*`).join(' & ');
 
-        const results = await preparedSearchQuery.execute({ q, pq });
+        const numLimit = Number(limit) || 50;
+        const numOffset = Number(offset) || 0;
+
+        const results = await preparedSearchQuery.execute({ q, pq, limit: numLimit, offset: numOffset });
 
         return res.json({ results, total: results.length, limit, offset });
     } catch (err) {
@@ -44,11 +47,11 @@ const preparedSearchQuery = db.query.trackMetadata.findMany({
         (
           ${trackMetadata.searchVector} @@ websearch_to_tsquery('english', ${sql.placeholder('q')})
           OR ${trackMetadata.searchVector} @@ to_tsquery('english', ${sql.placeholder('pq')})
-          OR track_metadata.title ILIKE '%' || ${sql.placeholder('q')} || '%'
-          OR track_metadata.artist ILIKE '%' || ${sql.placeholder('q')} || '%'
+          OR ${trackMetadata.title} ILIKE '%' || ${sql.placeholder('q')} || '%'
+          OR ${trackMetadata.artist} ILIKE '%' || ${sql.placeholder('q')} || '%'
         )
     `,
-    orderBy: sql`rank DEC`,
+    orderBy: sql`rank DESC`,
     limit: sql.placeholder('limit'),
     offset: sql.placeholder('offset')
 }).prepare('track_query_search');
