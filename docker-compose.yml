@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:18-bookworm
     container_name: sonic-db
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -9,78 +10,14 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./packages/backend/drizzle:/docker-entrypoint-initdb.d/migrations:ro
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - sonic-atlas-db:/var/lib/postgresql/data
     networks:
-      - sonic-network
-    restart: unless-stopped
-
-  backend:
-    container_name: sonic-backend
-    build:
-      context: .
-      dockerfile: packages/backend/Dockerfile
-    ports:
-      - '3000:3000'
-    environment:
-      NODE_ENV: production
-      BACKEND_PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      TRANSCODER_URL: http://transcoder:8000
-      STORAGE_PATH: /storage
-      SERVER_PASSWORD: ${SERVER_PASSWORD}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
-    volumes:
-      - ./storage:/storage
-    depends_on:
-      db:
-        condition: service_healthy
-      transcoder:
-        condition: service_started
-    networks:
-      - sonic-network
-    restart: unless-stopped
-
-  transcoder:
-    container_name: sonic-transcoder
-    build:
-      context: .
-      dockerfile: packages/transcoder/Dockerfile
-    ports:
-      - '8000:8000'
-    environment:
-      STORAGE_PATH: /storage
-      FFMPEG_PATH: /usr/bin/ffmpeg
-      MAX_CONCURRENT_TRANSCODES: ${MAX_CONCURRENT_TRANSCODES:-4}
-    volumes:
-      - ./storage:/storage
-    networks:
-      - sonic-network
-    restart: unless-stopped
-
-  web:
-    container_name: sonic-web
-    build:
-      context: .
-      dockerfile: packages/web/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
-    ports:
-      - '5173:5173'
-    depends_on:
-      - backend
-    networks:
-      - sonic-network
-    restart: unless-stopped
-
-networks:
-  sonic-network:
-    driver: bridge
+      - sonic-atlas-network
 
 volumes:
-  postgres-data:
+  sonic-atlas-db:
+    name: sonic-atlas-db
+
+networks:
+  sonic-atlas-network:
+    name: sonic-atlas-network

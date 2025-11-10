@@ -5,7 +5,10 @@ set -e
 source "$(dirname "$0")/utils/colors.sh"
 
 BUILD_FLAG=false
-INSTALL_FLAG=false
+DB_FLAG=false
+DEV_FLAG=false
+DB_GUI_FLAG=false
+RESET_DB_FLAG=false
 
 # flags
 while [[ $# -gt 0 ]]; do
@@ -15,18 +18,32 @@ while [[ $# -gt 0 ]]; do
             echo "Option --build was set. Forcing rebuild..."
             shift
             ;;
-        -i|--install)
-            INSTALL_FLAG=true
-            echo "Option --install was set. Will install dependencies..."
+        --db)
+            DB_FLAG=true
+            shift
+            ;;
+        --dev)
+            DEV_FLAG=true
+            shift
+            ;;
+        --db-gui)
+            DB_GUI_FLAG=true
+            shift
+            ;;
+        --reset-db)
+            RESET_DB_FLAG=true
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [--build] [--install]"
+            echo "Usage: $0 [--db] [--dev] [--reset-db] [--build]"
             echo ""
             echo "Options:"
-            echo "  -b, --build    Build before running"
-            echo "  -i, --install  Install dependencies in containers"
-            echo "  -h, --help     Show this help message"
+            echo "  --db         Start only the database container"
+            echo "  --dev        Start dev servers with npm (not Docker)"
+            echo "  --db-gui     Start drizzle-studio for database"
+            echo "  --reset-db   Reset and rebuild the database container (for breaking changes)"
+            echo "  -b, --build  Build before running"
+            echo "  -h, --help   Show this help message"
             exit 0
             ;;
         *)
@@ -39,43 +56,38 @@ done
 
 echo "Starting Sonic Atlas in development mode..."
 
-if [ ! -f .env ]; then
-    echo ".env file not found. Copying from .env.example..."
-    cp .env.example .env
-    echo "Created .env - please edit it with your settings"
-    exit 1
-fi
-
-mkdir -p storage/{originals,cache,metadata}
-
-if $INSTALL_FLAG; then
-    echo -e "${BLUE}Installing dependencies in containers...${NC}"
-    
-    docker compose -f docker-compose.dev.yml up -d
-    
-    echo -e "${BLUE}Installing web dependencies...${NC}"
-    docker compose -f docker-compose.dev.yml exec web npm install
-    
-    echo -e "${BLUE}Installing backend dependencies...${NC}"
-    docker compose -f docker-compose.dev.yml exec backend sh -c "cd /app/packages/backend && npm install"
-    
-    echo -e "${GREEN}Dependencies installed successfully!${NC}"
-    echo -e "${YELLOW}Restarting containers...${NC}"
-    
-    docker compose -f docker-compose.dev.yml restart web backend
-    
-    docker compose -f docker-compose.dev.yml logs -f
-    
+if $RESET_DB_FLAG; then
+    echo -e "${YELLOW}Resetting database container...${NC}"
+    docker compose -f docker-compose.dev.yml stop db
+    docker compose -f docker-compose.dev.yml rm -f db
+    docker volume rm sonicatlas_postgres-data-dev || true
+    echo -e "${BLUE}Rebuilding database container...${NC}"
+    docker compose -f docker-compose.dev.yml up -d --build db
+    echo -e "${GREEN}Database container reset and rebuilt!${NC}"
     exit 0
 fi
 
-DOCKER_COMPOSE_COMMAND="docker compose -f docker-compose.dev.yml up"
-
-if $BUILD_FLAG; then
-    DOCKER_COMPOSE_COMMAND="docker compose -f docker-compose.dev.yml up --build"
+if $DB_FLAG; then
+    echo -e "${BLUE}Starting only the database container...${NC}"
+    docker compose -f docker-compose.dev.yml up db
+    exit 0
 fi
 
-$DOCKER_COMPOSE_COMMAND
+if $DEV_FLAG; then
+    echo -e "${BLUE}Starting dev servers with npm (not Docker)...${NC}"
+    npm run dev
+    exit 0
+fi
+
+if $DB_GUI_FLAG; then
+    echo -e "${BLUE}Starting drizzle-studio for database...${NC}"
+    npm run db:studio -w @sonic-atlas/backend
+    exit 0
+fi
+
+if $BUILD_FLAG; then
+   docker compose -f docker-compose.dev.yml up --build
+fi
 
 echo "Sonic Atlas is running!"
 echo "Web: http://localhost:5173"
