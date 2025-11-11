@@ -6,6 +6,7 @@ import { logger } from './logger.js';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { tracks } from '../../db/schema.js';
 import { getSourceQuality, qualityHierarchy } from '../routes/stream.js';
+import { socket } from '../index.js';
 
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
@@ -17,7 +18,7 @@ const qualities: Record<Quality, { bitrate?: string, codec: string, maxRate?: st
     hires: { codec: 'flac', sampleRate: '96000', audioBitrate: null }
 }
 
-export async function generateHLS(track: InferSelectModel<typeof tracks>, inputFile: string) {
+export async function generateHLS(track: InferSelectModel<typeof tracks>, inputFile: string, socketRoom?: string) {
     const outputDir = path.join(STORAGE_PATH, track.id);
     fs.mkdirSync(outputDir, { recursive: true });
 
@@ -52,8 +53,27 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
         ];
 
         logger.debug(`Transcoding ${quality} for ${track.id} in directory: ${qualityDir}`);
+        if (socketRoom) {
+            socket.io.to(socketRoom).emit('startTranscode', {
+                id: track.id,
+                quality
+            });
+        }
+
         // set current working directory to qualityDir and use just the filename above
         const ffmpeg = spawn('ffmpeg', ffmpegArgs, { cwd: qualityDir });
+
+        ffmpeg.stderr.on('data', (data) => {
+            const line = data.toString();
+            const match = line.match(/time=(\d+:\d+:\d+\.\d+)/);
+            if (match && socketRoom) {
+                socket.io.to(socketRoom).emit('transcodeProgress', {
+                    id: track.id,
+                    quality,
+                    time: match[1]
+                });
+            }
+        });
 
         await new Promise((resolve, reject) => {
             ffmpeg.on('close', (code) => {
@@ -72,6 +92,13 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
         }
 
         variantPlaylists.push(playlistFile);
+
+        if (socketRoom) {
+            socket.io.to(socketRoom).emit('finishTranscode', {
+                id: track.id,
+                quality
+            });
+        }
     }
 
     const masterFile = path.join(outputDir, 'master.m3u8');
@@ -84,4 +111,10 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
     }).join('\n');
 
     fs.writeFileSync(masterFile, `#EXTM3U\n${masterContent}\n`);
+
+    if (socketRoom) {
+        socket.io.to(socketRoom).emit('finishAllTranscodes', {
+            id: track.id
+        });
+    }
 }

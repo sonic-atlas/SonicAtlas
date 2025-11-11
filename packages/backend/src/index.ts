@@ -9,6 +9,8 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { $envPath } from '@sonic-atlas/shared';
 import { logger } from './utils/logger.js';
 import compression from 'compression';
+import http from 'node:http';
+import { SocketServer } from './socket/ws.js';
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
 
@@ -48,7 +50,7 @@ app.use(express.json({
     limit: '10mb',
     type: ['application/json'],
     verify: (req) => {
-        if (req.url?.startsWith('/api/stream') || req.url?.startsWith('/hls')) {
+        if ((req.url?.startsWith('/api/stream') && !req.url?.endsWith('/quality')) || req.url?.startsWith('/hls')) {
             throw new Error('Skip body parsing for stream');
         }
     },
@@ -128,15 +130,26 @@ async function loadRoutes(dir: string) {
     }));
 }
 
-await loadRoutes(apiDir);
+const server = http.createServer(app);
+export const socket = new SocketServer(server);
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    logger.error(`Error: ${err.message}`);
-    res.status(err.status || 500).json({ error: err.message });
-});
+async function main() {
+    await loadRoutes(apiDir);
+    socket.setupSocket();
 
-app.listen(PORT, '0.0.0.0', () => {
-    logger.info(`Server is running at:
+    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+        logger.error(`Error: ${err.message}`);
+        res.status(err.status || 500).json({ error: err.message });
+    });
+
+    server.listen(PORT, '0.0.0.0', () => {
+        logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
 Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
+    });
+}
+
+main().catch((err) => {
+    logger.error(`Startup failed: ${err}`);
+    process.exit(1);
 });

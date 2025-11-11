@@ -1,12 +1,12 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
-import { db } from '../../db/db.js';
+import { db } from '$db/db.js';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { playlistItems, trackMetadata, tracks } from '../../db/schema.js';
+import { playlistItems, trackMetadata, tracks } from '$db/schema.js';
 import { parseFile } from 'music-metadata';
-import { eq, type InferSelectModel } from 'drizzle-orm';
+import { eq, type InferSelectModel, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
             with: {
                 metadata: true
             },
-            orderBy: (tracks, { desc }) => [desc(tracks.uploadedAt)]
+            orderBy: (tracks) => [desc(tracks.uploadedAt)]
         });
 
         return res.json(allTracks);
@@ -84,6 +84,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             message: 'File exceeds 500MB limit'
         });
     }
+
+    const { socketId } = req.body;
 
     let filename;
     let fileRenamed = false;
@@ -181,7 +183,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             logger.info(`No cover art found in metadata for track ${trackInfo!.id}`);
         }
 
-        await generateHLS(trackInfo!, newPath);
+        await generateHLS(trackInfo!, newPath, socketId);
 
         return res.status(201).json({
             id: trackInfo!.id,
