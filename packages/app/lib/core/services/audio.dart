@@ -57,17 +57,23 @@ class AudioService with ChangeNotifier {
         }
       });
 
-      print('AudioService initialized (media_kit)');
+      if (kDebugMode) {
+        print('AudioService initialized (media_kit)');
+      }
     } catch (e, stackTrace) {
-      print('Error initializing AudioService: $e');
-      print('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('Error initializing AudioService: $e');
+        print('Stack trace: $stackTrace');
+      }
     }
   }
 
   void _onSettingsChanged() async {
     final newQuality = _settingsService.audioQuality;
     if (newQuality != _currentTrackQuality && _currentTrack != null) {
-      print('Quality setting changed to: ${newQuality.value}');
+      if (kDebugMode) {
+        print('Quality setting changed to: ${newQuality.value}');
+      }
     }
     notifyListeners();
   }
@@ -95,14 +101,18 @@ class AudioService with ChangeNotifier {
         for (int i = desiredIndex; i < qualityOrder.length; i++) {
           if (availableQualities.contains(qualityOrder[i])) {
             selectedQuality = qualityOrder[i];
-            print('Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}');
+            if (kDebugMode) {
+              print('Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}');
+            }
             break;
           }
         }
 
         if (selectedQuality == null && availableQualities.isNotEmpty) {
           selectedQuality = availableQualities.first;
-          print('Using fallback quality: ${selectedQuality.value}');
+          if (kDebugMode) {
+            print('Using fallback quality: ${selectedQuality.value}');
+          }
         }
       }
 
@@ -115,9 +125,11 @@ class AudioService with ChangeNotifier {
       final url = _apiService.getStreamUrl(track.id, selectedQuality);
       final token = _authService.token;
 
-      print('Playing: ${track.title}');
-      print('Stream URL: $url');
-      print('Quality: ${selectedQuality.value}');
+      if (kDebugMode) {
+        print('Playing: ${track.title}');
+        print('Stream URL: $url');
+        print('Quality: ${selectedQuality.value}');
+      }
 
       await _player.open(
         media_kit.Media(url, httpHeaders: {'Authorization': 'Bearer $token'}),
@@ -138,8 +150,10 @@ class AudioService with ChangeNotifier {
 
       notifyListeners();
     } catch (e, stackTrace) {
-      print('Error playing track: $e');
-      print('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('Error playing track: $e');
+        print('Stack trace: $stackTrace');
+      }
       rethrow;
     }
   }

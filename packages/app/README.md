@@ -1,6 +1,6 @@
 # sonic_atlas
 
-SonicAtals Flutter app
+SonicAtlas Flutter app
 
 ## Getting Started
 

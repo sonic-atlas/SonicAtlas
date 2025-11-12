@@ -38,29 +38,35 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ),
-            ...Quality.values.map((quality) {
-              final info = quality.info;
-              final isSelected = settings.audioQuality == quality;
+            RadioGroup<Quality>(
+              groupValue: settings.audioQuality,
+              onChanged: (Quality? value) {
+                if (value != null) {
+                  settings.setAudioQuality(value);
+                }
+              },
+              child: Column(
+                children: <Widget>[
+                  ...Quality.values.map((quality) {
+                    final info = quality.info;
+                    final isSelected = settings.audioQuality == quality;
 
-              return RadioListTile<Quality>(
-                title: Text(info.label),
-                subtitle: Text(
-                  info.bitrate != null
+                    return RadioListTile<Quality>(
+                      title: Text(info.label),
+                      subtitle: Text(
+                      info.bitrate != null
                       ? '${info.codec} • ${info.bitrate}'
-                      : info.sampleRate != null
+                          : info.sampleRate != null
                       ? '${info.codec} • ${info.sampleRate}'
-                      : info.codec,
-                ),
-                value: quality,
-                groupValue: settings.audioQuality,
-                selected: isSelected,
-                onChanged: (Quality? value) {
-                  if (value != null) {
-                    settings.setAudioQuality(value);
-                  }
-                },
-              );
-            }),
+                          : info.codec,
+                      ),
+                      value: quality,
+                      selected: isSelected
+                    );
+                  })
+                ]
+              )
+            ),
             const Divider(),
             ListTile(
               title: const Text('Log Out'),

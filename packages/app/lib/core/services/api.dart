@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '/core/models/quality.dart';
@@ -44,7 +45,9 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      print('Login error: $e');
+      if (kDebugMode) {
+        print('Login error: $e');
+      }
       return false;
     }
   }
@@ -62,7 +65,9 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Get tracks error: $e');
+      if (kDebugMode) {
+        print('Get tracks error: $e');
+      }
       return [];
     }
   }
@@ -99,7 +104,9 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Search tracks error: $e');
+      if (kDebugMode) {
+        print('Search tracks error: $e');
+      }
       return [];
     }
   }
@@ -132,7 +139,9 @@ class ApiService {
         'availableQualities': Quality.values.toList(),
       };
     } catch (e) {
-      print('Get track quality error: $e');
+      if (kDebugMode) {
+        print('Get track quality error: $e');
+      }
       return {
         'sourceQuality': Quality.cd,
         'availableQualities': Quality.values.toList(),

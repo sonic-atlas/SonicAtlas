@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -71,7 +72,9 @@ class _SearchPageState extends State<SearchPage> {
         limit: _pageSize,
         offset: offset,
       );
-      print('Search results for "$query" (offset $offset): $results');
+      if (kDebugMode) {
+        print('Search results for "$query" (offset $offset): $results');
+      }
 
       setState(() {
         if (append) {

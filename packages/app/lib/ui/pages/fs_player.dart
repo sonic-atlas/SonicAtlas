@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -62,7 +63,9 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
         });
       }
     } catch (e) {
-      print('Error loading quality info: $e');
+      if (kDebugMode) {
+        print('Error loading quality info: $e');
+      }
       if (mounted) {
         setState(() {
           _availableQualities = Quality.values.toList();
@@ -115,90 +118,95 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                       ),
                     ],
                     const SizedBox(height: 16),
+                    RadioGroup<Quality>(
+                      groupValue: selectedQuality,
+                      onChanged: (value) {
+                        if (value != null && _isQualityAvailable(value)) {
+                          settingsService.setAudioQuality(value);
+                          setModalState(() {});
+                        } else {
+                          null;
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          ...Quality.values.map((quality) {
+                            final isAvailable = _isQualityAvailable(quality);
+                            final isSource =
+                                quality == _sourceQuality && quality != Quality.auto;
+                            final isSelected = quality == selectedQuality;
+                            final info = quality.info;
 
-                    ...Quality.values.map((quality) {
-                      final isAvailable = _isQualityAvailable(quality);
-                      final isSource =
-                          quality == _sourceQuality && quality != Quality.auto;
-                      final isSelected = quality == selectedQuality;
-                      final info = quality.info;
-
-                      return ListTile(
-                        enabled: isAvailable,
-                        leading: Radio<Quality>(
-                          value: quality,
-                          groupValue: selectedQuality,
-                          onChanged: isAvailable
-                              ? (value) {
-                                  if (value != null) {
-                                    settingsService.setAudioQuality(value);
-                                    setModalState(() {});
-                                  }
-                                }
-                              : null,
-                        ),
-                        title: Row(
-                          children: [
-                            Text(
-                              info.label,
-                              style: TextStyle(
-                                fontWeight: isSelected ? FontWeight.bold : null,
-                                color: isAvailable
-                                    ? (isSelected
+                            return ListTile(
+                              enabled: isAvailable,
+                              leading: Radio<Quality>(
+                                value: quality,
+                              ),
+                              title: Row(
+                                children: [
+                                  Text(
+                                    info.label,
+                                    style: TextStyle(
+                                      fontWeight: isSelected ? FontWeight.bold : null,
+                                      color: isAvailable
+                                          ? (isSelected
                                           ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
+                                        context,
+                                      ).colorScheme.primary
                                           : null)
-                                    : Theme.of(context).disabledColor,
-                              ),
-                            ),
-                            if (isSource) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'Source',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSecondary,
+                                          : Theme.of(context).disabledColor,
+                                    ),
                                   ),
+                                  if (isSource) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.secondary,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'Source',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              subtitle: Text(
+                                info.bitrate != null
+                                    ? '${info.codec} • ${info.bitrate}'
+                                    : info.sampleRate != null
+                                    ? '${info.codec} • ${info.sampleRate}'
+                                    : info.codec,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isAvailable
+                                      ? Theme.of(context).textTheme.bodySmall?.color
+                                      : Theme.of(context).disabledColor,
                                 ),
                               ),
-                            ],
-                          ],
-                        ),
-                        subtitle: Text(
-                          info.bitrate != null
-                              ? '${info.codec} • ${info.bitrate}'
-                              : info.sampleRate != null
-                              ? '${info.codec} • ${info.sampleRate}'
-                              : info.codec,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isAvailable
-                                ? Theme.of(context).textTheme.bodySmall?.color
-                                : Theme.of(context).disabledColor,
-                          ),
-                        ),
-                        onTap: isAvailable
-                            ? () {
+                              onTap: isAvailable
+                                  ? () {
                                 settingsService.setAudioQuality(quality);
                                 setModalState(() {});
                               }
-                            : null,
-                      );
-                    }),
+                                  : null,
+                            );
+                          }),
+                        ]
+                      )
+                    ),
 
                     if (qualityChanged) ...[
                       const SizedBox(height: 16),
