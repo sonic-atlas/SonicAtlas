@@ -68,6 +68,29 @@ class SettingsPage extends StatelessWidget {
               )
             ),
             const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Text(
+                'Other',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              )
+            ),
+            ListTile(
+              title: const Text('Discord RPC'),
+              subtitle: const Text('Enable Discord Rich Presence'),
+              trailing: Switch(
+                value: settings.discordRPCEnabled,
+                onChanged: (value) {
+                  settings.setDiscordRPCEnabled(value);
+                },
+              ),
+            ),
+            const Divider(),
             ListTile(
               title: const Text('Log Out'),
               onTap: () {

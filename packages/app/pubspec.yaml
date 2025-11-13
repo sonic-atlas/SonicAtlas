@@ -30,6 +30,7 @@ dependencies:
   provider: ^6.1.5
   shared_preferences: ^2.5.3
   cupertino_icons: ^1.0.8
+  discord_rich_presence: ^1.1.1
 
 dev_dependencies:
   flutter_test:

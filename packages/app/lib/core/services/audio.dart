@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as media_kit;
 
@@ -42,6 +44,15 @@ class AudioService with ChangeNotifier {
     _init();
     _settingsService.addListener(_onSettingsChanged);
   }
+
+  static final _playTrackController = StreamController<models.Track>.broadcast();
+  static final _playController = StreamController<AudioService>.broadcast();
+  static final _pauseController = StreamController<AudioService>.broadcast();
+  static final _seekController = StreamController<Duration>.broadcast();
+  static Stream<models.Track> get onPlayTrack => _playTrackController.stream;
+  static Stream<AudioService> get onPlay => _playController.stream;
+  static Stream<AudioService> get onPause => _pauseController.stream;
+  static Stream<Duration> get onSeek => _seekController.stream;
 
   Future<void> _init() async {
     try {
@@ -148,6 +159,7 @@ class AudioService with ChangeNotifier {
         _currentIndex = 0;
       }
 
+      _playTrackController.add(track);
       notifyListeners();
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -206,16 +218,20 @@ class AudioService with ChangeNotifier {
 
   void play() {
     _player.play();
+    _playController.add(this);
     notifyListeners();
   }
 
   void pause() {
     _player.pause();
+    _pauseController.add(this);
     notifyListeners();
   }
 
   void seek(Duration position) {
     _player.seek(position);
+    _seekController.add(position);
+    notifyListeners();
   }
 
   Future<void> restartCurrentTrack() async {

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/services/api.dart';
 import 'core/services/audio.dart';
 import 'core/services/auth.dart';
+import 'core/services/discord.dart';
 import 'core/services/settings.dart';
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
@@ -23,11 +24,15 @@ void main() async {
   final authService = AuthService();
   await authService.init();
 
+  final discordService = DiscordService(settingsService);
+  await discordService.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsService),
         ChangeNotifierProvider.value(value: authService),
+        ChangeNotifierProvider.value(value: discordService),
 
         ProxyProvider2<SettingsService, AuthService, ApiService>(
           update: (context, settings, auth, previous) =>
@@ -43,7 +48,7 @@ void main() async {
           create: (context) => AudioService(
             context.read<ApiService>(),
             context.read<AuthService>(),
-            context.read<SettingsService>(),
+            context.read<SettingsService>()
           ),
           update: (context, api, auth, settings, previous) =>
               previous ?? AudioService(api, auth, settings),
