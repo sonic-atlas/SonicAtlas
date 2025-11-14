@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as media_kit;
+import 'package:sonic_atlas/core/services/media_handler.dart';
 
 import '../models/quality.dart';
 import '../models/track.dart' as models;
@@ -11,10 +12,12 @@ import 'settings.dart';
 
 class AudioService with ChangeNotifier {
   final media_kit.Player _player;
-
+  media_kit.Player get player => _player;
+  
   final ApiService _apiService;
   final AuthService _authService;
   final SettingsService _settingsService;
+  late final MediaSessionHandler _audioHandler;
 
   models.Track? _currentTrack;
   models.Track? get currentTrack => _currentTrack;
@@ -53,6 +56,20 @@ class AudioService with ChangeNotifier {
   static Stream<AudioService> get onPlay => _playController.stream;
   static Stream<AudioService> get onPause => _pauseController.stream;
   static Stream<Duration> get onSeek => _seekController.stream;
+
+  static AudioService create(ApiService api, AuthService auth, SettingsService settings) {
+    return AudioService._internal(api, auth, settings);
+  }
+
+  AudioService._internal(this._apiService, this._authService, this._settingsService)
+      : _player = media_kit.Player() {
+    _init();
+    _settingsService.addListener(_onSettingsChanged);
+  }
+
+  void setAudioHandler(MediaSessionHandler handler) {
+    _audioHandler = handler;
+  }
 
   Future<void> _init() async {
     try {
@@ -158,6 +175,9 @@ class AudioService with ChangeNotifier {
         _queue = [track];
         _currentIndex = 0;
       }
+
+      String albumArtUri = _apiService.getAlbumArtUrl(track.id);
+      _audioHandler.updateItem(track, albumArtUri);
 
       _playTrackController.add(track);
       notifyListeners();

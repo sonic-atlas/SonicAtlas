@@ -69,6 +69,8 @@ class _LoginPageState extends State<LoginPage> {
                   labelText: 'Server Password',
                   border: OutlineInputBorder(),
                 ),
+                textInputAction: TextInputAction.go,
+                onSubmitted: (_) => _login(),
               ),
               const SizedBox(height: 24),
               if (_isLoading)

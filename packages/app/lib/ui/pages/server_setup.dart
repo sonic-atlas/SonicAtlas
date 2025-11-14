@@ -44,6 +44,8 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
                   hintText: 'e.g., 192.168.1.100',
                 ),
                 keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.go,
+                onSubmitted: (_) => _saveServerIp(),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
