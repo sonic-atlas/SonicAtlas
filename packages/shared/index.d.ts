@@ -22,10 +22,16 @@ declare module '@sonic-atlas/shared' {
     // API Types
     export interface Track {
         id: string;
-        fileName: string;
+        filename: string;
+        originalFilename: string;
         fileSize: number;
         uploadedAt: string;
-        uploadedBy: string;
+        coverArtPath?: string;
+        format?: string;
+        duration?: number;
+        sampleRate?: number;
+        bitDepth?: number;
+        metadata?: TrackMetadata;
     }
 
     export interface TrackMetadata {
@@ -36,14 +42,17 @@ declare module '@sonic-atlas/shared' {
         album?: string;
         year?: number;
         genre?: string;
+        genres?: string[];
         duration?: number;
         bitrate?: number;
         sampleRate?: number;
+        bitDepth?: number;
         channels?: number;
         codec?: string;
+        sourceQuality?: 'efficiency' | 'high' | 'cd' | 'hires';
     }
 
-    export type Quality = 'efficiency' | 'high' | 'cd' | 'hires';
+    export type Quality = 'auto' | 'efficiency' | 'high' | 'cd' | 'hires';
 
     export interface QualityInfo {
         label: string;
@@ -57,4 +66,5 @@ declare module '@sonic-atlas/shared' {
         code?: string;
         message: string;
     }
+
 }
