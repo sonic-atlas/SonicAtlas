@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:discord_rich_presence/discord_rich_presence.dart';
 import 'package:flutter/foundation.dart';
@@ -70,7 +71,7 @@ class DiscordService with ChangeNotifier {
   }
 
   Future<void> init() async {
-    if (!isEnabled) return;
+    if (!isEnabled || Platform.isAndroid || Platform.isIOS) return;
 
     await client.connect().then((_) {
       if (kDebugMode) {
