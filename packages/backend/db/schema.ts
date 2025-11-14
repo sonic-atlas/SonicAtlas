@@ -8,14 +8,17 @@ import {
     pgTable,
     text,
     timestamp,
+    uniqueIndex,
     uuid
 } from 'drizzle-orm/pg-core';
 
 export const trackFormatEnum = pgEnum('track_format_enum', ['flac', 'mp3', 'wav', 'aac']);
 
+/* No longer used along with tables and relations below
 export const transcodeJobsStatusEnum = pgEnum('transcode_jobs_status_enum', ['queued', 'transcoding', 'completed', 'failed']);
 
 export const cacheEntriesQualityEnum = pgEnum('cache_entries_quality_enum', ['efficiency', 'high', 'cd', 'hires']);
+*/
 
 const tsvector = customType<{ data: string; notNull: false; default: false }>({
     dataType() {
@@ -36,12 +39,23 @@ export const tracks = pgTable('tracks', {
     uploadedAt: timestamp('uploaded_at').defaultNow()
 });
 
+export const albums = pgTable('albums', {
+  id: uuid().defaultRandom().primaryKey(),
+  title: text().notNull(),
+  artist: text(),
+  year: integer(),
+  coverArt: text(),
+  createdAt: timestamp().defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('album_unique_idx').on(table.title, table.artist),
+]);
+
 export const trackMetadata = pgTable('track_metadata', {
     id: uuid().defaultRandom().primaryKey(),
-    trackId: uuid('track_id').references(() => tracks.id),
+    trackId: uuid('track_id').references(() => tracks.id, { onDelete: 'set null' }),
     title: text(),
     artist: text(),
-    album: text(),
+    albumId: uuid('album_id').references(() => albums.id, { onDelete: 'set null' }),
     year: integer(),
     genres: text().array(),
     bitrate: integer(),
@@ -49,6 +63,7 @@ export const trackMetadata = pgTable('track_metadata', {
     searchVector: tsvector('search_vector')
 });
 
+/*
 export const cacheEntries = pgTable('cache_entries', {
     id: uuid().defaultRandom().primaryKey(),
     trackId: uuid('track_id').references(() => tracks.id),
@@ -61,6 +76,7 @@ export const cacheEntries = pgTable('cache_entries', {
 }, (table) => [
     index('cache_entries_track_id_quality_idx').on(table.trackId, table.quality)
 ]);
+*/
 
 export const playlists = pgTable('playlists', {
     id: uuid().defaultRandom().primaryKey(),
@@ -80,6 +96,7 @@ export const playlistItems = pgTable('playlist_items', {
     index('playlist_items_playlist_id_idx').on(table.playlistId)
 ]);
 
+/*
 export const transcodeJobs = pgTable('transcode_jobs', {
     id: uuid().defaultRandom().primaryKey(),
     trackId: uuid('track_id').references(() => tracks.id),
@@ -89,7 +106,7 @@ export const transcodeJobs = pgTable('transcode_jobs', {
     completedAt: timestamp('completed_at'),
     errorMessage: text()
 });
-
+*/
 
 
 //* ===============
@@ -106,10 +123,18 @@ export const trackRelations = relations(tracks, ({ many, one }) => ({
     playlistItems: many(playlistItems)
 }));
 
+export const albumRelations = relations(albums, ({ many }) => ({
+    tracks: many(trackMetadata)
+}))
+
 export const trackMetadataRelations = relations(trackMetadata, ({ one }) => ({
     track: one(tracks, {
         fields: [trackMetadata.trackId],
         references: [tracks.id]
+    }),
+    album: one(albums, {
+        fields: [trackMetadata.albumId],
+        references: [albums.id]
     })
 }));
 
@@ -127,12 +152,13 @@ export const playlistItemRelations = relations(playlistItems, ({ one }) => ({
         references: [tracks.id]
     })
 }));
-
+/*
 export const transcodeJobRelations = relations(transcodeJobs, ({ one }) => ({
     track: one(tracks, {
         fields: [transcodeJobs.trackId],
         references: [tracks.id]
     })
 }));
+*/
 
 //#endregion

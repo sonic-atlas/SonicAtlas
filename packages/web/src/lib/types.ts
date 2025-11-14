@@ -4,4 +4,4 @@ export type {
     Quality,
     QualityInfo,
     ApiError
-} from '@sonic-atlas/shared/types';
+} from '@sonic-atlas/shared';
