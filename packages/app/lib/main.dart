@@ -29,7 +29,6 @@ void main() async {
   await authService.init();
 
   final discordService = DiscordService(settingsService);
-  await discordService.init();
 
   final apiService = ApiService(settingsService, authService);
   final audioService = AudioService.create(apiService, authService, settingsService);
@@ -69,6 +68,8 @@ void main() async {
       child: const SonicAtlasApp(),
     ),
   );
+
+  Future.microtask(() => discordService.init());
 }
 
 class SonicAtlasApp extends StatelessWidget {

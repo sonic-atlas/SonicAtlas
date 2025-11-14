@@ -54,8 +54,7 @@ class DiscordService with ChangeNotifier {
   final Activity _templateActivity = Activity(
     name: 'Sonic Atlas',
     assets: ActivityAssets(
-      largeImage: 'icon_flutter',
-      largeText: 'Sonic Atlas'
+      largeImage: 'icon_flutter'
     )
   );
   Activity? _currentActivity;
@@ -71,27 +70,33 @@ class DiscordService with ChangeNotifier {
   }
 
   Future<void> init() async {
-    if (!isEnabled || Platform.isAndroid || Platform.isIOS) return;
+    if (!isEnabled || Platform.isAndroid || Platform.isIOS || !_isEnabled) return;
 
-    await client.connect().then((_) {
+    try {
+      await client.connect().timeout(const Duration(seconds: 2));
+    } on TimeoutException {
+      if (kDebugMode) print('Discord IPC not available, skipping RPC.');
+      return;
+    } catch (e, s) {
       if (kDebugMode) {
-        print('DiscordService connected');
+        print('DiscordService error: $e');
+        print('DiscordService stack trace: $s');
       }
-
-      _subscriptions.addAll([
-        AudioService.onPlayTrack.listen(playTrack),
-        AudioService.onPlay.listen((_) => resumeTrack()),
-        AudioService.onPause.listen((_) => pauseTrack()),
-        AudioService.onSeek.listen(seekTrack)
-      ]);
-    }).onError(handleError);
-
-    await _updateActivity(details: 'Looking for songs');
-
-    if (kDebugMode) {
-      print('DiscordService initialized');
+      return;
     }
 
+    if (kDebugMode) print('DiscordService connected');
+
+    _subscriptions.addAll([
+      AudioService.onPlayTrack.listen(playTrack),
+      AudioService.onPlay.listen((_) => resumeTrack()),
+      AudioService.onPause.listen((_) => pauseTrack()),
+      AudioService.onSeek.listen(seekTrack)
+    ]);
+
+    _currentActivity = null;
+
+    if (kDebugMode) print('DiscordService initialized');
     notifyListeners();
   }
 
@@ -119,7 +124,7 @@ class DiscordService with ChangeNotifier {
     }
   }
 
-  Future<void> _updateActivity({ String? details, String? state, ActivityTimestamps? timestamps, ActivityType? type, String? largeImage, String? largeText, String? smallImage, String? smallText }) async {
+  Future<void> _updateActivity({String? details, String? state, ActivityTimestamps? timestamps, ActivityType? type, String? largeImage, String? largeText}) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
       details: details,
       state: state,
@@ -127,9 +132,7 @@ class DiscordService with ChangeNotifier {
       type: type ?? ActivityType.listening,
       assets: (_currentActivity?.assets ?? _templateActivity.assets)?.copyWith(
         largeImage: largeImage,
-        largeText: largeText,
-        smallImage: smallImage,
-        smallText: smallText
+        largeText: largeText
       )
     );
 
@@ -146,14 +149,12 @@ class DiscordService with ChangeNotifier {
     _pauseTime = null;
 
     await _updateActivity(
-      details: 'Listening to ${track.title}',
-      state: 'by ${track.artist}',
+      details: track.title,
+      state: track.artist,
       timestamps: ActivityTimestamps(
         start: _trackStartTime!,
         end: _trackStartTime!.add(Duration(seconds: track.duration))
-      ),
-      smallImage: 'play',
-      smallText: 'play'
+      )
     );
 
     notifyListeners();
@@ -167,8 +168,6 @@ class DiscordService with ChangeNotifier {
     _pauseTime = null;
 
     await _updateActivity(
-      smallImage: 'play',
-      smallText: 'play',
       type: ActivityType.listening,
       timestamps: ActivityTimestamps(
         start: _trackStartTime!,
@@ -183,8 +182,6 @@ class DiscordService with ChangeNotifier {
     _pauseTime = DateTime.now();
 
     await _updateActivity(
-      smallImage: 'pause',
-      smallText: 'pause',
       timestamps: ActivityTimestamps(
         start: _trackStartTime,
         end: _pauseTime
@@ -205,14 +202,5 @@ class DiscordService with ChangeNotifier {
         end: _trackStartTime!.add(Duration(seconds: _currentlyPlaying!.duration))
       )
     );
-  }
-
-  FutureOr<Null> handleError(Object e, StackTrace s) {
-    if (kDebugMode) {
-      print('DiscordService error: $e');
-      print('DiscordService stack trace: $s');
-    }
-
-    throw 'DiscordService error: $e';
   }
 }
