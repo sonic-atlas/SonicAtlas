@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
-import 'package:audio_service/audio_service.dart' as audio_service;
 
 import 'core/services/api.dart';
 import 'core/services/audio.dart';
 import 'core/services/auth.dart';
 import 'core/services/discord.dart';
-import 'core/services/media_handler.dart';
 import 'core/services/settings.dart';
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
 import 'ui/pages/server_setup.dart';
 import 'ui/pages/settings.dart';
 import 'ui/pages/splash.dart';
-
-late MediaSessionHandler audioHandler;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,39 +26,31 @@ void main() async {
 
   final discordService = DiscordService(settingsService);
 
-  final apiService = ApiService(settingsService, authService);
-  final audioService = AudioService.create(apiService, authService, settingsService);
-
-  audioHandler = await audio_service.AudioService.init(
-    builder: () => MediaSessionHandler(
-      audioService.player,
-      onSkipNext: audioService.skipNext,
-      onSkipPrevious: audioService.skipPrevious,
-    ),
-    config: const audio_service.AudioServiceConfig(
-      androidNotificationChannelId: 'com.heggo.sonic_atlas.channel',
-      androidNotificationChannelName: 'Sonic Atlas Playback',
-      androidNotificationChannelDescription: 'Media playback',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      androidShowNotificationBadge: true,
-      notificationColor: Color(0xFF2196f3)
-    )
-  );
-
-  audioService.setAudioHandler(audioHandler);
-
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: settingsService),
         ChangeNotifierProvider.value(value: authService),
         ChangeNotifierProvider.value(value: discordService),
-        ChangeNotifierProvider.value(value: audioService),
 
         ProxyProvider2<SettingsService, AuthService, ApiService>(
           update: (context, settings, auth, previous) =>
               ApiService(settings, auth),
+        ),
+
+        ChangeNotifierProxyProvider3<
+          ApiService,
+          AuthService,
+          SettingsService,
+          AudioService
+        >(
+          create: (context) => AudioService(
+            context.read<ApiService>(),
+            context.read<AuthService>(),
+            context.read<SettingsService>()
+          ),
+          update: (context, api, auth, settings, previous) =>
+              previous ?? AudioService(api, auth, settings),
         ),
       ],
       child: const SonicAtlasApp(),

@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  audio_service_win
   media_kit_libs_windows_video
   media_kit_video
   volume_controller
