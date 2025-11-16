@@ -1,4 +1,4 @@
-# sonic_atlas
+# Sonic Atlas
 
 SonicAtlas Flutter app
 
