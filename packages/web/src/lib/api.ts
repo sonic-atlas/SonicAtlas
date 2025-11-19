@@ -14,7 +14,10 @@ export function getAuthHeaders(): HeadersInit {
     };
 }
 
-export async function apiFetch(path: string, options: RequestInit & { customFetch?: typeof fetch } = {}): Promise<Response> {
+export async function apiFetch(
+    path: string,
+    options: RequestInit & { customFetch?: typeof fetch } = {}
+): Promise<Response> {
     const authHeaders = getAuthHeaders();
     const headers = { ...authHeaders, ...options.headers };
     const fetchImpl = options.customFetch || fetch;
@@ -67,10 +70,7 @@ export async function apiPatch(
     });
 }
 
-export async function apiDelete(
-    path: string,
-    additionalHeaders?: HeadersInit
-): Promise<Response> {
+export async function apiDelete(path: string, additionalHeaders?: HeadersInit): Promise<Response> {
     const headers = { ...getAuthHeaders(), ...additionalHeaders };
 
     return fetch(`${API_BASE_URL}${path}`, {

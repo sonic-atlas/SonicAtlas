@@ -57,14 +57,14 @@
     }
 </script>
 
-<form onsubmit={handleSubmit} class="upload-form">
+<form onsubmit={handleSubmit} class="uploadForm">
     <h2>Upload Release</h2>
 
     {#if error}
         <div class="error">{error}</div>
     {/if}
 
-    <div class="form-group">
+    <div class="formGroup">
         <label for="files">Audio Files</label>
         <input
             type="file"
@@ -76,7 +76,7 @@
         />
     </div>
 
-    <div class="form-group">
+    <div class="formGroup">
         <label for="cover">Release Cover (Optional)</label>
         <input
             type="file"
@@ -86,23 +86,23 @@
         />
     </div>
 
-    <div class="form-group">
+    <div class="formGroup">
         <label for="title">Release Title</label>
         <input type="text" id="title" bind:value={releaseTitle} placeholder="Album Title" />
     </div>
 
-    <div class="form-group">
+    <div class="formGroup">
         <label for="artist">Primary Artist</label>
         <input type="text" id="artist" bind:value={primaryArtist} placeholder="Artist Name" />
     </div>
 
     <div class="row">
-        <div class="form-group">
+        <div class="formGroup">
             <label for="year">Year</label>
             <input type="number" id="year" bind:value={year} />
         </div>
 
-        <div class="form-group">
+        <div class="formGroup">
             <label for="type">Type</label>
             <select id="type" bind:value={releaseType}>
                 <option value="album">Album</option>
@@ -113,7 +113,7 @@
         </div>
     </div>
 
-    <div class="form-group checkbox-group">
+    <div class="formGroup checkboxGroup">
         <input type="checkbox" id="extractAllCovers" bind:checked={extractAllCovers} />
         <label for="extractAllCovers">Extract individual track covers</label>
     </div>
@@ -124,23 +124,23 @@
 </form>
 
 <style>
-    .upload-form {
+    .uploadForm {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         max-width: 500px;
         padding: 1.5rem;
-        background: var(--surface-1);
+        background: var(--surface-color);
         border-radius: 8px;
     }
 
-    .form-group {
+    .formGroup {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
     }
 
-    .checkbox-group {
+    .checkboxGroup {
         flex-direction: row;
         align-items: center;
         gap: 0.5rem;
@@ -151,7 +151,7 @@
         gap: 1rem;
     }
 
-    .row .form-group {
+    .row .formGroup {
         flex: 1;
     }
 
@@ -159,14 +159,14 @@
     select {
         padding: 0.5rem;
         border-radius: 4px;
-        border: 1px solid var(--border);
-        background: var(--surface-2);
-        color: var(--text);
+        border: 1px solid var(--border-color);
+        background: var(--primary-surface-color);
+        color: var(--text-primary-color);
     }
 
     button {
         padding: 0.75rem;
-        background: var(--primary);
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 4px;
@@ -180,7 +180,7 @@
     }
 
     .error {
-        color: var(--error);
+        color: var(--error-color);
         background: #ff000020;
         padding: 0.5rem;
         border-radius: 4px;

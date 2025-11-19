@@ -436,7 +436,7 @@
 
     <div class="qualityBadge">
         <strong>{currentQualityInfo.label}</strong>
-        <div class="quality-details">
+        <div class="qualityDetails">
             {#if isAdaptive}
                 {currentQualityInfo.codec} · ABR Active
             {:else}
@@ -586,7 +586,7 @@
         margin-bottom: 4px;
     }
 
-    .quality-details {
+    .qualityDetails {
         font-size: 12px;
         color: var(--text-secondary-color);
     }

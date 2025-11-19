@@ -58,6 +58,9 @@
             {#if metadata?.sampleRate}
                 <span class="badge">{(metadata.sampleRate / 1000).toFixed(1)}kHz</span>
             {/if}
+            {#if metadata?.bitDepth}
+                <span class="badge">{metadata.bitDepth}bit</span>
+            {/if}
             <span class="badge">{formatFileSize(track.fileSize)}</span>
         </div>
     </div>
