@@ -3,6 +3,7 @@ import { socket } from '../index.js';
 import { logger } from '../utils/logger.js';
 import type { InferSelectModel } from 'drizzle-orm';
 import type { tracks } from '$db/schema.js';
+import fs from 'node:fs/promises';
 
 type TranscodeJob = {
     track: InferSelectModel<typeof tracks>;
@@ -38,6 +39,13 @@ async function processQueue() {
 
         logger.info(`Starting background transcode for track ${track.id}`);
         await generateHLS(track, filePath, socketId);
+
+        try {
+            await fs.unlink(filePath);
+            logger.info(`Deleted original file for track ${track.id}: ${filePath}`);
+        } catch (unlinkErr) {
+            logger.error(`Failed to delete original file for track ${track.id}: ${unlinkErr}`);
+        }
 
         if (socketId) {
             socket.io.to(socketId).emit('transcode:done', { trackId: track.id });
