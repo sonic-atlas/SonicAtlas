@@ -6,6 +6,9 @@
   --text-primary-color: #ffffff;
   --text-secondary-color: #b3b3b3;
   --surface-color: #141414;
+  --error-color: #ff5555;
+  --success-color: #55ff55;
+  --border-color: #333333;
 }
 
 body {

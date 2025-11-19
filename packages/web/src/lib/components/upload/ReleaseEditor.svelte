@@ -94,22 +94,22 @@
 </script>
 
 <div class="editor">
-    <div class="release-info">
+    <div class="releaseInfo">
         <h2>Edit Release</h2>
-        <div class="form-group">
+        <div class="formGroup">
             <label for="r-title">Title</label>
             <input id="r-title" type="text" bind:value={release.title} />
         </div>
-        <div class="form-group">
+        <div class="formGroup">
             <label for="r-artist">Artist</label>
             <input id="r-artist" type="text" bind:value={release.primaryArtist} />
         </div>
         <div class="row">
-            <div class="form-group">
+            <div class="formGroup">
                 <label for="r-year">Year</label>
                 <input id="r-year" type="number" bind:value={release.year} />
             </div>
-            <div class="form-group">
+            <div class="formGroup">
                 <label for="r-type">Type</label>
                 <select id="r-type" bind:value={release.releaseType}>
                     <option value="album">Album</option>
@@ -125,10 +125,10 @@
         {/if}
     </div>
 
-    <div class="track-list">
+    <div class="trackList">
         <h3>Tracks</h3>
         {#each tracks as track (track.id)}
-            <div class="track-item">
+            <div class="trackItem">
                 <div
                     class="status"
                     class:done={track.transcodeStatus === 'done'}
@@ -160,7 +160,7 @@
                     />
                     <input
                         type="number"
-                        class="small-input"
+                        class="smallInput"
                         bind:value={track.discNumber}
                         onchange={() => saveTrack(track)}
                         placeholder="Disc"
@@ -168,7 +168,7 @@
                     />
                     <input
                         type="number"
-                        class="small-input"
+                        class="smallInput"
                         bind:value={track.trackNumber}
                         onchange={() => saveTrack(track)}
                         placeholder="#"
@@ -188,8 +188,8 @@
         max-width: 800px;
     }
 
-    .release-info {
-        background: var(--surface-1);
+    .releaseInfo {
+        background: var(--surface-color);
         padding: 1.5rem;
         border-radius: 8px;
         display: flex;
@@ -197,17 +197,17 @@
         gap: 1rem;
     }
 
-    .track-list {
+    .trackList {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
     }
 
-    .track-item {
+    .trackItem {
         display: flex;
         align-items: center;
         gap: 1rem;
-        background: var(--surface-1);
+        background: var(--surface-color);
         padding: 0.75rem;
         border-radius: 4px;
     }
@@ -219,20 +219,20 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        background: var(--surface-2);
+        background: var(--primary-surface-color);
         font-weight: bold;
     }
 
     .status.done {
-        color: var(--success);
+        color: var(--success-color);
         background: #00ff0020;
     }
     .status.processing {
-        color: var(--primary);
+        color: var(--primary-color);
         animation: spin 1s linear infinite;
     }
     .status.error {
-        color: var(--error);
+        color: var(--error-color);
         background: #ff000020;
     }
 
@@ -246,21 +246,21 @@
     select {
         padding: 0.5rem;
         border-radius: 4px;
-        border: 1px solid var(--border);
-        background: var(--surface-2);
-        color: var(--text);
+        border: 1px solid var(--border-color);
+        background: var(--primary-surface-color);
+        color: var(--text-primary-color);
     }
 
     input {
         flex: 1;
     }
 
-    .small-input {
+    .smallInput {
         flex: 0 0 60px;
         text-align: center;
     }
 
-    .form-group {
+    .formGroup {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -271,13 +271,13 @@
         gap: 1rem;
     }
 
-    .row .form-group {
+    .row .formGroup {
         flex: 1;
     }
 
     button {
         padding: 0.75rem;
-        background: var(--primary);
+        background: var(--primary-color);
         color: white;
         border: none;
         border-radius: 4px;
@@ -292,7 +292,7 @@
     }
 
     .message {
-        color: var(--success);
+        color: var(--success-color);
         margin-left: 1rem;
     }
 
