@@ -4,9 +4,9 @@ import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { playlistItems, trackMetadata, tracks } from '$db/schema.js';
+import { albums, playlistItems, trackMetadata, tracks } from '$db/schema.js';
 import { parseFile } from 'music-metadata';
-import { eq, type InferSelectModel, desc } from 'drizzle-orm';
+import { and, eq, type InferSelectModel, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
@@ -25,12 +25,28 @@ router.get('/', async (req, res) => {
     try {
         const allTracks = await db.query.tracks.findMany({
             with: {
-                metadata: true
+                metadata: true,
+                releaseTracks: {
+                    with: {
+                        release: true
+                    }
+                }
             },
             orderBy: (tracks) => [desc(tracks.uploadedAt)]
         });
 
-        return res.json(allTracks);
+        const tracksWithCovers = allTracks.map(track => {
+            const hasReleaseCover = track.releaseTracks.some(rt => rt.release?.coverArtPath);
+            const coverArtPath = track.coverArtPath ?? (hasReleaseCover ? `/api/metadata/${track.id}/cover` : null);
+
+            const { releaseTracks, ...rest } = track;
+            return {
+                ...rest,
+                coverArtPath
+            };
+        });
+
+        return res.json(tracksWithCovers);
     } catch (err) {
         logger.error(`(GET /api/tracks) Unknown Error Occurred:\n${err}`);
         return res.status(500).json({
@@ -96,6 +112,14 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         const metadata = await parseFile(req.file.path);
         const format = (metadata.format.codec?.toLowerCase() || path.extname(req.file.originalname).slice(1).toLowerCase()) as any;
 
+        const albumName = metadata.common.album?.trim() || null;
+        const albumArtist =
+            metadata.common.albumartist?.trim() ||
+            metadata.common.artist?.trim() ||
+            'Unknown Artist';
+
+        logger.info(`Parsed metadata - Album: "${albumName}", AlbumArtist: "${albumArtist}", Title: "${metadata.common.title}"`);
+
         const meta = {
             // tracks
             duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
@@ -106,7 +130,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             // track_metadata
             title: metadata.common.title ?? path.parse(req.file.originalname).name,
             artist: metadata.common.artist ?? 'Unknown Artist',
-            album: metadata.common.album ?? 'Unknown Album',
+            album: albumName,
+            albumArtist,
             year: metadata.common.year ?? null,
             genres: metadata.common.genre ?? null,
             bitrate: metadata.format.bitrate ?? null,
@@ -140,13 +165,53 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                 .set({ filename })
                 .where(eq(tracks.id, track!.id));
 
+            let albumId: string | null = null;
+            if (meta.album) {
+                logger.info(`Processing album: "${meta.album}" by "${meta.albumArtist}"`);
+
+                const albumWhere = meta.albumArtist
+                    ? and(eq(albums.title, meta.album), eq(albums.artist, meta.albumArtist))
+                    : eq(albums.title, meta.album);
+
+                const insertResult = await tx
+                    .insert(albums)
+                    .values({
+                        title: meta.album,
+                        artist: meta.albumArtist,
+                        year: meta.year ?? undefined
+                    })
+                    .onConflictDoNothing({
+                        target: meta.albumArtist ? [albums.title, albums.artist] : [albums.title]
+                    })
+                    .returning({ id: albums.id });
+
+                logger.info(`Album insert result: ${JSON.stringify(insertResult)}`);
+
+                if (insertResult.length > 0 && insertResult[0]?.id) {
+                    albumId = insertResult[0].id;
+                    logger.info(`Created new album with ID: ${albumId}`);
+                } else {
+                    logger.info(`Album exists, fetching from DB`);
+                    const [existingAlbum] = await tx
+                        .select({ id: albums.id })
+                        .from(albums)
+                        .where(albumWhere)
+                        .limit(1);
+
+                    albumId = existingAlbum?.id ?? null;
+                    logger.info(`Found existing album ID: ${albumId}`);
+                }
+            }
+
             await tx.insert(trackMetadata).values({
                 trackId: track!.id,
                 title: meta.title,
                 artist: meta.artist,
-                album: meta.album,
+                albumId,
                 year: meta.year,
-                genres: meta.genres
+                genres: meta.genres,
+                bitrate: meta.bitrate ? Math.round(meta.bitrate) : null,
+                codec: meta.codec ?? null
             });
 
             return track;
@@ -158,22 +223,22 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                 if (picture && picture.data) {
                     const metadataFolder = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'metadata');
                     await fsp.mkdir(metadataFolder, { recursive: true });
-                    
+
                     let ext = 'jpg';
                     if (picture.format) {
                         if (picture.format.includes('png')) ext = 'png';
                         else if (picture.format.includes('jpeg') || picture.format.includes('jpg')) ext = 'jpg';
                         else if (picture.format.includes('webp')) ext = 'webp';
                     }
-                    
+
                     const coverPath = path.join(metadataFolder, `${trackInfo!.id}_cover.${ext}`);
                     await fsp.writeFile(coverPath, picture.data);
-                    
+
                     await db
                         .update(tracks)
                         .set({ coverArtPath: `/api/metadata/${trackInfo!.id}/cover` })
                         .where(eq(tracks.id, trackInfo!.id));
-                        
+
                     logger.info(`Extracted cover art for track ${trackInfo!.id} (${ext}, ${picture.data.length} bytes)`);
                 }
             } catch (coverErr) {
@@ -201,7 +266,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         });
     } catch (err) {
         logger.error(`(POST /api/tracks/upload) Unknown Error Occured:\n${err}`);
-        
+
         try {
             if (fileRenamed && newPath) {
                 await fsp.unlink(newPath);
@@ -211,7 +276,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
         } catch (unlinkErr) {
             logger.error(`Failed to clean up file after error: ${unlinkErr}`);
         }
-        
+
         return res.status(500).json({
             error: 'INTERNAL_SERVER_ERROR',
             message: 'Track uploading failed due to an internal error'

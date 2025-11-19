@@ -34,7 +34,7 @@ const preparedSearchQuery = db.query.trackMetadata.findMany({
     columns: {
         title: true,
         artist: true,
-        album: true
+        albumId: true
     },
     extras: {
         id: sql`${trackMetadata.trackId}`.as('id'),

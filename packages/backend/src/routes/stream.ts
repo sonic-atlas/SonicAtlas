@@ -23,7 +23,7 @@ export function getSourceQuality(track: InferSelectModel<typeof tracks>): ValidQ
     const sampleRate = track.sampleRate || 44100;
     const fileSize = track.fileSize || 0;
     const duration = track.duration || 1;
-    
+
     // Calculate approximate bitrate from file size if not provided
     const estimatedBitrate = (fileSize * 8) / duration;
 
@@ -74,7 +74,7 @@ router.get('/:trackId/quality', async (req, res) => {
 
     const sourceQuality = getSourceQuality(track);
     const sourceIndex = qualityHierarchy.indexOf(sourceQuality);
-    
+
     const availableQualities = qualityHierarchy.slice(0, sourceIndex + 1);
 
     return res.json({
@@ -88,7 +88,7 @@ router.get('/:trackId/quality', async (req, res) => {
     });
 });
 
-const hlsRoot = path.join($rootDir, process.env.STORAGE || 'storage', 'hls');
+const hlsRoot = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 
 // I don't think there's any need to check if trackId is a UUID here. Don't need to add unnecessary latency.
 // Master playlist, for ABR
@@ -144,7 +144,7 @@ router.get('/:trackId/:quality/:segment', async (req, res) => {
     res.setHeader('Content-Type', segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4');
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('Accept-Ranges', 'bytes');
-    
+
     const stat = await fsp.stat(filepath);
     res.setHeader('Content-Length', stat.size);
 
