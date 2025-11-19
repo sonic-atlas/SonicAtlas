@@ -11,7 +11,7 @@ import { socket } from '../index.js';
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
 
-const qualities: Record<Quality, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
+const qualities: Record<Exclude<Quality, 'auto'>, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
     efficiency: { bitrate: '128k', codec: 'aac', maxRate: '128k', bufsize: '256k' },
     high: { bitrate: '320k', codec: 'aac', maxRate: '320k', bufsize: '640k' },
     cd: { codec: 'flac', sampleRate: '44100', audioBitrate: null },
@@ -29,7 +29,7 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
     const availableQualities = qualityHierarchy.slice(0, sourceIndex + 1);
 
     for (const [quality, opts] of Object.entries(qualities)) {
-        if (availableQualities.indexOf(quality as Quality) === -1) continue;
+        if (availableQualities.indexOf(quality as Exclude<Quality, 'auto'>) === -1) continue;
 
         const qualityDir = path.join(outputDir, quality);
         fs.mkdirSync(qualityDir, { recursive: true });

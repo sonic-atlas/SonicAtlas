@@ -2,11 +2,15 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 DROP TRIGGER IF EXISTS track_metadata_search_update ON track_metadata;--> statement-breakpoint
 DROP FUNCTION IF EXISTS update_track_metadata_search_vector;--> statement-breakpoint
 CREATE FUNCTION update_track_metadata_search_vector() RETURNS trigger AS $$
+DECLARE
+  album_title text;
 BEGIN
+  SELECT title INTO album_title FROM albums WHERE id = NEW.album_id;
+  
   NEW.search_vector :=
     setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
     setweight(to_tsvector('english', coalesce(NEW.artist, '')), 'A') ||
-    setweight(to_tsvector('english', coalesce(NEW.album, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(album_title, '')), 'B') ||
     setweight(to_tsvector('english', coalesce(array_to_string(NEW.genres, ' '), '')), 'C') ||
     setweight(to_tsvector('english', coalesce(NEW.year::text, '')), 'D');
   RETURN NEW;
