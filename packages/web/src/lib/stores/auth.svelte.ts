@@ -1,3 +1,5 @@
+import { browser } from '$app/environment';
+
 let token = $state<string | null>(null);
 let tokenExpiry = $state<number | null>(null);
 
@@ -15,7 +17,7 @@ export const auth = {
         const hours = parseInt(expiresIn);
         tokenExpiry = Date.now() + hours * 60 * 60 * 1000;
 
-        if (typeof localStorage !== 'undefined') {
+        if (browser) {
             localStorage.setItem('authToken', newToken);
             localStorage.setItem('tokenExpiry', tokenExpiry.toString());
         }
@@ -23,13 +25,13 @@ export const auth = {
     clearToken() {
         token = null;
         tokenExpiry = null;
-        if (typeof localStorage !== 'undefined') {
+        if (browser) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('tokenExpiry');
         }
     },
     loadFromStorage() {
-        if (typeof localStorage !== 'undefined') {
+        if (browser) {
             const storedToken = localStorage.getItem('authToken');
             const storedExpiry = localStorage.getItem('tokenExpiry');
 
@@ -46,3 +48,7 @@ export const auth = {
         }
     }
 };
+
+if (browser) {
+    auth.loadFromStorage();
+}

@@ -7,7 +7,11 @@ export class SocketServer {
 
     constructor(server: HTTPServer) {
         this.io = new SocketIOServer(server, {
-            path: '/ws'
+            path: '/ws',
+            cors: {
+                origin: '*',
+                methods: ['GET', 'POST']
+            }
         });
     }
 

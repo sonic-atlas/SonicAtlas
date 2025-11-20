@@ -14,10 +14,22 @@ export function getAuthHeaders(): HeadersInit {
     };
 }
 
-export async function apiGet(path: string): Promise<Response> {
-    return fetch(`${API_BASE_URL}${path}`, {
-        headers: getAuthHeaders()
+export async function apiFetch(
+    path: string,
+    options: RequestInit & { customFetch?: typeof fetch } = {}
+): Promise<Response> {
+    const authHeaders = getAuthHeaders();
+    const headers = { ...authHeaders, ...options.headers };
+    const fetchImpl = options.customFetch || fetch;
+    const { customFetch, ...fetchOptions } = options;
+    return fetchImpl(`${API_BASE_URL}${path}`, {
+        ...fetchOptions,
+        headers
     });
+}
+
+export async function apiGet(path: string): Promise<Response> {
+    return apiFetch(path);
 }
 
 export async function apiPost(
@@ -31,6 +43,39 @@ export async function apiPost(
         method: 'POST',
         headers,
         body
+    });
+}
+
+export async function apiPostFormData(path: string, formData: FormData): Promise<Response> {
+    const headers = getAuthHeaders();
+
+    return fetch(`${API_BASE_URL}${path}`, {
+        method: 'POST',
+        headers: headers as HeadersInit,
+        body: formData
+    });
+}
+
+export async function apiPatch(
+    path: string,
+    body?: BodyInit,
+    additionalHeaders?: HeadersInit
+): Promise<Response> {
+    const headers = { ...getAuthHeaders(), ...additionalHeaders };
+
+    return fetch(`${API_BASE_URL}${path}`, {
+        method: 'PATCH',
+        headers,
+        body
+    });
+}
+
+export async function apiDelete(path: string, additionalHeaders?: HeadersInit): Promise<Response> {
+    const headers = { ...getAuthHeaders(), ...additionalHeaders };
+
+    return fetch(`${API_BASE_URL}${path}`, {
+        method: 'DELETE',
+        headers
     });
 }
 

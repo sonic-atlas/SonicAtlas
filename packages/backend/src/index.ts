@@ -60,7 +60,7 @@ app.use('/api',
     //* IP rate limit
     rateLimit({
         windowMs: 1 * 60 * 1000,
-        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 100,
+        limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 1000,
         skip: (req) => req.method === 'OPTIONS',
     }),
     //* User rate limit

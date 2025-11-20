@@ -1,8 +1,8 @@
 <script lang="ts">
-    import UploadForm from '$lib/components/UploadForm.svelte';
-    import TrackList from '$lib/components/TrackList.svelte';
-    import Player from '$lib/components/Player.svelte';
-    import LoginForm from '$lib/components/LoginForm.svelte';
+    import TrackList from '$lib/components/tracks/TrackList.svelte';
+    import Player from '$lib/components/player/Player.svelte';
+    import LoginForm from '$lib/components/auth/LoginForm.svelte';
+    import { goto } from '$app/navigation';
     import type { Track } from '$lib/types';
     import { apiGet } from '$lib/api';
     import { auth } from '$lib/stores/auth.svelte';
@@ -27,10 +27,6 @@
         }
     }
 
-    function handleTrackUploaded() {
-        loadTracks();
-    }
-
     function handleTrackSelected(track: Track) {
         currentTrack = track;
     }
@@ -44,6 +40,14 @@
         auth.clearToken();
         tracks = [];
         currentTrack = null;
+    }
+
+    function navigateToUpload() {
+        goto('/upload');
+    }
+
+    function navigateToManage() {
+        goto('/manage');
     }
 
     onMount(() => {
@@ -63,10 +67,12 @@
     <main>
         <div class="header">
             <h1>Sonic Atlas</h1>
-            <button class="logoutButton" onclick={handleLogout}>Logout</button>
+            <div class="headerActions">
+                <button class="primaryButton" onclick={navigateToUpload}>Upload Release</button>
+                <button class="primaryButton" onclick={navigateToManage}>Manage</button>
+                <button class="logoutButton" onclick={handleLogout}>Logout</button>
+            </div>
         </div>
-
-        <UploadForm onUploaded={handleTrackUploaded} />
 
         <div class="content">
             <TrackList
@@ -102,6 +108,11 @@
         margin-bottom: 20px;
     }
 
+    .headerActions {
+        display: flex;
+        gap: 12px;
+    }
+
     h1 {
         margin: 0;
         color: var(--text-primary-color);
@@ -118,7 +129,22 @@
         transition: opacity 0.2s;
     }
 
+    .primaryButton {
+        padding: 8px 16px;
+        background: var(--primary-color);
+        color: var(--text-primary-color);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: opacity 0.2s;
+    }
+
     .logoutButton:hover {
+        opacity: 0.9;
+    }
+
+    .primaryButton:hover {
         opacity: 0.9;
     }
 
