@@ -40,7 +40,7 @@ void main() async {
       onSkipPrevious: audioService.skipPrevious,
     ),
     config: const audio_service.AudioServiceConfig(
-      androidNotificationChannelId: 'com.heggo.sonic_atlas.channel',
+      androidNotificationChannelId: 'dev.heggo.sonic_atlas.channel',
       androidNotificationChannelName: 'Sonic Atlas Playback',
       androidNotificationChannelDescription: 'Media playback',
       androidNotificationOngoing: true,

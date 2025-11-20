@@ -1,5 +1,4 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as media_kit;
 import 'package:rxdart/rxdart.dart';
 import 'package:sonic_atlas/core/models/track.dart';
@@ -10,9 +9,15 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
   final Future<void> Function() onSkipPrevious;
 
   final BehaviorSubject<bool> _playing = BehaviorSubject.seeded(false);
-  final BehaviorSubject<Duration> _duration = BehaviorSubject.seeded(Duration.zero);
+  final BehaviorSubject<Duration> _duration = BehaviorSubject.seeded(
+    Duration.zero,
+  );
 
-  MediaSessionHandler(this.player, {required this.onSkipNext, required this.onSkipPrevious}) {
+  MediaSessionHandler(
+    this.player, {
+    required this.onSkipNext,
+    required this.onSkipPrevious,
+  }) {
     player.stream.playing.listen((isPlaying) {
       _playing.add(isPlaying);
       _broadcastState();
@@ -24,9 +29,7 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
     });
 
     player.stream.position.listen((pos) {
-      playbackState.add(playbackState.value.copyWith(
-        updatePosition: pos,
-      ));
+      playbackState.add(playbackState.value.copyWith(updatePosition: pos));
     });
   }
 
@@ -62,14 +65,16 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void updateItem(Track track, String artUri) {
-    mediaItem.add(MediaItem(
-      id: track.id,
-      album: track.album,
-      title: track.title,
-      artist: track.artist,
-      duration: player.state.duration,
-      artUri: Uri.parse(artUri)
-    ));
+    mediaItem.add(
+      MediaItem(
+        id: track.id,
+        album: track.album,
+        title: track.title,
+        artist: track.artist,
+        duration: player.state.duration,
+        artUri: Uri.parse(artUri),
+      ),
+    );
 
     _broadcastState();
   }
