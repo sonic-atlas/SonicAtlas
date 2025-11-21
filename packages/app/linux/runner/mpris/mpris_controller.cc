@@ -3,6 +3,17 @@
 
 const gchar* introspection_xml =
         "<node>"
+        "  <interface name='org.mpris.MediaPlayer2'>"
+        "    <method name='Raise'/>"
+        "    <method name='Quit'/>"
+        "    <property name='CanQuit' type='b' access='read'/>"
+        "    <property name='CanRaise' type='b' access='read'/>"
+        "    <property name='HasTrackList' type='b' access='read'/>"
+        "    <property name='Identity' type='s' access='read'/>"
+        "    <property name='DesktopEntry' type='s' access='read'/>"
+        "    <property name='SupportedUriSchemes' type='as' access='read'/>"
+        "    <property name='SupportedMimeTypes' type='as' access='read'/>"
+        "  </interface>"
         "  <interface name='org.mpris.MediaPlayer2.Player'>"
         "    <method name='PlayPause'/>"
         "    <method name='Play'/>"
@@ -56,10 +67,22 @@ void MprisController::OnBusAcquired(GDBusConnection* connection, const gchar* na
             nullptr
     };
 
-    _registration_id = g_dbus_connection_register_object(
+    // Register org.mpris.MediaPlayer2 interface
+    g_dbus_connection_register_object(
             connection,
             "/org/mpris/MediaPlayer2",
             _introspection_data->interfaces[0],
+            &vtable,
+            this,
+            nullptr,
+            nullptr
+    );
+
+    // Register org.mpris.MediaPlayer2.Player interface
+    _registration_id = g_dbus_connection_register_object(
+            connection,
+            "/org/mpris/MediaPlayer2",
+            _introspection_data->interfaces[1],
             &vtable,
             this,
             nullptr,
@@ -73,7 +96,13 @@ void MprisController::HandleMethodCall(GDBusConnection* connection, const gchar*
                                        GDBusMethodInvocation* invocation, gpointer user_data) {
     auto* self = static_cast<MprisController*>(user_data);
 
-    if (g_strcmp0(method_name, "PlayPause") == 0) {
+    if (g_strcmp0(method_name, "Raise") == 0) {
+        g_dbus_method_invocation_return_value(invocation, nullptr);
+    }
+    else if (g_strcmp0(method_name, "Quit") == 0) {
+        g_dbus_method_invocation_return_value(invocation, nullptr);
+    }
+    else if (g_strcmp0(method_name, "PlayPause") == 0) {
         if (self->_is_playing) {
             if (self->_pause_callback) self->_pause_callback();
         } else {
@@ -118,6 +147,29 @@ GVariant* MprisController::HandleGetProperty(GDBusConnection* connection, const 
                                              gpointer user_data) {
     auto* self = static_cast<MprisController*>(user_data);
 
+    // org.mpris.MediaPlayer2 properties
+    if (g_strcmp0(property_name, "Identity") == 0) {
+        return g_variant_new_string("Sonic Atlas Playback");
+    }
+    if (g_strcmp0(property_name, "DesktopEntry") == 0) {
+        return g_variant_new_string("sonic_atlas");
+    }
+    if (g_strcmp0(property_name, "SupportedUriSchemes") == 0) {
+        GVariantBuilder builder;
+        g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+        return g_variant_builder_end(&builder);
+    }
+    if (g_strcmp0(property_name, "SupportedMimeTypes") == 0) {
+        GVariantBuilder builder;
+        g_variant_builder_init(&builder, G_VARIANT_TYPE("as"));
+        return g_variant_builder_end(&builder);
+    }
+    if (g_strcmp0(property_name, "CanQuit") == 0) return g_variant_new_boolean(FALSE);
+    if (g_strcmp0(property_name, "CanRaise") == 0) return g_variant_new_boolean(FALSE);
+    if (g_strcmp0(property_name, "HasTrackList") == 0) return g_variant_new_boolean(FALSE);
+
+
+    // org.mpris.MediaPlayer2.Player properties
     if (g_strcmp0(property_name, "PlaybackStatus") == 0) {
         return g_variant_new_string(self->_is_playing ? "Playing" : "Paused");
     }
