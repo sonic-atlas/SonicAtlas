@@ -12,23 +12,28 @@ import 'settings.dart';
 
 class AudioService with ChangeNotifier {
   final media_kit.Player _player;
+
   media_kit.Player get player => _player;
-  
+
   final ApiService _apiService;
   final AuthService _authService;
   final SettingsService _settingsService;
   late final MediaSessionHandler _audioHandler;
 
   models.Track? _currentTrack;
+
   models.Track? get currentTrack => _currentTrack;
 
   List<models.Track> _queue = [];
+
   List<models.Track> get queue => _queue;
   int _currentIndex = -1;
+
   int get currentIndex => _currentIndex;
 
   Quality get quality => _settingsService.audioQuality;
   Quality? _currentTrackQuality;
+
   Quality? get currentTrackQuality => _currentTrackQuality;
 
   bool get isPlaying => _player.state.playing;
@@ -40,29 +45,42 @@ class AudioService with ChangeNotifier {
   Duration get duration => _player.state.duration;
 
   bool get hasNext => _currentIndex < _queue.length - 1;
+
   bool get hasPrevious => _currentIndex > 0;
 
   AudioService(this._apiService, this._authService, this._settingsService)
-      : _player = media_kit.Player() {
+    : _player = media_kit.Player() {
     _init();
     _settingsService.addListener(_onSettingsChanged);
   }
 
-  static final _playTrackController = StreamController<models.Track>.broadcast();
+  static final _playTrackController =
+      StreamController<models.Track>.broadcast();
   static final _playController = StreamController<AudioService>.broadcast();
   static final _pauseController = StreamController<AudioService>.broadcast();
   static final _seekController = StreamController<Duration>.broadcast();
+
   static Stream<models.Track> get onPlayTrack => _playTrackController.stream;
+
   static Stream<AudioService> get onPlay => _playController.stream;
+
   static Stream<AudioService> get onPause => _pauseController.stream;
+
   static Stream<Duration> get onSeek => _seekController.stream;
 
-  static AudioService create(ApiService api, AuthService auth, SettingsService settings) {
+  static AudioService create(
+    ApiService api,
+    AuthService auth,
+    SettingsService settings,
+  ) {
     return AudioService._internal(api, auth, settings);
   }
 
-  AudioService._internal(this._apiService, this._authService, this._settingsService)
-      : _player = media_kit.Player() {
+  AudioService._internal(
+    this._apiService,
+    this._authService,
+    this._settingsService,
+  ) : _player = media_kit.Player() {
     _init();
     _settingsService.addListener(_onSettingsChanged);
   }
@@ -83,6 +101,15 @@ class AudioService with ChangeNotifier {
           }
           notifyListeners();
         }
+      });
+
+      _player.stream.playing.listen((isPlaying) {
+        if (isPlaying) {
+          _playController.add(this);
+        } else {
+          _pauseController.add(this);
+        }
+        notifyListeners();
       });
 
       if (kDebugMode) {
@@ -107,13 +134,14 @@ class AudioService with ChangeNotifier {
   }
 
   Future<void> playTrack(
-      models.Track track, {
-        List<models.Track>? queue,
-        bool preserveIndex = false,
-      }) async {
+    models.Track track, {
+    List<models.Track>? queue,
+    bool preserveIndex = false,
+  }) async {
     try {
       final qualityInfo = await _apiService.getTrackQuality(track.id);
-      final List<Quality> availableQualities = qualityInfo['availableQualities'];
+      final List<Quality> availableQualities =
+          qualityInfo['availableQualities'];
 
       Quality desiredQuality = _settingsService.audioQuality;
       Quality? selectedQuality;
@@ -123,14 +151,21 @@ class AudioService with ChangeNotifier {
       } else if (availableQualities.contains(desiredQuality)) {
         selectedQuality = desiredQuality;
       } else {
-        final qualityOrder = [Quality.hires, Quality.cd, Quality.high, Quality.efficiency];
+        final qualityOrder = [
+          Quality.hires,
+          Quality.cd,
+          Quality.high,
+          Quality.efficiency,
+        ];
         final desiredIndex = qualityOrder.indexOf(desiredQuality);
 
         for (int i = desiredIndex; i < qualityOrder.length; i++) {
           if (availableQualities.contains(qualityOrder[i])) {
             selectedQuality = qualityOrder[i];
             if (kDebugMode) {
-              print('Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}');
+              print(
+                'Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}',
+              );
             }
             break;
           }
@@ -225,31 +260,37 @@ class AudioService with ChangeNotifier {
   Future<void> skipNext() async {
     if (hasNext) {
       _currentIndex++;
-      await playTrack(_queue[_currentIndex], queue: _queue, preserveIndex: true);
+      await playTrack(
+        _queue[_currentIndex],
+        queue: _queue,
+        preserveIndex: true,
+      );
     }
   }
 
   Future<void> skipPrevious() async {
     if (hasPrevious) {
       _currentIndex--;
-      await playTrack(_queue[_currentIndex], queue: _queue, preserveIndex: true);
+      await playTrack(
+        _queue[_currentIndex],
+        queue: _queue,
+        preserveIndex: true,
+      );
     }
   }
 
   void play() {
-    _player.play();
-    _playController.add(this);
+    _audioHandler.play();
     notifyListeners();
   }
 
   void pause() {
-    _player.pause();
-    _pauseController.add(this);
+    _audioHandler.pause();
     notifyListeners();
   }
 
   void seek(Duration position) {
-    _player.seek(position);
+    _audioHandler.seek(position);
     _seekController.add(position);
     notifyListeners();
   }

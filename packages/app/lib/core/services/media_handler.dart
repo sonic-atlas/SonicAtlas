@@ -39,7 +39,7 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
-  PlaybackState _mapPlayerStateToPlaybackState() {
+  PlaybackState _mapPlayerStateToPlaybackState(Duration? overridePosition) {
     return PlaybackState(
       controls: [
         if (_playing.value) MediaControl.pause else MediaControl.play,
@@ -54,14 +54,14 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
       androidCompactActionIndices: const [0, 1, 2],
       processingState: AudioProcessingState.ready,
       playing: _playing.value,
-      updatePosition: player.state.position,
+      updatePosition: overridePosition ?? player.state.position,
       bufferedPosition: player.state.buffer,
       speed: player.state.rate,
     );
   }
 
-  void _broadcastState() {
-    playbackState.add(_mapPlayerStateToPlaybackState());
+  void _broadcastState([Duration? overridePosition]) {
+    playbackState.add(_mapPlayerStateToPlaybackState(overridePosition));
   }
 
   void updateItem(Track track, String artUri) {
@@ -94,7 +94,7 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> seek(Duration position) async {
     await player.seek(position);
-    _broadcastState();
+    _broadcastState(position);
   }
 
   @override

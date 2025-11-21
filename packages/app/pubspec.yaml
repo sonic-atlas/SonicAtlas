@@ -33,7 +33,6 @@ dependencies:
   discord_rich_presence: ^1.1.1
   audio_service: ^0.18.18
   audio_service_win: ^0.0.2
-  audio_service_mpris: ^0.2.0
   rxdart: ^0.28.0
 
 dev_dependencies:

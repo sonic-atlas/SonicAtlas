@@ -1,13 +1,16 @@
+import 'dart:io';
+
+import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
-import 'package:audio_service/audio_service.dart' as audio_service;
 
 import 'core/services/api.dart';
 import 'core/services/audio.dart';
 import 'core/services/auth.dart';
 import 'core/services/discord.dart';
 import 'core/services/media_handler.dart';
+import 'core/services/mpris_service.dart';
 import 'core/services/settings.dart';
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
@@ -16,6 +19,7 @@ import 'ui/pages/settings.dart';
 import 'ui/pages/splash.dart';
 
 late MediaSessionHandler audioHandler;
+LinuxMprisManager? linuxMpris;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +35,13 @@ void main() async {
   final discordService = DiscordService(settingsService);
 
   final apiService = ApiService(settingsService, authService);
-  final audioService = AudioService.create(apiService, authService, settingsService);
+  final audioService = AudioService.create(
+    apiService,
+    authService,
+    settingsService,
+  );
+
+  discordService.setAudioService(audioService);
 
   audioHandler = await audio_service.AudioService.init(
     builder: () => MediaSessionHandler(
@@ -46,11 +56,15 @@ void main() async {
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
       androidShowNotificationBadge: true,
-      notificationColor: Color(0xFF2196f3)
-    )
+      notificationColor: Color(0xFF2196f3),
+    ),
   );
 
   audioService.setAudioHandler(audioHandler);
+
+  if (Platform.isLinux) {
+    linuxMpris = LinuxMprisManager(audioHandler, audioService);
+  }
 
   runApp(
     MultiProvider(
