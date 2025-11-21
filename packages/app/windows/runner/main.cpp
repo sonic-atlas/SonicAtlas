@@ -1,6 +1,8 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <Shobjidl.h>
+#include <iostream>
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -11,6 +13,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
     CreateAndAttachConsole();
+  }
+
+  HRESULT hr = SetCurrentProcessExplicitAppUserModelID(L"dev.heggo.sonic_atlas");
+  if (SUCCEEDED(hr)) {
+    std::cout << "Successfully set AUMID to dev.heggo.sonic_atlas" << std::endl;
+  } else {
+    std::cerr << "Failed to set AUMID. HRESULT: 0x" << std::hex << hr << std::endl;
   }
 
   // Initialize COM, so that it is available for use in the library and/or
