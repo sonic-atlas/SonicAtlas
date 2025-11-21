@@ -124,8 +124,9 @@ class DiscordService with ChangeNotifier {
     }
   }
 
-  Future<void> _updateActivity({String? details, String? state, ActivityTimestamps? timestamps, ActivityType? type, String? largeImage, String? largeText}) async {
+  Future<void> _updateActivity({String? details, String? state, ActivityTimestamps? timestamps, ActivityType? type, String? largeImage, String? largeText, String? name}) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
+      name: name,
       details: details,
       state: state,
       timestamps: timestamps,
@@ -148,7 +149,10 @@ class DiscordService with ChangeNotifier {
     _trackStartTime = DateTime.now();
     _pauseTime = null;
 
+    String activityName = '${track.title} - ${track.artist}'; // em dashes break everything idk
+
     await _updateActivity(
+      name: activityName,
       details: track.title,
       state: track.artist,
       timestamps: ActivityTimestamps(
