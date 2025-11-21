@@ -475,7 +475,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(_formatDuration(position)),
-                                          Text(_formatDuration(duration)),
+                                          GestureDetector(
+                                            onTap: () {
+                                              settingsService.setRelativeDuration(!settingsService.relativeDuration);
+                                            },
+                                            child: Text(settingsService.relativeDuration ? '-${_formatDuration(duration - position)}' : _formatDuration(duration)),
+                                          )
                                         ],
                                       ),
                                     ),
