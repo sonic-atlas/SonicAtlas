@@ -132,10 +132,9 @@ packages:
   discord_rich_presence:
     dependency: "direct main"
     description:
-      name: discord_rich_presence
-      sha256: ed30f3aa310fb96afe1d410ac0263f4f3013943981935332db08a037f340f4fd
-      url: "https://pub.dev"
-    source: hosted
+      path: "vendor/discord_rich_presence_fork"
+      relative: true
+    source: path
     version: "1.1.1"
   fake_async:
     dependency: transitive

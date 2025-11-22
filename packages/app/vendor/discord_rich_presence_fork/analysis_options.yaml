@@ -1,0 +1,37 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    - require_trailing_commas
+    - always_use_package_imports
+    - cancel_subscriptions
+    - discarded_futures
+    - no_adjacent_strings_in_list
+    - always_declare_return_types
+    - always_put_required_named_parameters_first
+    - always_specify_types
+    - avoid_classes_with_only_static_members
+    - avoid_final_parameters
+    - avoid_positional_boolean_parameters
+    - avoid_returning_this
+    - avoid_setters_without_getters
+    - directives_ordering
+    - eol_at_end_of_file
+    - parameter_assignments
+    - prefer_single_quotes
+    - prefer_final_in_for_each
+    - prefer_final_locals
+    - prefer_null_aware_method_calls
+    - sort_constructors_first
+    - sort_unnamed_constructors_first
+    - unnecessary_breaks
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - unnecessary_raw_strings
+    - unnecessary_to_list_in_spreads
+    - use_colored_box
+    - use_decorated_box
+    - use_enums
+    - use_raw_strings
+    - use_named_constants
+    - use_string_buffers
