@@ -147,8 +147,10 @@ class DiscordService with ChangeNotifier {
     ActivityType? type,
     String? largeImage,
     String? largeText,
+    String? name
   }) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
+      name: name,
       details: details,
       state: state,
       timestamps: timestamps,
@@ -172,6 +174,7 @@ class DiscordService with ChangeNotifier {
     _pauseTime = null;
 
     await _updateActivity(
+      name: '${track.title} — ${track.artist}',
       details: track.title,
       state: track.artist,
       timestamps: ActivityTimestamps(
