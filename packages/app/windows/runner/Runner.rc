@@ -95,8 +95,9 @@ BEGIN
             VALUE "InternalName", "sonic_atlas" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 dev.heggo. All rights reserved." "\0"
             VALUE "OriginalFilename", "sonic_atlas.exe" "\0"
-            VALUE "ProductName", "sonic_atlas" "\0"
+            VALUE "ProductName", "Sonic Atlas" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
+            VALUE "AppUserModelID", "dev.heggo.sonic_atlas" "\0"
         END
     END
     BLOCK "VarFileInfo"

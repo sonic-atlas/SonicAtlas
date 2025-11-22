@@ -15,7 +15,7 @@ const qualities: Record<Exclude<Quality, 'auto'>, { bitrate?: string, codec: str
     efficiency: { bitrate: '128k', codec: 'aac', maxRate: '128k', bufsize: '256k' },
     high: { bitrate: '320k', codec: 'aac', maxRate: '320k', bufsize: '640k' },
     cd: { codec: 'flac', sampleRate: '44100', audioBitrate: null },
-    hires: { codec: 'flac', sampleRate: '96000', audioBitrate: null }
+    hires: { codec: 'flac', audioBitrate: null }
 }
 
 export async function generateHLS(track: InferSelectModel<typeof tracks>, inputFile: string, socketRoom?: string) {

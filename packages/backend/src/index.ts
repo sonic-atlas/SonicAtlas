@@ -61,7 +61,7 @@ app.use('/api',
     rateLimit({
         windowMs: 1 * 60 * 1000,
         limit: Number(process.env.RATE_LIMIT_PER_MINUTE) ?? 1000,
-        skip: (req) => req.method === "OPTIONS",
+        skip: (req) => req.method === 'OPTIONS',
     }),
     //* User rate limit
     rateLimit({
@@ -72,7 +72,7 @@ app.use('/api',
 
             return ipKeyGenerator(req.ip!);
         },
-        skip: (req) => req.method === "OPTIONS",
+        skip: (req) => req.method === 'OPTIONS',
     })
 );
 

@@ -475,7 +475,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(_formatDuration(position)),
-                                          Text(_formatDuration(duration)),
+                                          GestureDetector(
+                                            onTap: () {
+                                              settingsService.setRelativeDuration(!settingsService.relativeDuration);
+                                            },
+                                            child: Text(settingsService.relativeDuration ? '-${_formatDuration(duration - position)}' : _formatDuration(duration)),
+                                          )
                                         ],
                                       ),
                                     ),
@@ -489,7 +494,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.skip_previous),
+                                  icon: Icon(
+                                    Icons.skip_previous,
+                                    color: audioService.hasPrevious
+                                        ? Colors.white
+                                        : Theme.of(context).disabledColor,
+                                  ),
                                   iconSize: 40,
                                   onPressed: audioService.hasPrevious
                                       ? () => audioService.skipPrevious()
@@ -517,7 +527,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 ),
                                 const SizedBox(width: 24),
                                 IconButton(
-                                  icon: const Icon(Icons.skip_next),
+                                  icon: Icon(
+                                    Icons.skip_next,
+                                    color: audioService.hasNext
+                                        ? Colors.white
+                                        : Theme.of(context).disabledColor
+                                  ),
                                   iconSize: 40,
                                   onPressed: audioService.hasNext
                                       ? () => audioService.skipNext()

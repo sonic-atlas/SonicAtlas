@@ -5,6 +5,7 @@ import 'package:discord_rich_presence/discord_rich_presence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sonic_atlas/core/models/track.dart';
 import 'package:sonic_atlas/core/services/settings.dart';
+
 import 'audio.dart';
 
 extension ActivityCopyWith on Activity {
@@ -46,6 +47,7 @@ extension ActivityAssetsCopyWith on ActivityAssets {
 class DiscordService with ChangeNotifier {
   final Client client = Client(clientId: '1438064057138806818'); // Don't change
   final SettingsService _settingsService;
+  AudioService? _audioService;
 
   Track? _currentlyPlaying;
   DateTime? _trackStartTime;
@@ -53,13 +55,12 @@ class DiscordService with ChangeNotifier {
 
   final Activity _templateActivity = Activity(
     name: 'Sonic Atlas',
-    assets: ActivityAssets(
-      largeImage: 'icon_flutter'
-    )
+    assets: ActivityAssets(largeImage: 'icon_flutter'),
   );
   Activity? _currentActivity;
 
   bool _isEnabled = true;
+
   bool get isEnabled => _settingsService.discordRPCEnabled;
 
   final List<StreamSubscription> _subscriptions = [];
@@ -69,8 +70,23 @@ class DiscordService with ChangeNotifier {
     _isEnabled = isEnabled;
   }
 
+  void setAudioService(AudioService service) {
+    _audioService = service;
+    _subscriptions.add(
+      _audioService!.playingStream.listen((isPlaying) {
+        if (isPlaying) {
+          resumeTrack();
+        } else {
+          pauseTrack();
+        }
+      }),
+    );
+  }
+
   Future<void> init() async {
-    if (!isEnabled || Platform.isAndroid || Platform.isIOS || !_isEnabled) return;
+    if (!isEnabled || Platform.isAndroid || Platform.isIOS || !_isEnabled) {
+      return;
+    }
 
     try {
       await client.connect().timeout(const Duration(seconds: 2));
@@ -91,7 +107,7 @@ class DiscordService with ChangeNotifier {
       AudioService.onPlayTrack.listen(playTrack),
       AudioService.onPlay.listen((_) => resumeTrack()),
       AudioService.onPause.listen((_) => pauseTrack()),
-      AudioService.onSeek.listen(seekTrack)
+      AudioService.onSeek.listen(seekTrack),
     ]);
 
     _currentActivity = null;
@@ -124,7 +140,14 @@ class DiscordService with ChangeNotifier {
     }
   }
 
-  Future<void> _updateActivity({String? details, String? state, ActivityTimestamps? timestamps, ActivityType? type, String? largeImage, String? largeText}) async {
+  Future<void> _updateActivity({
+    String? details,
+    String? state,
+    ActivityTimestamps? timestamps,
+    ActivityType? type,
+    String? largeImage,
+    String? largeText,
+  }) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
       details: details,
       state: state,
@@ -132,8 +155,8 @@ class DiscordService with ChangeNotifier {
       type: type ?? ActivityType.listening,
       assets: (_currentActivity?.assets ?? _templateActivity.assets)?.copyWith(
         largeImage: largeImage,
-        largeText: largeText
-      )
+        largeText: largeText,
+      ),
     );
 
     await client.setActivity(_currentActivity!);
@@ -153,8 +176,8 @@ class DiscordService with ChangeNotifier {
       state: track.artist,
       timestamps: ActivityTimestamps(
         start: _trackStartTime!,
-        end: _trackStartTime!.add(Duration(seconds: track.duration))
-      )
+        end: _trackStartTime!.add(Duration(seconds: track.duration)),
+      ),
     );
 
     notifyListeners();
@@ -171,8 +194,10 @@ class DiscordService with ChangeNotifier {
       type: ActivityType.listening,
       timestamps: ActivityTimestamps(
         start: _trackStartTime!,
-        end: _trackStartTime!.add(Duration(seconds: _currentlyPlaying!.duration))
-      )
+        end: _trackStartTime!.add(
+          Duration(seconds: _currentlyPlaying!.duration),
+        ),
+      ),
     );
   }
 
@@ -182,11 +207,8 @@ class DiscordService with ChangeNotifier {
     _pauseTime = DateTime.now();
 
     await _updateActivity(
-      timestamps: ActivityTimestamps(
-        start: _trackStartTime,
-        end: _pauseTime
-      ),
-      type: ActivityType.playing
+      timestamps: ActivityTimestamps(start: _trackStartTime, end: _pauseTime),
+      type: ActivityType.playing,
     );
   }
 
@@ -199,8 +221,10 @@ class DiscordService with ChangeNotifier {
     await _updateActivity(
       timestamps: ActivityTimestamps(
         start: _trackStartTime,
-        end: _trackStartTime!.add(Duration(seconds: _currentlyPlaying!.duration))
-      )
+        end: _trackStartTime!.add(
+          Duration(seconds: _currentlyPlaying!.duration),
+        ),
+      ),
     );
   }
 }

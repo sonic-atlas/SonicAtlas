@@ -64,6 +64,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 24),
               TextField(
                 controller: _passwordController,
+                autofocus: true,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Server Password',
