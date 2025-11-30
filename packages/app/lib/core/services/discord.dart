@@ -45,7 +45,7 @@ extension ActivityAssetsCopyWith on ActivityAssets {
 }
 
 class DiscordService with ChangeNotifier {
-  final Client client = Client(clientId: '1438064057138806818'); // Don't change
+  final Client client = Client(clientId: '1438064057138806818'); // Don't change -- I won't :)
   final SettingsService _settingsService;
   AudioService? _audioService;
 
@@ -55,7 +55,7 @@ class DiscordService with ChangeNotifier {
 
   final Activity _templateActivity = Activity(
     name: 'Sonic Atlas',
-    assets: ActivityAssets(largeImage: 'icon_flutter'),
+    assets: ActivityAssets(largeImage: 'sonic_atlas_logo'),
   );
   Activity? _currentActivity;
 
