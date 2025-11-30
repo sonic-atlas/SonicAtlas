@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -47,17 +48,23 @@ class TrackListItem extends StatelessWidget {
     return Listener(
       onPointerDown: handlePointerDown,
       child: ListTile(
-        leading: Image.network(
-          apiService.getAlbumArtUrl(track.id),
-          headers: context.read<ApiService>().headers,
+        leading: CachedNetworkImage(
+          imageUrl: apiService.getAlbumArtUrl(track.id),
+          httpHeaders: context.read<ApiService>().headers,
           width: 40,
           height: 40,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.album),
+          fadeInDuration: Duration(milliseconds: 0),
+          errorWidget: (context, url, error) => const Icon(Icons.album),
+          placeholder: (context, url) => Container(
+            width: 40,
+            height: 40,
+            color: Colors.grey[900],
+          ),
         ),
         title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          '${track.artist} • ${track.album}',
+          '${track.artist} • ${track.releaseTitle ?? track.album}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

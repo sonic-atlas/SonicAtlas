@@ -23,6 +23,13 @@ class _HomePageState extends State<HomePage> {
     _tracksFuture = context.read<ApiService>().getTracks();
   }
 
+  Future<void> _refresh() async {
+    setState(() {
+      _tracksFuture = context.read<ApiService>().getTracks();
+    });
+    await _tracksFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainLayout(
@@ -30,6 +37,10 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: const Text('Sonic Atlas'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refresh,
+            ),
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
@@ -58,11 +69,15 @@ class _HomePageState extends State<HomePage> {
             }
 
             final tracks = snapshot.data!;
-            return ListView.builder(
-              itemCount: tracks.length,
-              itemBuilder: (context, index) {
-                return TrackListItem(track: tracks[index]);
-              },
+            return RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: tracks.length,
+                itemBuilder: (context, index) {
+                  return TrackListItem(track: tracks[index]);
+                },
+              ),
             );
           },
         ),

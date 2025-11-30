@@ -163,59 +163,54 @@ router.get('/:trackId/cover', async (req, res) => {
     }
 
     const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const contentTypes: Record<string, string> = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp'
+    };
+
+    let releaseId: string | null = null;
+    try {
+        const releaseTrack = await db.query.releaseTracks.findFirst({
+            where: eq(releaseTracks.trackId, trackId!),
+            columns: { releaseId: true },
+            with: {
+                release: {
+                    columns: { id: true }
+                }
+            }
+        });
+        releaseId = releaseTrack?.releaseId ?? null;
+    } catch (err) { }
 
     for (const ext of extensions) {
         const coverFile = path.join(storagePath, `${trackId}_cover.${ext}`);
 
         try {
             await fsp.access(coverFile);
-
-            const contentTypes: Record<string, string> = {
-                'jpg': 'image/jpeg',
-                'jpeg': 'image/jpeg',
-                'png': 'image/png',
-                'webp': 'image/webp'
-            }
-
             res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
             res.setHeader('Cache-Control', 'public, max-age=31536000');
-
             return res.sendFile(coverFile);
         } catch (err) {
             continue;
         }
     }
 
-    try {
-        const releaseTrack = await db.query.releaseTracks.findFirst({
-            where: eq(releaseTracks.trackId, trackId!),
-            columns: { releaseId: true }
-        });
+    if (releaseId) {
+        for (const ext of extensions) {
+            const coverFile = path.join(storagePath, `release_${releaseId}_cover.${ext}`);
 
-        if (releaseTrack) {
-            for (const ext of extensions) {
-                const coverFile = path.join(storagePath, `release_${releaseTrack.releaseId}_cover.${ext}`);
-
-                try {
-                    await fsp.access(coverFile);
-
-                    const contentTypes: Record<string, string> = {
-                        'jpg': 'image/jpeg',
-                        'jpeg': 'image/jpeg',
-                        'png': 'image/png',
-                        'webp': 'image/webp'
-                    }
-
-                    res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
-                    res.setHeader('Cache-Control', 'public, max-age=31536000');
-
-                    return res.sendFile(coverFile);
-                } catch (err) {
-                    continue;
-                }
+            try {
+                await fsp.access(coverFile);
+                res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
+                res.setHeader('Cache-Control', 'public, max-age=31536000');
+                return res.sendFile(coverFile);
+            } catch (err) {
+                continue;
             }
         }
-    } catch (err) { }
+    }
 
     return res.status(404).json({
         error: 'NOT_FOUND',

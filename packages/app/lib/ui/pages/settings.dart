@@ -90,6 +90,14 @@ class SettingsPage extends StatelessWidget {
                 },
               ),
             ),
+            ListTile(
+              title: const Text('Upload Music'),
+              subtitle: const Text('Upload releases to the server'),
+              leading: const Icon(Icons.upload),
+              onTap: () {
+                Navigator.pushNamed(context, '/upload');
+              },
+            ),
             const Divider(),
             ListTile(
               title: const Text('Log Out'),
