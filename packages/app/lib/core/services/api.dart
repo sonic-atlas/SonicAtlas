@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 import '/core/models/quality.dart';
 import '/core/models/track.dart';
+import '/core/models/release.dart';
 import 'auth.dart';
 import 'settings.dart';
 
@@ -151,5 +154,142 @@ class ApiService {
 
   String getAlbumArtUrl(String trackId) {
     return '$_baseUrl/api/metadata/$trackId/cover';
+  }
+
+  Future<Release?> getRelease(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/releases/$id'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return Release.fromJson(body['release']);
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Get release error: $e');
+      }
+      return null;
+    }
+  }
+
+  Future<List<Track>> getReleaseTracks(String releaseId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/releases/$releaseId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final List<dynamic> tracks = body['tracks'];
+        return tracks.map((json) => Track.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      if (kDebugMode) {
+        print('Get release tracks error: $e');
+      }
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> uploadRelease(
+    List<String> filePaths,
+    String? coverPath,
+    String title,
+    String artist,
+    String year,
+    String type,
+    bool extractAllCovers,
+    String? socketId,
+  ) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/api/releases/upload'),
+      );
+      request.headers.addAll(_headers);
+
+      for (var path in filePaths) {
+        String mimeType = lookupMimeType(path) ?? 'application/octet-stream';
+        if (mimeType == 'audio/x-flac') {
+          mimeType = 'audio/flac';
+        }
+        final mediaType = MediaType.parse(mimeType);
+        request.files.add(await http.MultipartFile.fromPath(
+          'files[]',
+          path,
+          contentType: mediaType,
+        ));
+      }
+
+      if (coverPath != null) {
+        final mimeType = lookupMimeType(coverPath) ?? 'image/jpeg';
+        final mediaType = MediaType.parse(mimeType);
+        request.files.add(await http.MultipartFile.fromPath(
+          'cover',
+          coverPath,
+          contentType: mediaType,
+        ));
+      }
+
+      request.fields['releaseTitle'] = title;
+      request.fields['primaryArtist'] = artist;
+      request.fields['year'] = year;
+      request.fields['releaseType'] = type;
+      request.fields['extractAllCovers'] = extractAllCovers.toString();
+      if (socketId != null) {
+        request.fields['socketId'] = socketId;
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      }
+      throw Exception('Upload failed: ${response.body}');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Upload release error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  Future<bool> updateRelease(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/api/releases/$id'),
+        headers: _headers,
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update release error: $e');
+      }
+      return false;
+    }
+  }
+
+  Future<bool> updateTrackMetadata(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/api/metadata/$id'),
+        headers: _headers,
+        body: jsonEncode(data),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update track metadata error: $e');
+      }
+      return false;
+    }
   }
 }

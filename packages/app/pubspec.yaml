@@ -35,6 +35,11 @@ dependencies:
   audio_service: ^0.18.18
   audio_service_win: ^0.0.2
   rxdart: ^0.28.0
+  file_picker: ^10.3.7
+  socket_io_client: ^3.1.2
+  mime: ^2.0.0
+  http_parser: ^4.1.2
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:

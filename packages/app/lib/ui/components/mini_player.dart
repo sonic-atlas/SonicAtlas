@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,19 +40,21 @@ class MiniPlayer extends StatelessWidget {
           children: [
             ImageFiltered(
               imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Image.network(
-                imageUrl,
-                headers: apiService.headers,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                httpHeaders: apiService.headers,
                 fit: BoxFit.cover,
                 color: Colors.black.withValues(alpha: 0.4),
                 colorBlendMode: BlendMode.darken,
-                errorBuilder: (context, error, stackTrace) {
+                fadeInDuration: Duration.zero,
+                errorWidget: (context, url, error) {
                   return Container(
                     color: Theme.of(
                       context,
                     ).colorScheme.surfaceContainerHighest,
                   );
                 },
+                placeholder: (context, url) => Container(color: Colors.black),
               ),
             ),
             Container(
@@ -63,13 +66,14 @@ class MiniPlayer extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.network(
-                      imageUrl,
-                      headers: apiService.headers,
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      httpHeaders: apiService.headers,
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
+                      fadeInDuration: Duration.zero,
+                      errorWidget: (context, url, error) {
                         return Container(
                           width: 48,
                           height: 48,
@@ -79,6 +83,11 @@ class MiniPlayer extends StatelessWidget {
                           child: const Icon(Icons.music_note),
                         );
                       },
+                      placeholder: (context, url) => Container(
+                        width: 48,
+                        height: 48,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

@@ -4,6 +4,7 @@ import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
+import fs from 'node:fs';
 import { albums, playlistItems, trackMetadata, tracks } from '$db/schema.js';
 import { parseFile } from 'music-metadata';
 import { and, eq, type InferSelectModel, desc } from 'drizzle-orm';
@@ -19,6 +20,7 @@ const router = Router();
 router.use(authMiddleware, uploaderPerms);
 
 const uploadFolder = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals');
+fs.mkdirSync(uploadFolder, { recursive: true });
 
 // GET all tracks
 router.get('/', async (req, res) => {
@@ -40,9 +42,13 @@ router.get('/', async (req, res) => {
             const coverArtPath = track.coverArtPath ?? (hasReleaseCover ? `/api/metadata/${track.id}/cover` : null);
 
             const { releaseTracks, ...rest } = track;
+            const primaryRelease = track.releaseTracks[0]?.release;
+
             return {
                 ...rest,
-                coverArtPath
+                coverArtPath,
+                releaseId: primaryRelease?.id,
+                releaseTitle: primaryRelease?.title
             };
         });
 

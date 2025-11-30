@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -295,13 +296,14 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            imageUrl,
-            headers: apiService.headers,
+          CachedNetworkImage(
+            imageUrl: imageUrl,
+            httpHeaders: apiService.headers,
             fit: BoxFit.cover,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stackTrace) =>
+            fadeInDuration: Duration.zero,
+            errorWidget: (context, url, error) =>
                 Container(color: Colors.black),
+            placeholder: (context, url) => Container(color: Colors.black),
           ),
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -404,11 +406,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  imageUrl,
-                                  headers: apiService.headers,
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  httpHeaders: apiService.headers,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
+                                  fadeInDuration: Duration.zero,
+                                  errorWidget: (context, url, error) {
                                     return Container(
                                       color: Theme.of(
                                         context,
@@ -419,6 +422,11 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                       ),
                                     );
                                   },
+                                  placeholder: (context, url) => Container(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                                  ),
                                 ),
                               ),
                             ),
@@ -440,6 +448,20 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                         .colorScheme
                                         .onSurface
                                         .withValues(alpha: 0.7),
+                                  ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              track.releaseTitle ?? track.album,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.5),
                                   ),
                               textAlign: TextAlign.center,
                               maxLines: 1,

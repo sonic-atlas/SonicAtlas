@@ -474,12 +474,31 @@ router.delete('/:id', async (req, res) => {
 
         await db.delete(releases).where(eq(releases.id, id!));
 
-        if (release.coverArtPath) {
-            const coverName = path.basename(release.coverArtPath);
-            const coverPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata', coverName);
-            if (fs.existsSync(coverPath)) {
-                fs.unlinkSync(coverPath);
+        const deletedFiles: string[] = [];
+        const deletedFolders: string[] = [];
+        const preservedTracks: string[] = [];
+        const deletionErrors: string[] = [];
+
+        try {
+            const metadataDir = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
+            const entries = await fsp.readdir(metadataDir).catch(() => [] as string[]);
+            for (const entry of entries) {
+                if (entry.startsWith(`release_${id}_cover.`)) {
+                    const p = path.join(metadataDir, entry);
+                    try {
+                        await fsp.unlink(p);
+                        deletedFiles.push(p);
+                    } catch (e) {
+                        const msg = `Failed to remove release cover ${p}: ${e}`;
+                        logger.warn(msg);
+                        deletionErrors.push(msg);
+                    }
+                }
             }
+        } catch (e) {
+            const msg = `Failed to scan metadata dir for release cover files: ${e}`;
+            logger.warn(msg);
+            deletionErrors.push(msg);
         }
 
         for (const trackId of trackIds) {
@@ -494,28 +513,75 @@ router.delete('/:id', async (req, res) => {
 
                     await db.delete(tracks).where(eq(tracks.id, trackId));
 
-                    const originalPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals', track.originalFilename);
-                    if (fs.existsSync(originalPath)) {
-                        fs.unlinkSync(originalPath);
-                    }
-
-                    const hlsPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'hls', track.id);
-                    if (fs.existsSync(hlsPath)) {
-                        fs.rmSync(hlsPath, { recursive: true, force: true });
-                    }
-
-                    if (track.coverArtPath) {
-                        const trackCoverName = path.basename(track.coverArtPath);
-                        const trackCoverPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata', trackCoverName);
-                        if (fs.existsSync(trackCoverPath)) {
-                            fs.unlinkSync(trackCoverPath);
+                    if (track.filename) {
+                        const originalPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals', track.filename);
+                        try {
+                            if (fs.existsSync(originalPath)) {
+                                await fsp.unlink(originalPath);
+                                deletedFiles.push(originalPath);
+                            }
+                        } catch (e) {
+                            const msg = `Failed to remove original file ${originalPath}: ${e}`;
+                            logger.warn(msg);
+                            deletionErrors.push(msg);
                         }
                     }
+
+                    try {
+                        const hlsPath = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'hls', track.id);
+                        if (fs.existsSync(hlsPath)) {
+                            await fsp.rm(hlsPath, { recursive: true, force: true });
+                            deletedFolders.push(hlsPath);
+                        }
+                    } catch (e) {
+                        const msg = `Failed to remove HLS ${track.id}: ${e}`;
+                        logger.warn(msg);
+                        deletionErrors.push(msg);
+                    }
+
+                    try {
+                        const metadataDir = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
+                        const entries = await fsp.readdir(metadataDir).catch(() => [] as string[]);
+                        for (const entry of entries) {
+                            if (entry.startsWith(`${track.id}_cover.`)) {
+                                const p = path.join(metadataDir, entry);
+                                try {
+                                    await fsp.unlink(p);
+                                    deletedFiles.push(p);
+                                } catch (e) {
+                                    const msg = `Failed to remove track cover ${p}: ${e}`;
+                                    logger.warn(msg);
+                                    deletionErrors.push(msg);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        const msg = `Failed to scan metadata dir for track covers for ${track.id}: ${e}`;
+                        logger.warn(msg);
+                        deletionErrors.push(msg);
+                    }
                 }
+            } else {
+                preservedTracks.push(trackId);
             }
         }
 
-        return res.json({ success: true });
+        if (deletionErrors.length > 0) {
+            return res.status(500).json({
+                success: true,
+                message: 'Release removed from database, but some storage deletions failed. You can remove unused files manually to free storage.',
+                deletedFiles,
+                deletedFolders,
+                preservedTracks,
+                errors: deletionErrors
+            });
+        }
+
+        const responseMsg = preservedTracks.length > 0
+            ? 'Release deleted; some tracks were preserved because they belong to other releases.'
+            : 'Release deleted and unused files removed.';
+
+        return res.json({ success: true, message: responseMsg, deletedFiles, deletedFolders, preservedTracks });
 
     } catch (err) {
         logger.error(`(DELETE /api/releases/${id}) Error: ${err}`);

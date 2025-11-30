@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
@@ -12,11 +13,14 @@ import 'core/services/discord.dart';
 import 'core/services/media_handler.dart';
 import 'core/services/mpris_service.dart';
 import 'core/services/settings.dart';
+import 'core/services/socket.dart';
+import 'ui/pages/fs_player.dart';
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
 import 'ui/pages/server_setup.dart';
 import 'ui/pages/settings.dart';
 import 'ui/pages/splash.dart';
+import 'ui/pages/upload.dart';
 
 late MediaSessionHandler audioHandler;
 LinuxMprisManager? linuxMpris;
@@ -78,6 +82,11 @@ void main() async {
           update: (context, settings, auth, previous) =>
               ApiService(settings, auth),
         ),
+        ChangeNotifierProvider<SocketService>(
+          create: (context) => SocketService(
+            Provider.of<SettingsService>(context, listen: false),
+          ),
+        ),
       ],
       child: const SonicAtlasApp(),
     ),
@@ -100,6 +109,14 @@ class SonicAtlasApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Sonic Atlas',
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: background,
@@ -107,12 +124,13 @@ class SonicAtlasApp extends StatelessWidget {
         colorScheme: ColorScheme.dark(
           primary: primaryColor,
           secondary: secondaryColor,
-          surface: background,
+          surface: surfaceColor,
           surfaceContainerHighest: surfaceColor,
+          surfaceTint: Colors.transparent,
           onPrimary: Colors.black,
           onSecondary: Colors.black,
           onSurface: textPrimaryColor,
-          onSurfaceVariant: surfaceColor,
+          onSurfaceVariant: background,
         ),
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: textPrimaryColor),
@@ -148,13 +166,86 @@ class SonicAtlasApp extends StatelessWidget {
             side: const BorderSide(color: textSecondaryColor),
           ),
         ),
+        inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(color: textSecondaryColor),
+          hintStyle: TextStyle(color: textSecondaryColor),
+          floatingLabelStyle: TextStyle(color: textPrimaryColor),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: textSecondaryColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: primaryColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: surfaceColor,
+            foregroundColor: textPrimaryColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: primaryColor,
+          selectionColor: primaryColor.withOpacity(0.25),
+          selectionHandleColor: primaryColor,
+        ),
         sliderTheme: SliderThemeData(
           activeTrackColor: primaryColor,
           thumbColor: primaryColor,
           inactiveTrackColor: textSecondaryColor.withValues(alpha: 0.3),
         ),
+        checkboxTheme: CheckboxThemeData(
+          side: const BorderSide(color: textSecondaryColor, width: 2),
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primaryColor;
+            }
+            return null;
+          }),
+          checkColor: WidgetStateProperty.all(Colors.black),
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primaryColor;
+            }
+            return textSecondaryColor;
+          }),
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primaryColor;
+            }
+            return textSecondaryColor;
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primaryColor.withValues(alpha: 0.5);
+            }
+            return surfaceColor;
+          }),
+          trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return Colors.transparent;
+            }
+            return textSecondaryColor;
+          }),
+        ),
         bottomSheetTheme: const BottomSheetThemeData(
           backgroundColor: surfaceColor,
+          surfaceTintColor: Colors.transparent,
+        ),
+        popupMenuTheme: const PopupMenuThemeData(
+          surfaceTintColor: Colors.transparent,
+        ),
+        dialogTheme: const DialogThemeData(
+          surfaceTintColor: Colors.transparent,
+        ),
+        cardTheme: const CardThemeData(
+          surfaceTintColor: Colors.transparent,
         ),
         useMaterial3: true,
       ),
@@ -165,6 +256,7 @@ class SonicAtlasApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/': (context) => const HomePage(),
         '/settings': (context) => const SettingsPage(),
+        '/upload': (context) => const UploadPage(),
       },
     );
   }
