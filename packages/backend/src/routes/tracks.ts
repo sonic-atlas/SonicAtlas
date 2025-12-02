@@ -5,9 +5,9 @@ import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import fs from 'node:fs';
-import { albums, playlistItems, trackMetadata, tracks } from '$db/schema.js';
+import { playlistItems, trackMetadata, tracks } from '$db/schema.js';
 import { parseFile } from 'music-metadata';
-import { and, eq, type InferSelectModel, desc } from 'drizzle-orm';
+import { eq, type InferSelectModel, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger.js';
 import { isUUID } from '../utils/isUUID.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
@@ -48,7 +48,8 @@ router.get('/', async (req, res) => {
                 ...rest,
                 coverArtPath,
                 releaseId: primaryRelease?.id,
-                releaseTitle: primaryRelease?.title
+                releaseTitle: primaryRelease?.title,
+                album: primaryRelease?.title
             };
         });
 
@@ -171,49 +172,10 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                 .set({ filename })
                 .where(eq(tracks.id, track!.id));
 
-            let albumId: string | null = null;
-            if (meta.album) {
-                logger.info(`Processing album: "${meta.album}" by "${meta.albumArtist}"`);
-
-                const albumWhere = meta.albumArtist
-                    ? and(eq(albums.title, meta.album), eq(albums.artist, meta.albumArtist))
-                    : eq(albums.title, meta.album);
-
-                const insertResult = await tx
-                    .insert(albums)
-                    .values({
-                        title: meta.album,
-                        artist: meta.albumArtist,
-                        year: meta.year ?? undefined
-                    })
-                    .onConflictDoNothing({
-                        target: meta.albumArtist ? [albums.title, albums.artist] : [albums.title]
-                    })
-                    .returning({ id: albums.id });
-
-                logger.info(`Album insert result: ${JSON.stringify(insertResult)}`);
-
-                if (insertResult.length > 0 && insertResult[0]?.id) {
-                    albumId = insertResult[0].id;
-                    logger.info(`Created new album with ID: ${albumId}`);
-                } else {
-                    logger.info(`Album exists, fetching from DB`);
-                    const [existingAlbum] = await tx
-                        .select({ id: albums.id })
-                        .from(albums)
-                        .where(albumWhere)
-                        .limit(1);
-
-                    albumId = existingAlbum?.id ?? null;
-                    logger.info(`Found existing album ID: ${albumId}`);
-                }
-            }
-
             await tx.insert(trackMetadata).values({
                 trackId: track!.id,
                 title: meta.title,
                 artist: meta.artist,
-                albumId,
                 year: meta.year,
                 genres: meta.genres,
                 bitrate: meta.bitrate ? Math.round(meta.bitrate) : null,

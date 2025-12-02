@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../../db/db.js';
-import { trackMetadata } from '../../db/schema.js';
-import { sql } from 'drizzle-orm';
+import { trackMetadata, releases, releaseTracks } from '../../db/schema.js';
+import { sql, eq } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 
@@ -30,30 +30,31 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-const preparedSearchQuery = db.query.trackMetadata.findMany({
-    columns: {
-        title: true,
-        artist: true,
-        albumId: true
-    },
-    extras: {
-        id: sql`${trackMetadata.trackId}`.as('id'),
-        rank: sql<number>`
-            ts_rank(${trackMetadata.searchVector}, websearch_to_tsquery('english', ${sql.placeholder('q')}))
-            + 0.5 * ts_rank(${trackMetadata.searchVector}, to_tsquery('english', ${sql.placeholder('pq')}))
-        `.as('rank')
-    },
-    where: sql`
-        (
-          ${trackMetadata.searchVector} @@ websearch_to_tsquery('english', ${sql.placeholder('q')})
-          OR ${trackMetadata.searchVector} @@ to_tsquery('english', ${sql.placeholder('pq')})
-          OR ${trackMetadata.title} ILIKE '%' || ${sql.placeholder('q')} || '%'
-          OR ${trackMetadata.artist} ILIKE '%' || ${sql.placeholder('q')} || '%'
-        )
-    `,
-    orderBy: sql`rank DESC`,
-    limit: sql.placeholder('limit'),
-    offset: sql.placeholder('offset')
-}).prepare('track_query_search');
+const preparedSearchQuery = db.select({
+    id: trackMetadata.trackId,
+    title: trackMetadata.title,
+    artist: trackMetadata.artist,
+    album: releases.title,
+    rank: sql<number>`
+        ts_rank(${trackMetadata.searchVector}, websearch_to_tsquery('english', ${sql.placeholder('q')}))
+        + 0.5 * ts_rank(${trackMetadata.searchVector}, to_tsquery('english', ${sql.placeholder('pq')}))
+    `.as('rank')
+})
+    .from(trackMetadata)
+    .leftJoin(releaseTracks, eq(trackMetadata.trackId, releaseTracks.trackId))
+    .leftJoin(releases, eq(releaseTracks.releaseId, releases.id))
+    .where(sql`
+    (
+        ${trackMetadata.searchVector} @@ websearch_to_tsquery('english', ${sql.placeholder('q')})
+        OR ${trackMetadata.searchVector} @@ to_tsquery('english', ${sql.placeholder('pq')})
+        OR ${trackMetadata.title} ILIKE '%' || ${sql.placeholder('q')} || '%'
+        OR ${trackMetadata.artist} ILIKE '%' || ${sql.placeholder('q')} || '%'
+        OR ${releases.title} ILIKE '%' || ${sql.placeholder('q')} || '%'
+    )
+`)
+    .orderBy(sql`rank DESC`)
+    .limit(sql.placeholder('limit'))
+    .offset(sql.placeholder('offset'))
+    .prepare('track_query_search');
 
 export default router;

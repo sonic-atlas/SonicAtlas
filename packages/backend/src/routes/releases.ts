@@ -288,15 +288,6 @@ router.post('/upload', uploadFields, async (req, res) => {
 
                         await tx.update(tracks).set({ filename }).where(eq(tracks.id, track.id));
 
-                        await tx.insert(trackMetadata).values({
-                            trackId: track.id,
-                            title: meta.title,
-                            artist: meta.artist,
-                            albumId: null,
-                            year: meta.year,
-                            genres: meta.genres
-                        });
-
                         // Guess track number from filename if not in metadata
                         let trackNumber = meta.trackNo;
                         if (!trackNumber) {
@@ -309,6 +300,14 @@ router.post('/upload', uploadFields, async (req, res) => {
                             trackId: track.id,
                             discNumber: meta.diskNo || 1,
                             trackNumber: trackNumber
+                        });
+
+                        await tx.insert(trackMetadata).values({
+                            trackId: track.id,
+                            title: meta.title,
+                            artist: meta.artist,
+                            year: meta.year,
+                            genres: meta.genres
                         });
 
                         if (metadata.common.picture && metadata.common.picture.length > 0) {

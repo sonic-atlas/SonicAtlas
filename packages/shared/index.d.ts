@@ -32,6 +32,9 @@ declare module '@sonic-atlas/shared' {
         sampleRate?: number;
         bitDepth?: number;
         metadata?: TrackMetadata;
+        album?: string;
+        releaseId?: string;
+        releaseTitle?: string;
     }
 
     export interface TrackMetadata {

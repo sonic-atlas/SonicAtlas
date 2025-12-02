@@ -63,27 +63,39 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
                         fileSize: true,
                         uploadedAt: true
                     }
-                },
-                album: {
-                    columns: {
-                        title: true,
-                        artist: true
-                    }
                 }
             }
         });
 
         if (!metadataRaw) return res.status(404);
 
-        const { track, album, ...rest } = metadataRaw;
+        const { track, ...rest } = metadataRaw;
 
         const sourceQuality = determineSourceQuality(track);
+
+        let albumTitle: string | null = null;
+        let albumArtist: string | null = null;
+
+        try {
+            const releaseTrack = await db.query.releaseTracks.findFirst({
+                where: eq(releaseTracks.trackId, trackId!),
+                with: {
+                    release: true
+                }
+            });
+            if (releaseTrack?.release) {
+                albumTitle = releaseTrack.release.title;
+                albumArtist = releaseTrack.release.primaryArtist;
+            }
+        } catch (e) {
+            // ignore
+        }
 
         return res.json({
             ...rest,
             ...track,
-            album: album?.title ?? null,
-            albumArtist: album?.artist ?? null,
+            album: albumTitle,
+            albumArtist: albumArtist,
             sourceQuality
         });
     } catch (err) {

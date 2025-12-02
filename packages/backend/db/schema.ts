@@ -8,7 +8,6 @@ import {
     pgTable,
     text,
     timestamp,
-    uniqueIndex,
     uuid
 } from 'drizzle-orm/pg-core';
 
@@ -35,24 +34,11 @@ export const tracks = pgTable('tracks', {
     uploadedAt: timestamp('uploaded_at').defaultNow()
 });
 
-export const albums = pgTable('albums', {
-    id: uuid().defaultRandom().primaryKey(),
-    title: text().notNull(),
-    artist: text(),
-    year: integer(),
-    coverArt: text('cover_art'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow()
-}, (table) => [
-    uniqueIndex('album_unique_idx').on(table.title, table.artist)
-]);
-
 export const trackMetadata = pgTable('track_metadata', {
     id: uuid().defaultRandom().primaryKey(),
     trackId: uuid('track_id').references(() => tracks.id, { onDelete: 'set null' }),
     title: text(),
     artist: text(),
-    albumId: uuid('album_id').references(() => albums.id, { onDelete: 'set null' }),
     year: integer(),
     genres: text().array(),
     bitrate: integer(),
@@ -62,7 +48,6 @@ export const trackMetadata = pgTable('track_metadata', {
     updatedAt: timestamp('updated_at').defaultNow()
 }, (table) => [
     index('track_metadata_track_id_idx').on(table.trackId),
-    index('track_metadata_album_id_idx').on(table.albumId)
 ]);
 
 export const releases = pgTable('releases', {
@@ -125,19 +110,11 @@ export const trackRelations = relations(tracks, ({ many, one }) => ({
     releaseTracks: many(releaseTracks)
 }));
 
-export const albumRelations = relations(albums, ({ many }) => ({
-    tracks: many(trackMetadata)
-}));
-
 export const trackMetadataRelations = relations(trackMetadata, ({ one }) => ({
     track: one(tracks, {
         fields: [trackMetadata.trackId],
         references: [tracks.id]
     }),
-    album: one(albums, {
-        fields: [trackMetadata.albumId],
-        references: [albums.id]
-    })
 }));
 
 export const playlistRelations = relations(playlists, ({ many }) => ({
