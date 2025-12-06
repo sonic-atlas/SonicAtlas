@@ -115,7 +115,8 @@ async function loadRoutes(dir: string) {
             const routePath = relativePath.replace(/\.ts/, '').replace(/\\/g, '/');
 
             try {
-                const { default: router } = await import(pathToFileURL(fullPath).href);
+                const importUrl = pathToFileURL(fullPath).href + `?v=${Date.now()}`;
+                const { default: router } = await import(importUrl);
 
                 if (router) {
                     app.use(`/api/${routePath}`, router);

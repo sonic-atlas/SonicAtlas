@@ -246,13 +246,13 @@ router.post('/upload', uploadFields, async (req, res) => {
                 attempts++;
                 try {
                     const metadata = await parseFile(file.path);
-                    const format = (metadata.format.codec?.toLowerCase() || path.extname(file.originalname).slice(1).toLowerCase()) as any;
+                    const ext = path.extname(file.originalname).slice(1).toLowerCase() as any;
 
                     const meta = {
                         duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
                         sampleRate: metadata.format.sampleRate ?? null,
                         bitDepth: metadata.format.bitsPerSample ?? null,
-                        format,
+                        format: ext,
                         title: metadata.common.title ?? path.parse(file.originalname).name,
                         artist: metadata.common.artist ?? primaryArtist ?? 'Unknown Artist',
                         album: metadata.common.album ?? releaseTitle ?? 'Unknown Album',

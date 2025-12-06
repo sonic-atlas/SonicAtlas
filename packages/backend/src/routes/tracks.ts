@@ -117,7 +117,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
 
     try {
         const metadata = await parseFile(req.file.path);
-        const format = (metadata.format.codec?.toLowerCase() || path.extname(req.file.originalname).slice(1).toLowerCase()) as any;
+        const ext = path.extname(req.file.originalname).slice(1).toLowerCase() as any;
 
         const albumName = metadata.common.album?.trim() || null;
         const albumArtist =
@@ -132,7 +132,7 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
             sampleRate: metadata.format.sampleRate ?? null,
             bitDepth: metadata.format.bitsPerSample ?? null,
-            format,
+            format: ext,
 
             // track_metadata
             title: metadata.common.title ?? path.parse(req.file.originalname).name,
@@ -145,6 +145,8 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
             codec: metadata.format.codec ?? null
         }
 
+        logger.info(ext);
+
         trackInfo = await db.transaction(async (tx) => {
             const [track] = await tx
                 .insert(tracks)
@@ -154,13 +156,12 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                     duration: meta.duration,
                     sampleRate: meta.sampleRate,
                     bitDepth: meta.bitDepth,
-                    format: meta.format,
+                    format: ext,
                     fileSize: req.file!.size
                 })
                 .returning();
 
-            const fileExt = path.extname(req.file!.originalname);
-            filename = `${track!.id}${fileExt}`;
+            filename = `${track!.id}${ext}`;
             newPath = path.join(uploadFolder, filename);
             await fsp.rename(req.file!.path, newPath);
             fileRenamed = true;
