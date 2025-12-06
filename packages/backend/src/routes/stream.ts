@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { db } from '../../db/db.js';
-import { eq, type InferSelectModel } from 'drizzle-orm';
+import { type InferSelectModel } from 'drizzle-orm';
 import { tracks } from '../../db/schema.js';
 import path from 'node:path';
 import { isUUID } from '../utils/isUUID.js';
@@ -61,7 +61,9 @@ router.get('/:trackId/quality', async (req, res) => {
     }
 
     const track = await db.query.tracks.findFirst({
-        where: eq(tracks.id, trackId!)
+        where: {
+            id: trackId
+        }
     });
 
     if (!track) {

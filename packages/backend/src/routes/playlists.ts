@@ -141,7 +141,9 @@ router.delete('/:playlistId', uploaderPerms, async (req, res) => {
 
     try {
         const playlist = await db.query.playlists.findFirst({
-            where: eq(playlists.id, playlistId!)
+            where: {
+                id: playlistId
+            }
         });
 
         if (!playlist) {

@@ -2,6 +2,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema.js';
+import { relations } from './relations.js';
 import { $envPath } from '@sonic-atlas/shared';
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
@@ -10,7 +11,7 @@ let DATABASE_URL = process.env.DATABASE_URL!;
 
 export const pgClient = postgres(DATABASE_URL);
 
-export const db = drizzle(pgClient, { schema });
+export const db = drizzle(DATABASE_URL, { schema, relations });
 
 /* // Redis
 import { createClient } from 'redis';

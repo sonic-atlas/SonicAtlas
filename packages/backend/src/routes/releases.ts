@@ -129,7 +129,9 @@ router.get('/:id', async (req, res) => {
 
     try {
         const release = await db.query.releases.findFirst({
-            where: eq(releases.id, id!)
+            where: {
+                id
+            }
         });
 
         if (!release) {
@@ -451,7 +453,9 @@ router.delete('/:id', async (req, res) => {
 
     try {
         const release = await db.query.releases.findFirst({
-            where: eq(releases.id, id!)
+            where: {
+                id
+            }
         });
 
         if (!release) {

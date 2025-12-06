@@ -1,4 +1,3 @@
-import { relations } from 'drizzle-orm';
 import {
     bigint,
     customType,
@@ -20,6 +19,11 @@ const tsvector = customType<{ data: string; notNull: false; default: false }>({
         return 'tsvector';
     }
 });
+
+const timestamps = {
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow()
+}
 
 export const tracks = pgTable('tracks', {
     id: uuid().defaultRandom().primaryKey(),
@@ -44,8 +48,7 @@ export const trackMetadata = pgTable('track_metadata', {
     bitrate: integer(),
     codec: text(),
     searchVector: tsvector('search_vector'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow()
+    ...timestamps
 }, (table) => [
     index('track_metadata_track_id_idx').on(table.trackId),
 ]);
@@ -57,8 +60,7 @@ export const releases = pgTable('releases', {
     year: integer(),
     releaseType: releaseTypeEnum('release_type'),
     coverArtPath: text('cover_art_path'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow()
+    ...timestamps
 });
 
 export const releaseTracks = pgTable('release_tracks', {
@@ -81,8 +83,7 @@ export const playlists = pgTable('playlists', {
     id: uuid().defaultRandom().primaryKey(),
     name: text().notNull(),
     description: text().notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow()
+    ...timestamps
 });
 
 export const playlistItems = pgTable('playlist_items', {
@@ -94,57 +95,3 @@ export const playlistItems = pgTable('playlist_items', {
 }, (table) => [
     index('playlist_items_playlist_id_idx').on(table.playlistId)
 ]);
-
-//* ===============
-//*    RELATIONS
-//* ===============
-
-//#region RELATIONS
-
-export const trackRelations = relations(tracks, ({ many, one }) => ({
-    metadata: one(trackMetadata, {
-        fields: [tracks.id],
-        references: [trackMetadata.trackId]
-    }),
-    playlistItems: many(playlistItems),
-    releaseTracks: many(releaseTracks)
-}));
-
-export const trackMetadataRelations = relations(trackMetadata, ({ one }) => ({
-    track: one(tracks, {
-        fields: [trackMetadata.trackId],
-        references: [tracks.id]
-    }),
-}));
-
-export const playlistRelations = relations(playlists, ({ many }) => ({
-    items: many(playlistItems)
-}));
-
-export const playlistItemRelations = relations(playlistItems, ({ one }) => ({
-    playlist: one(playlists, {
-        fields: [playlistItems.playlistId],
-        references: [playlists.id]
-    }),
-    track: one(tracks, {
-        fields: [playlistItems.trackId],
-        references: [tracks.id]
-    })
-}));
-
-export const releaseRelations = relations(releases, ({ many }) => ({
-    releaseTracks: many(releaseTracks)
-}));
-
-export const releaseTrackRelations = relations(releaseTracks, ({ one }) => ({
-    release: one(releases, {
-        fields: [releaseTracks.releaseId],
-        references: [releases.id]
-    }),
-    track: one(tracks, {
-        fields: [releaseTracks.trackId],
-        references: [tracks.id]
-    })
-}));
-
-//#endregion

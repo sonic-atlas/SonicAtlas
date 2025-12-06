@@ -49,7 +49,9 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 
     try {
         const metadataRaw = await db.query.trackMetadata.findFirst({
-            where: eq(trackMetadata.trackId, trackId!),
+            where: {
+                trackId
+            },
             columns: {
                 searchVector: false,
                 trackId: false
@@ -78,7 +80,9 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 
         try {
             const releaseTrack = await db.query.releaseTracks.findFirst({
-                where: eq(releaseTracks.trackId, trackId!),
+                where: {
+                    trackId
+                },
                 with: {
                     release: true
                 }
@@ -121,7 +125,9 @@ router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
 
     try {
         const metadata = await db.query.trackMetadata.findFirst({
-            where: eq(trackMetadata?.trackId, trackId!)
+            where: {
+                trackId
+            }
         });
 
         if (!metadata) {
@@ -185,7 +191,9 @@ router.get('/:trackId/cover', async (req, res) => {
     let releaseId: string | null = null;
     try {
         const releaseTrack = await db.query.releaseTracks.findFirst({
-            where: eq(releaseTracks.trackId, trackId!),
+            where: {
+                trackId
+            },
             columns: { releaseId: true },
             with: {
                 release: {

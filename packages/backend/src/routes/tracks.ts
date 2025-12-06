@@ -286,7 +286,9 @@ router.delete('/:trackId', async (req, res) => {
 
     try {
         const track = await db.query.tracks.findFirst({
-            where: eq(tracks.id, trackId!)
+            where: {
+                id: trackId
+            }
         });
 
         if (!track) {
