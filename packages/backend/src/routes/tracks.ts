@@ -13,6 +13,7 @@ import { isUUID } from '../utils/isUUID.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
 import { $envPath, $rootDir } from '@sonic-atlas/shared';
 import { generateHLS } from '../utils/pretranscode.js';
+import { ImageService } from '../services/ImageService.js';
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true, path: $envPath });
 
@@ -191,24 +192,16 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
                 const picture = metadata.common.picture[0];
                 if (picture && picture.data) {
                     const metadataFolder = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'metadata');
-                    await fsp.mkdir(metadataFolder, { recursive: true });
 
-                    let ext = 'jpg';
-                    if (picture.format) {
-                        if (picture.format.includes('png')) ext = 'png';
-                        else if (picture.format.includes('jpeg') || picture.format.includes('jpg')) ext = 'jpg';
-                        else if (picture.format.includes('webp')) ext = 'webp';
-                    }
-
-                    const coverPath = path.join(metadataFolder, `${trackInfo!.id}_cover.${ext}`);
-                    await fsp.writeFile(coverPath, picture.data);
+                    const coverName = `${trackInfo!.id}_cover`;
+                    await ImageService.processAndSaveCover(Buffer.from(picture.data), metadataFolder, coverName);
 
                     await db
                         .update(tracks)
                         .set({ coverArtPath: `/api/metadata/${trackInfo!.id}/cover` })
                         .where(eq(tracks.id, trackInfo!.id));
 
-                    logger.info(`Extracted cover art for track ${trackInfo!.id} (${ext}, ${picture.data.length} bytes)`);
+                    logger.info(`Extracted and processed cover art for track ${trackInfo!.id}`);
                 }
             } catch (coverErr) {
                 logger.warn(`Failed to extract cover art: ${coverErr}`);

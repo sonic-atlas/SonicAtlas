@@ -32,7 +32,7 @@
 <button class="trackItem" class:playing={isPlaying} onclick={onClick}>
     <div class="thumbnail">
         {#if track.coverArtPath}
-            <img src={`${API_BASE_URL}${track.coverArtPath}`} alt="Cover" />
+            <img src={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
         {:else}
             <div class="icon">{isPlaying ? '▶' : '🎵'}</div>
         {/if}

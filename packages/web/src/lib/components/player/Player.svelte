@@ -59,6 +59,11 @@
         }
     }
 
+    function preloadImage(url: string) {
+        const img = new Image();
+        img.src = url;
+    }
+
     function togglePlay() {
         if (!audio) {
             console.error('Audio element not bound');
@@ -295,6 +300,10 @@
 
         isAdaptive = quality === 'auto';
         streamUrl = getStreamUrl(track.id, quality);
+
+        if (track.coverArtPath) {
+            preloadImage(`${API_BASE_URL}${track.coverArtPath}`);
+        }
 
         const isHlsNativelySupported = audio.canPlayType('application/vnd.apple.mpegurl') !== '';
         const museUseHlsJs = isAdaptive || !isHlsNativelySupported;

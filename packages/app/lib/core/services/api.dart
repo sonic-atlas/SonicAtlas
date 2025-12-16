@@ -152,8 +152,12 @@ class ApiService {
     }
   }
 
-  String getAlbumArtUrl(String trackId) {
-    return '$_baseUrl/api/metadata/$trackId/cover';
+  String getAlbumArtUrl(String trackId, {String? size}) {
+    final url = '$_baseUrl/api/metadata/$trackId/cover';
+    if (size != null) {
+      return '$url?size=$size';
+    }
+    return url;
   }
 
   Future<Release?> getRelease(String id) async {

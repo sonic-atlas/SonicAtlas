@@ -13,6 +13,7 @@ import { parseFile } from 'music-metadata';
 import { enqueueTranscodeJob } from '../services/transcodeQueue.js';
 import { stripCoverArt } from '../utils/stripCoverArt.js';
 import { $envPath, $rootDir } from '@sonic-atlas/shared';
+import { ImageService } from '../services/ImageService.js';
 import dotenv from 'dotenv';
 
 dotenv.config({ quiet: true, path: $envPath });
@@ -22,6 +23,7 @@ const router = Router();
 // GET /api/releases/:id/cover
 router.get('/:id/cover', async (req, res) => {
     const { id } = req.params;
+    const { size } = req.query;
 
     if (!isUUID(id!)) {
         return res.status(422).json({
@@ -31,29 +33,28 @@ router.get('/:id/cover', async (req, res) => {
         });
     }
 
-    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const isSmall = size === 'small';
+    const baseFilename = `release_${id}_cover`;
 
-    for (const ext of extensions) {
-        const coverFile = path.join(metadataFolder, `release_${id}_cover.${ext}`);
-
+    const tryServe = async (filename: string, ext: string) => {
+        const coverFile = path.join(metadataFolder, filename);
         try {
             await fsp.access(coverFile);
 
-            const contentTypes: Record<string, string> = {
-                'jpg': 'image/jpeg',
-                'jpeg': 'image/jpeg',
-                'png': 'image/png',
-                'webp': 'image/webp'
-            }
-
-            res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
+            res.setHeader('Content-Type', 'image/webp');
             res.setHeader('Cache-Control', 'public, max-age=31536000');
-
-            return res.sendFile(coverFile);
-        } catch (err) {
-            continue;
+            res.sendFile(coverFile);
+            return true;
+        } catch {
+            return false;
         }
+    };
+
+    if (isSmall) {
+        if (await tryServe(`${baseFilename}-small.webp`, 'webp')) return;
     }
+
+    if (await tryServe(`${baseFilename}.webp`, 'webp')) return;
 
     return res.status(404).json({
         error: 'NOT_FOUND',
@@ -217,12 +218,11 @@ router.post('/upload', uploadFields, async (req, res) => {
 
         if (coverFile) {
             try {
-                await fsp.mkdir(metadataFolder, { recursive: true });
-                const ext = path.extname(coverFile.originalname).replace('.', '') || 'jpg';
-                const releaseCoverName = `release_${newRelease.id}_cover.${ext}`;
-                const releaseCoverPath = path.join(metadataFolder, releaseCoverName);
+                const releaseCoverName = `release_${newRelease.id}_cover`;
+                const buffer = await fsp.readFile(coverFile.path);
 
-                await fsp.rename(coverFile.path, releaseCoverPath);
+                await ImageService.processAndSaveCover(buffer, metadataFolder, releaseCoverName);
+                await fsp.unlink(coverFile.path).catch(e => logger.warn(`Failed to cleanup temp cover: ${e}`));
 
                 const coverUrl = `/api/releases/${newRelease.id}/cover`;
                 await db.update(releases)
@@ -316,16 +316,11 @@ router.post('/upload', uploadFields, async (req, res) => {
                             try {
                                 const picture = metadata.common.picture[0];
                                 if (picture && picture.data) {
-                                    await fsp.mkdir(metadataFolder, { recursive: true });
-                                    let ext = 'jpg';
-                                    if (picture.format?.includes('png')) ext = 'png';
-                                    else if (picture.format?.includes('webp')) ext = 'webp';
 
                                     if (!newRelease.coverArtPath) {
-                                        const releaseCoverName = `release_${newRelease.id}_cover.${ext}`;
-                                        const releaseCoverPath = path.join(metadataFolder, releaseCoverName);
+                                        const releaseCoverName = `release_${newRelease.id}_cover`;
+                                        await ImageService.processAndSaveCover(Buffer.from(picture.data), metadataFolder, releaseCoverName);
 
-                                        await fsp.writeFile(releaseCoverPath, picture.data);
                                         const coverUrl = `/api/releases/${newRelease.id}/cover`;
 
                                         await tx.update(releases)
@@ -336,8 +331,8 @@ router.post('/upload', uploadFields, async (req, res) => {
                                     }
 
                                     if (shouldExtractAllCovers) {
-                                        const trackCoverPath = path.join(metadataFolder, `${track.id}_cover.${ext}`);
-                                        await fsp.writeFile(trackCoverPath, picture.data);
+                                        const trackCoverName = `${track.id}_cover`;
+                                        await ImageService.processAndSaveCover(Buffer.from(picture.data), metadataFolder, trackCoverName);
 
                                         await tx.update(tracks)
                                             .set({ coverArtPath: `/api/metadata/${track.id}/cover` })

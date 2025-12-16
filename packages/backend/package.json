@@ -29,6 +29,7 @@
     "music-metadata": "^11.9.0",
     "postgres": "^3.4.7",
     "redis": "^5.9.0",
+    "sharp": "^0.34.5",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
@@ -40,6 +41,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.9.2",
+    "@types/sharp": "^0.31.1",
     "drizzle-kit": "^1.0.0-beta.2-86f844e",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",

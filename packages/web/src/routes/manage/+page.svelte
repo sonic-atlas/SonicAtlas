@@ -37,7 +37,7 @@
                 <div class="release-content">
                     {#if release.coverArtPath}
                         <img
-                            src="{API_BASE_URL}{release.coverArtPath}"
+                            src="{API_BASE_URL}{release.coverArtPath}?size=small"
                             alt={release.title}
                             class="cover-art"
                         />

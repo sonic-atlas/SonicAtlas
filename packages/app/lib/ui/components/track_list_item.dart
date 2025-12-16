@@ -49,7 +49,7 @@ class TrackListItem extends StatelessWidget {
       onPointerDown: handlePointerDown,
       child: ListTile(
         leading: CachedNetworkImage(
-          imageUrl: apiService.getAlbumArtUrl(track.id),
+          imageUrl: apiService.getAlbumArtUrl(track.id, size: 'small'),
           httpHeaders: context.read<ApiService>().headers,
           width: 40,
           height: 40,

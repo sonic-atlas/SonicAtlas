@@ -171,6 +171,7 @@ const storagePath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', '
 
 router.get('/:trackId/cover', async (req, res) => {
     const { trackId } = req.params;
+    const { size } = req.query;
 
     if (!isUUID(trackId)) {
         return res.status(422).json({
@@ -180,12 +181,20 @@ router.get('/:trackId/cover', async (req, res) => {
         })
     }
 
-    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-    const contentTypes: Record<string, string> = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'webp': 'image/webp'
+    const isSmall = size === 'small';
+
+    const tryServe = async (filename: string, ext: string) => {
+        const coverFile = path.join(storagePath, filename);
+        try {
+            await fsp.access(coverFile);
+
+            res.setHeader('Content-Type', 'image/webp');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            res.sendFile(coverFile);
+            return true;
+        } catch {
+            return false;
+        }
     };
 
     let releaseId: string | null = null;
@@ -204,31 +213,22 @@ router.get('/:trackId/cover', async (req, res) => {
         releaseId = releaseTrack?.releaseId ?? null;
     } catch (err) { }
 
-    for (const ext of extensions) {
-        const coverFile = path.join(storagePath, `${trackId}_cover.${ext}`);
-
-        try {
-            await fsp.access(coverFile);
-            res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
-            res.setHeader('Cache-Control', 'public, max-age=31536000');
-            return res.sendFile(coverFile);
-        } catch (err) {
-            continue;
-        }
+    if (isSmall) {
+        if (await tryServe(`${trackId}_cover-small.webp`, 'webp')) return;
+    }
+    if (await tryServe(`${trackId}_cover.webp`, 'webp')) return;
+    for (const ext of ['jpg', 'jpeg', 'png']) {
+        if (await tryServe(`${trackId}_cover.${ext}`, ext)) return;
     }
 
     if (releaseId) {
-        for (const ext of extensions) {
-            const coverFile = path.join(storagePath, `release_${releaseId}_cover.${ext}`);
-
-            try {
-                await fsp.access(coverFile);
-                res.setHeader('Content-Type', contentTypes[ext] || 'image/jpeg');
-                res.setHeader('Cache-Control', 'public, max-age=31536000');
-                return res.sendFile(coverFile);
-            } catch (err) {
-                continue;
-            }
+        const releaseBase = `release_${releaseId}_cover`;
+        if (isSmall) {
+            if (await tryServe(`${releaseBase}-small.webp`, 'webp')) return;
+        }
+        if (await tryServe(`${releaseBase}.webp`, 'webp')) return;
+        for (const ext of ['jpg', 'jpeg', 'png']) {
+            if (await tryServe(`${releaseBase}.${ext}`, ext)) return;
         }
     }
 

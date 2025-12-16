@@ -21,7 +21,18 @@ class MiniPlayer extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final imageUrl = apiService.getAlbumArtUrl(track.id);
+    final imageUrl = apiService.getAlbumArtUrl(track.id, size: 'small');
+    final largeImageUrl = apiService.getAlbumArtUrl(track.id);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      precacheImage(
+        CachedNetworkImageProvider(
+          largeImageUrl,
+          headers: apiService.headers,
+        ),
+        context,
+      );
+    });
 
     return GestureDetector(
       onTap: () {
