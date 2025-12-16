@@ -246,8 +246,17 @@
             console.log('Using hls.js for playback');
             hls = new Hls({
                 lowLatencyMode: true,
-                /* maxBufferLength: 15,
-                maxMaxBufferLength: 30, */
+                maxBufferLength: 30,
+                maxMaxBufferLength: 60,
+                manifestLoadingTimeOut: 10000,
+                manifestLoadingMaxRetry: 10,
+                manifestLoadingRetryDelay: 1000,
+                levelLoadingTimeOut: 10000,
+                levelLoadingMaxRetry: 10,
+                levelLoadingRetryDelay: 1000,
+                fragLoadingTimeOut: 20000,
+                fragLoadingMaxRetry: 20,
+                fragLoadingRetryDelay: 500,
                 xhrSetup: (xhr) => {
                     xhr.setRequestHeader('Authorization', `Bearer ${auth.token}`);
                 }
@@ -267,17 +276,22 @@
                     console.error('HLS Fatal Error:', data.details, data.error);
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log('Trying to recover from network error...');
+                            console.log('Network error encountered, trying to recover...');
                             hls?.startLoad();
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log('Trying to recover from media error...');
+                            console.log('Media error encountered, trying to recover...');
                             hls?.recoverMediaError();
                             break;
                         default:
+                            console.error('Unrecoverable error, destroying HLS instance');
                             hls?.destroy();
                             loading = false;
-                            showErrorAndClose(`Playback failed: ${data.details}`);
+
+                            setTimeout(() => {
+                                console.log('Attempting hard reload of stream...');
+                                loadHlsStream(streamUrl, true);
+                            }, 5000);
                             break;
                     }
                 }
@@ -468,6 +482,14 @@
         onloadedmetadata={handleLoadedMetadata}
         onloadstart={handleLoadStart}
         oncanplay={handleCanPlay}
+        onwaiting={() => {
+            console.log('Playback waiting/buffering...');
+            loading = true;
+        }}
+        onplaying={() => {
+            console.log('Playback resumed');
+            loading = false;
+        }}
         onerror={handleError}
         preload="none"
     ></audio>
@@ -477,14 +499,9 @@
             onclick={(e) => {
                 togglePlay();
             }}
-            disabled={loading}
             aria-label={isPlaying ? 'Pause' : 'Play'}
         >
-            {#if loading}
-                <md-circular-progress indeterminate aria-label="Loading"></md-circular-progress>
-            {:else}
-                {isPlaying ? '⏸' : '▶'}
-            {/if}
+            {isPlaying ? '⏸' : '▶'}
         </button>
     </div>
 
@@ -499,26 +516,28 @@
             role="slider"
             aria-label="Seek"
             aria-valuemin={0}
-            aria-valuemax={duration}
             aria-valuenow={currentTime}
             tabindex="0"
         >
             <div class="progressTrack">
+                {#if loading}
+                    <div class="progressBuffering"></div>
+                {/if}
                 <div
                     class="progressFilled"
                     style="width: {duration > 0 ? (currentTime / duration) * 100 : 0}%"
                 ></div>
-                {#if hoverTime !== null}
-                    <div
-                        class="progressHover"
-                        style="left: {duration > 0 ? (hoverTime / duration) * 100 : 0}%"
-                    >
-                        <div class="hoverTimeTooltip">
-                            {formatTime(hoverTime)}
-                        </div>
-                    </div>
-                {/if}
             </div>
+            {#if hoverTime !== null}
+                <div
+                    class="progressHover"
+                    style="left: {duration > 0 ? (hoverTime / duration) * 100 : 0}%"
+                >
+                    <div class="hoverTimeTooltip">
+                        {formatTime(hoverTime)}
+                    </div>
+                </div>
+            {/if}
         </div>
         <div class="time">
             <span>{formatTime(currentTime)}</span>
@@ -621,11 +640,6 @@
         justify-content: center;
     }
 
-    .controls button md-circular-progress {
-        --md-circular-progress-size: 48px;
-        --md-circular-progress-active-indicator-color: var(--secondary-color);
-    }
-
     .controls button:hover:not(:disabled) {
         opacity: 0.9;
     }
@@ -652,7 +666,7 @@
         height: 6px;
         background: var(--surface-color);
         border-radius: 3px;
-        overflow: visible;
+        overflow: hidden;
         transition: height 0.2s ease;
     }
 
@@ -669,6 +683,34 @@
         border-radius: 3px;
         transition: width 0.1s linear;
         pointer-events: none;
+        z-index: 2;
+    }
+
+    .progressBuffering {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+            to right,
+            var(--surface-color) 0%,
+            var(--text-secondary-color) 50%,
+            var(--surface-color) 100%
+        );
+        background-size: 50% 100%;
+        animation: shimmer 1s infinite linear;
+        z-index: 1;
+        opacity: 0.3;
+    }
+
+    @keyframes shimmer {
+        from {
+            background-position: -50% 0;
+        }
+        to {
+            background-position: 150% 0;
+        }
     }
 
     .progressHover {
@@ -680,41 +722,10 @@
         background: var(--primary-color);
         border-radius: 50%;
         pointer-events: none;
-        z-index: 2;
+        z-index: 3;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
-    .hoverTimeTooltip {
-        position: absolute;
-        bottom: 24px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--surface-color);
-        color: var(--text-primary-color);
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        white-space: nowrap;
-        border: 1px solid var(--primary-color);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .hoverTimeTooltip::after {
-        content: '';
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 5px solid transparent;
-        border-top-color: var(--primary-color);
-    }
-
-    .time {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: var(--text-secondary-color);
-    }
     .hoverTimeTooltip {
         position: absolute;
         bottom: 24px;

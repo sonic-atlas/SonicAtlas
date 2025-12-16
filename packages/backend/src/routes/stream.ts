@@ -7,7 +7,7 @@ import path from 'node:path';
 import { isUUID } from '../utils/isUUID.js';
 import { $rootDir } from '@sonic-atlas/shared';
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
+
 
 const router = Router();
 router.use(authMiddleware);
@@ -143,14 +143,19 @@ router.get('/:trackId/:quality/:segment', async (req, res) => {
         });
     }
 
-    res.setHeader('Content-Type', segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.setHeader('Accept-Ranges', 'bytes');
+    const headers = {
+        'Content-Type': segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4',
+        'Cache-Control': 'public, max-age=31536000, immutable'
+    };
 
-    const stat = await fsp.stat(filepath);
-    res.setHeader('Content-Length', stat.size);
-
-    fs.createReadStream(filepath).pipe(res);
+    res.sendFile(filepath, { headers }, (err) => {
+        if (err) {
+            console.error(`Error serving file ${filepath}:`, err);
+            if (!res.headersSent) {
+                res.status(500).send('Stream error');
+            }
+        }
+    });
 });
 
 export default router;
