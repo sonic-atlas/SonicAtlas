@@ -28,7 +28,7 @@ class WTaskbarService {
 
     /**
      * TODO: Swap between play/pause depending on audioService.isPlaying
-     * TODO: Use greyer icons for skip next/previous depending on audioService.hasNext & audioService.hasPrevious
+     * TODO: Use mode: ThumbnailToolbarButtonMode.disabled | ThumbnailToolbarButtonMode.dismissionClick for skip next/previous if !audioService.hasNext & !audioService.hasPrevious respectively
      */
 
     try {
@@ -45,8 +45,8 @@ class WTaskbarService {
         ),
         ThumbnailToolbarButton(
             ThumbnailToolbarAssetIcon('assets/wtaskbar/pause.ico'),
-          'Pause',
-          _audioService!.pause
+            'Pause',
+            _audioService!.pause
         ),
         ThumbnailToolbarButton(
             ThumbnailToolbarAssetIcon('assets/wtaskbar/skip_next.ico'),
