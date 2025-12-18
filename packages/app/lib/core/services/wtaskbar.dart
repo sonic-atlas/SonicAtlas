@@ -34,22 +34,22 @@ class WTaskbarService {
     try {
       await WindowsTaskbar.setThumbnailToolbar([
         ThumbnailToolbarButton(
-            ThumbnailToolbarAssetIcon('assets/skip_previous.ico'),
+            ThumbnailToolbarAssetIcon('assets/wtaskbar/skip_previous.ico'),
             'Previous',
             _audioService!.skipPrevious
         ),
         ThumbnailToolbarButton(
-            ThumbnailToolbarAssetIcon('assets/play.ico'),
+            ThumbnailToolbarAssetIcon('assets/wtaskbar/play.ico'),
             'Play',
             _audioService!.play
         ),
         ThumbnailToolbarButton(
-            ThumbnailToolbarAssetIcon('assets/pause.ico'),
+            ThumbnailToolbarAssetIcon('assets/wtaskbar/pause.ico'),
           'Pause',
           _audioService!.pause
         ),
         ThumbnailToolbarButton(
-            ThumbnailToolbarAssetIcon('assets/skip_next.ico'),
+            ThumbnailToolbarAssetIcon('assets/wtaskbar/skip_next.ico'),
             'Next',
             _audioService!.skipNext
         ),
