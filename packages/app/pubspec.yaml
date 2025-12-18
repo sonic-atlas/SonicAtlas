@@ -40,6 +40,8 @@ dependencies:
   mime: ^2.0.0
   http_parser: ^4.1.2
   cached_network_image: ^3.4.1
+  windows_taskbar:
+    path: vendor/windows_taskbar_fork
 
 dev_dependencies:
   flutter_test:
@@ -51,7 +53,8 @@ dev_dependencies:
 flutter:
 
   uses-material-design: true
-
+  assets:
+    - assets/
 
 flutter_launcher_icons:
   android: "ic_launcher"
@@ -65,9 +68,6 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/icon/icon.png"
     icon_size: 256
-
-assets:
-  - assets/icon/icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

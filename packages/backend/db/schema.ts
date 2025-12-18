@@ -9,6 +9,8 @@ import {
     timestamp,
     uuid
 } from 'drizzle-orm/pg-core';
+// import { SQL, sql } from 'drizzle-orm';
+// import { tsVectorColumn } from './tsvector.ts';
 
 export const trackFormatEnum = pgEnum('track_format_enum', ['flac', 'mp3', 'wav', 'aac']);
 
@@ -47,10 +49,18 @@ export const trackMetadata = pgTable('track_metadata', {
     genres: text().array(),
     bitrate: integer(),
     codec: text(),
-    searchVector: tsvector('search_vector'),
+    searchVector: tsvector('search_vector') /*.generatedAlwaysAs((): SQL => tsVectorColumn({
+        A: [trackMetadata.title, trackMetadata.artist],
+        B: [releases.title],
+        C: [trackMetadata.genres],
+        D: [trackMetadata.year]
+    }))*/,
     ...timestamps
 }, (table) => [
     index('track_metadata_track_id_idx').on(table.trackId),
+    // index('track_metadata_search_vector_idx').using('gin', table.searchVector),
+    // index('track_metadata_title_trgm_idx').using('gin', table.title, sql`gin_trgm_ops`),
+    // index('track_metadata_artist_trgm_idx').using('gin', table.artist, sql`gin_trgm_ops`),
 ]);
 
 export const releases = pgTable('releases', {

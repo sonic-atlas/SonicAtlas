@@ -12,7 +12,8 @@
     "check": "tsc --noEmit",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

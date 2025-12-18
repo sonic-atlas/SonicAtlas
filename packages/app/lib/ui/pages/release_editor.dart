@@ -279,7 +279,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                         decoration: BoxDecoration(
                           border: Border.all(color: Theme.of(context).dividerColor),
                           borderRadius: BorderRadius.circular(8),
-                          color: Theme.of(context).cardColor.withOpacity(0.02),
+                          color: Theme.of(context).cardColor.withValues(alpha: 0.02),
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

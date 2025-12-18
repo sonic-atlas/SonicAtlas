@@ -1,10 +1,20 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-    plugins: [sveltekit()],
-    // TODO: implement actual fix for one large bundle
+    plugins: [sveltekit(), visualizer({ filename: 'stats.html' })],
     build: {
-        chunkSizeWarningLimit: 1000
+        chunkSizeWarningLimit: 500,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        const pkg = id.split('node_modules/')[1].split('/')[0];
+                        return pkg;
+                    }
+                }
+            }
+        }
     }
 });

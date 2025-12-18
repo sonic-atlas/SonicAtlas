@@ -2,6 +2,8 @@
   // aka.ms/tsconfig
   "compilerOptions": {
     "outDir": "./dist",
+    // "allowImportingTsExtensions": true,
+    // "rewriteRelativeImportExtensions": true,
 
     // Environment
     "module": "nodenext",

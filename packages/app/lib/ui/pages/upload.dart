@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '/core/services/api.dart';
 import '/core/services/socket.dart';
@@ -70,6 +71,8 @@ class _UploadPageState extends State<UploadPage> {
       final api = Provider.of<ApiService>(context, listen: false);
       final socket = Provider.of<SocketService>(context, listen: false);
 
+      WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+
       final result = await api.uploadRelease(
         _files.map((f) => f.path!).toList(),
         _coverFile?.path,
@@ -99,6 +102,7 @@ class _UploadPageState extends State<UploadPage> {
       if (mounted) {
         setState(() => _uploading = false);
       }
+      WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
     }
   }
 

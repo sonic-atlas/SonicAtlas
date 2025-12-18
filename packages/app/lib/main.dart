@@ -14,7 +14,7 @@ import 'core/services/media_handler.dart';
 import 'core/services/mpris_service.dart';
 import 'core/services/settings.dart';
 import 'core/services/socket.dart';
-import 'ui/pages/fs_player.dart';
+import 'core/services/wtaskbar.dart';
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
 import 'ui/pages/server_setup.dart';
@@ -93,6 +93,12 @@ void main() async {
   );
 
   Future.microtask(() => discordService.init());
+
+  final wTaskBarService = WTaskbarService();
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    wTaskBarService.setup(audioService);
+  });
 }
 
 class SonicAtlasApp extends StatelessWidget {
@@ -188,7 +194,7 @@ class SonicAtlasApp extends StatelessWidget {
         ),
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: primaryColor,
-          selectionColor: primaryColor.withOpacity(0.25),
+          selectionColor: primaryColor.withValues(alpha: 0.25),
           selectionHandleColor: primaryColor,
         ),
         sliderTheme: SliderThemeData(

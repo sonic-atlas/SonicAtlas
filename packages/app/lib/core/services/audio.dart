@@ -48,25 +48,28 @@ class AudioService with ChangeNotifier {
 
   bool get hasPrevious => _currentIndex > 0;
 
-  AudioService(this._apiService, this._authService, this._settingsService)
-    : _player = media_kit.Player() {
-    _init();
-    _settingsService.addListener(_onSettingsChanged);
-  }
-
-  static final _playTrackController =
-      StreamController<models.Track>.broadcast();
+  static final _playTrackController = StreamController<models.Track>.broadcast();
   static final _playController = StreamController<AudioService>.broadcast();
   static final _pauseController = StreamController<AudioService>.broadcast();
   static final _seekController = StreamController<Duration>.broadcast();
 
   static Stream<models.Track> get onPlayTrack => _playTrackController.stream;
-
   static Stream<AudioService> get onPlay => _playController.stream;
-
   static Stream<AudioService> get onPause => _pauseController.stream;
-
   static Stream<Duration> get onSeek => _seekController.stream;
+
+  AudioService._internal(
+      this._apiService,
+      this._authService,
+      this._settingsService,
+      ) : _player = media_kit.Player(
+    configuration: const media_kit.PlayerConfiguration(
+      bufferSize: 10 * 1024 * 104
+    )
+  ) {
+    _init();
+    _settingsService.addListener(_onSettingsChanged);
+  }
 
   static AudioService create(
     ApiService api,
@@ -74,15 +77,6 @@ class AudioService with ChangeNotifier {
     SettingsService settings,
   ) {
     return AudioService._internal(api, auth, settings);
-  }
-
-  AudioService._internal(
-    this._apiService,
-    this._authService,
-    this._settingsService,
-  ) : _player = media_kit.Player() {
-    _init();
-    _settingsService.addListener(_onSettingsChanged);
   }
 
   void setAudioHandler(MediaSessionHandler handler) {
@@ -197,6 +191,7 @@ class AudioService with ChangeNotifier {
       await _player.open(
         media_kit.Media(url, httpHeaders: {'Authorization': 'Bearer $token'}),
       );
+      await _player.stream.buffering.firstWhere((v) => v == false); // wait for buffer
       await _player.play();
 
       _currentTrack = track;
@@ -290,6 +285,7 @@ class AudioService with ChangeNotifier {
   }
 
   void seek(Duration position) {
+    _player.setPlaylistMode(media_kit.PlaylistMode.single);
     _audioHandler.seek(position);
     _seekController.add(position);
     notifyListeners();
