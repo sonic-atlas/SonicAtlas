@@ -316,11 +316,300 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final useSideBySide =
+                    constraints.maxWidth > constraints.maxHeight &&
+                    constraints.maxHeight < 500;
+
                 final maxSize = constraints.maxHeight * 0.45;
-                final albumArtSize = (constraints.maxWidth * 0.7).clamp(
-                  200.0,
-                  maxSize,
+                final albumArtSize = useSideBySide
+                    ? constraints.maxHeight * 0.8
+                    : (constraints.maxWidth * 0.7).clamp(200.0, maxSize);
+
+                final minimizeButton = IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  onPressed: () => Navigator.pop(context),
                 );
+
+                final qualityAndQueueButtons = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!_loadingQuality)
+                      OutlinedButton.icon(
+                        onPressed: _showQualitySelector,
+                        icon: const Icon(Icons.high_quality, size: 18),
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              currentQuality.label,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            if (playingQuality != null &&
+                                playingQuality != currentQuality)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Icon(
+                                  Icons.pending,
+                                  size: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          minimumSize: Size.zero,
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.queue_music),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const QueuePage(),
+                          ),
+                        );
+                      },
+                      tooltip: 'Queue',
+                    ),
+                  ],
+                );
+
+                final albumArtWidget = Container(
+                  width: albumArtSize,
+                  height: albumArtSize,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      httpHeaders: apiService.headers,
+                      fit: BoxFit.cover,
+                      fadeInDuration: Duration.zero,
+                      errorWidget: (context, url, error) {
+                        return Container(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          child: const Icon(Icons.music_note, size: 64),
+                        );
+                      },
+                      placeholder: (context, url) => Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                  ),
+                );
+
+                final trackInfoWidget = Column(
+                  children: [
+                    Text(
+                      track.title,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      track.artist,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      track.releaseTitle ?? track.album,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                );
+
+                final progressBarWidget = StreamBuilder<Duration>(
+                  stream: audioService.positionStream,
+                  builder: (context, snapshot) {
+                    final position = snapshot.data ?? Duration.zero;
+                    final duration = audioService.duration;
+                    return Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (audioService.isBuffering)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24.0,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: const LinearProgressIndicator(
+                                    minHeight: 4,
+                                    backgroundColor: Colors.transparent,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white54,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Slider(
+                              value: position.inMilliseconds
+                                  .clamp(0, duration.inMilliseconds)
+                                  .toDouble(),
+                              min: 0,
+                              max: duration.inMilliseconds.toDouble(),
+                              onChanged: (value) {
+                                audioService.seek(
+                                  Duration(milliseconds: value.round()),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_formatDuration(position)),
+                              GestureDetector(
+                                onTap: () {
+                                  settingsService.setRelativeDuration(
+                                    !settingsService.relativeDuration,
+                                  );
+                                },
+                                child: Text(
+                                  settingsService.relativeDuration
+                                      ? '-${_formatDuration(duration - position)}'
+                                      : _formatDuration(duration),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                final controlsWidget = Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.skip_previous,
+                        color: audioService.hasPrevious
+                            ? Colors.white
+                            : Theme.of(context).disabledColor,
+                      ),
+                      iconSize: 40,
+                      onPressed: audioService.hasPrevious
+                          ? () => audioService.skipPrevious()
+                          : null,
+                    ),
+                    const SizedBox(width: 24),
+                    IconButton(
+                      icon: Icon(
+                        audioService.isPlaying
+                            ? Icons.pause_circle
+                            : Icons.play_circle,
+                      ),
+                      iconSize: 64,
+                      onPressed: audioService.isPlaying
+                          ? audioService.pause
+                          : audioService.play,
+                    ),
+                    const SizedBox(width: 24),
+                    IconButton(
+                      icon: Icon(
+                        Icons.skip_next,
+                        color: audioService.hasNext
+                            ? Colors.white
+                            : Theme.of(context).disabledColor,
+                      ),
+                      iconSize: 40,
+                      onPressed: audioService.hasNext
+                          ? () => audioService.skipNext()
+                          : null,
+                    ),
+                  ],
+                );
+
+                if (useSideBySide) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(32, 16, 32, 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              minimizeButton,
+                              Expanded(child: Center(child: albumArtWidget)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 32),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: qualityAndQueueButtons,
+                              ),
+                              Expanded(
+                                child: Center(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        trackInfoWidget,
+                                        const SizedBox(height: 24),
+                                        progressBarWidget,
+                                        const SizedBox(height: 16),
+                                        controlsWidget,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
                 return SingleChildScrollView(
                   child: ConstrainedBox(
@@ -334,265 +623,19 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           children: [
                             Row(
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.keyboard_arrow_down),
-                                  onPressed: () => Navigator.pop(context),
-                                ),
+                                minimizeButton,
                                 const Spacer(),
-                                if (!_loadingQuality)
-                                  OutlinedButton.icon(
-                                    onPressed: _showQualitySelector,
-                                    icon: const Icon(
-                                      Icons.high_quality,
-                                      size: 18,
-                                    ),
-                                    label: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          currentQuality.label,
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                        if (playingQuality != null &&
-                                            playingQuality != currentQuality)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 4,
-                                            ),
-                                            child: Icon(
-                                              Icons.pending,
-                                              size: 12,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.secondary,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      minimumSize: Size.zero,
-                                    ),
-                                  ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.queue_music),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const QueuePage(),
-                                      ),
-                                    );
-                                  },
-                                  tooltip: 'Queue',
-                                ),
+                                qualityAndQueueButtons,
                               ],
                             ),
                             const SizedBox(height: 16),
-
-                            Container(
-                              width: albumArtSize,
-                              height: albumArtSize,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: CachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  httpHeaders: apiService.headers,
-                                  fit: BoxFit.cover,
-                                  fadeInDuration: Duration.zero,
-                                  errorWidget: (context, url, error) {
-                                    return Container(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surfaceContainerHighest,
-                                      child: const Icon(
-                                        Icons.music_note,
-                                        size: 64,
-                                      ),
-                                    );
-                                  },
-                                  placeholder: (context, url) => Container(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHighest,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            albumArtWidget,
                             const SizedBox(height: 24),
-
-                            Text(
-                              track.title,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              track.artist,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7),
-                                  ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              track.releaseTitle ?? track.album,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
-                                  ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            trackInfoWidget,
                             const SizedBox(height: 24),
-
-                            StreamBuilder<Duration>(
-                              stream: audioService.positionStream,
-                              builder: (context, snapshot) {
-                                final position = snapshot.data ?? Duration.zero;
-                                final duration = audioService.duration;
-                                return Column(
-                                  children: [
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        if (audioService.isBuffering)
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 24.0,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                              child:
-                                                  const LinearProgressIndicator(
-                                                    minHeight: 4,
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                          Color
-                                                        >(Colors.white54),
-                                                  ),
-                                            ),
-                                          ),
-                                        Slider(
-                                          value: position.inMilliseconds
-                                              .clamp(0, duration.inMilliseconds)
-                                              .toDouble(),
-                                          min: 0,
-                                          max: duration.inMilliseconds
-                                              .toDouble(),
-                                          onChanged: (value) {
-                                            audioService.seek(
-                                              Duration(
-                                                milliseconds: value.round(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(_formatDuration(position)),
-                                          GestureDetector(
-                                            onTap: () {
-                                              settingsService
-                                                  .setRelativeDuration(
-                                                    !settingsService
-                                                        .relativeDuration,
-                                                  );
-                                            },
-                                            child: Text(
-                                              settingsService.relativeDuration
-                                                  ? '-${_formatDuration(duration - position)}'
-                                                  : _formatDuration(duration),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
+                            progressBarWidget,
                             const SizedBox(height: 16),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.skip_previous,
-                                    color: audioService.hasPrevious
-                                        ? Colors.white
-                                        : Theme.of(context).disabledColor,
-                                  ),
-                                  iconSize: 40,
-                                  onPressed: audioService.hasPrevious
-                                      ? () => audioService.skipPrevious()
-                                      : null,
-                                ),
-                                const SizedBox(width: 24),
-                                IconButton(
-                                  icon: Icon(
-                                    audioService.isPlaying
-                                        ? Icons.pause_circle
-                                        : Icons.play_circle,
-                                  ),
-                                  iconSize: 64,
-                                  onPressed: audioService.isPlaying
-                                      ? audioService.pause
-                                      : audioService.play,
-                                ),
-                                const SizedBox(width: 24),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.skip_next,
-                                    color: audioService.hasNext
-                                        ? Colors.white
-                                        : Theme.of(context).disabledColor,
-                                  ),
-                                  iconSize: 40,
-                                  onPressed: audioService.hasNext
-                                      ? () => audioService.skipNext()
-                                      : null,
-                                ),
-                              ],
-                            ),
+                            controlsWidget,
                             const SizedBox(height: 24),
                           ],
                         ),
