@@ -60,11 +60,7 @@ enum Quality {
           bitrate: '128k',
         );
       case Quality.high:
-        return const QualityInfo(
-          label: 'High',
-          codec: 'AAC',
-          bitrate: '320k',
-        );
+        return const QualityInfo(label: 'High', codec: 'AAC', bitrate: '320k');
       case Quality.cd:
         return const QualityInfo(
           label: 'CD',
@@ -88,4 +84,3 @@ enum Quality {
     );
   }
 }
-

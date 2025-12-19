@@ -54,18 +54,18 @@ class SettingsPage extends StatelessWidget {
                     return RadioListTile<Quality>(
                       title: Text(info.label),
                       subtitle: Text(
-                      info.bitrate != null
-                      ? '${info.codec} • ${info.bitrate}'
-                          : info.sampleRate != null
-                      ? '${info.codec} • ${info.sampleRate}'
-                          : info.codec,
+                        info.bitrate != null
+                            ? '${info.codec} • ${info.bitrate}'
+                            : info.sampleRate != null
+                            ? '${info.codec} • ${info.sampleRate}'
+                            : info.codec,
                       ),
                       value: quality,
-                      selected: isSelected
+                      selected: isSelected,
                     );
-                  })
-                ]
-              )
+                  }),
+                ],
+              ),
             ),
             const Divider(),
             Padding(
@@ -78,7 +78,7 @@ class SettingsPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                 ),
-              )
+              ),
             ),
             ListTile(
               title: const Text('Discord RPC'),

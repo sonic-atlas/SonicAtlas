@@ -9,7 +9,6 @@
 #include <audio_service_win/audio_service_win_plugin_c_api.h>
 #include <media_kit_libs_windows_video/media_kit_libs_windows_video_plugin_c_api.h>
 #include <media_kit_video/media_kit_video_plugin_c_api.h>
-#include <volume_controller/volume_controller_plugin_c_api.h>
 #include <windows_taskbar/windows_taskbar_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
@@ -19,8 +18,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("MediaKitLibsWindowsVideoPluginCApi"));
   MediaKitVideoPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("MediaKitVideoPluginCApi"));
-  VolumeControllerPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("VolumeControllerPluginCApi"));
   WindowsTaskbarPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("WindowsTaskbarPlugin"));
 }

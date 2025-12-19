@@ -56,11 +56,8 @@ class TrackListItem extends StatelessWidget {
           fit: BoxFit.cover,
           fadeInDuration: Duration(milliseconds: 0),
           errorWidget: (context, url, error) => const Icon(Icons.album),
-          placeholder: (context, url) => Container(
-            width: 40,
-            height: 40,
-            color: Colors.grey[900],
-          ),
+          placeholder: (context, url) =>
+              Container(width: 40, height: 40, color: Colors.grey[900]),
         ),
         title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(

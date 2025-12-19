@@ -26,10 +26,7 @@ class MiniPlayer extends StatelessWidget {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       precacheImage(
-        CachedNetworkImageProvider(
-          largeImageUrl,
-          headers: apiService.headers,
-        ),
+        CachedNetworkImageProvider(largeImageUrl, headers: apiService.headers),
         context,
       );
     });
@@ -97,7 +94,9 @@ class MiniPlayer extends StatelessWidget {
                       placeholder: (context, url) => Container(
                         width: 48,
                         height: 48,
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                       ),
                     ),
                   ),
@@ -116,16 +115,26 @@ class MiniPlayer extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      audioService.isPlaying ? Icons.pause : Icons.play_arrow,
+                  if (audioService.isBuffering)
+                    const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: Icon(
+                        audioService.isPlaying ? Icons.pause : Icons.play_arrow,
+                      ),
+                      onPressed: () {
+                        audioService.isPlaying
+                            ? audioService.pause()
+                            : audioService.play();
+                      },
                     ),
-                    onPressed: () {
-                      audioService.isPlaying
-                          ? audioService.pause()
-                          : audioService.play();
-                    },
-                  ),
                 ],
               ),
             ),

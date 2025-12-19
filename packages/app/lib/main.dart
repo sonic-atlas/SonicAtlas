@@ -189,7 +189,9 @@ class SonicAtlasApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: surfaceColor,
             foregroundColor: textPrimaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
         textSelectionTheme: TextSelectionThemeData(
@@ -250,9 +252,7 @@ class SonicAtlasApp extends StatelessWidget {
         dialogTheme: const DialogThemeData(
           surfaceTintColor: Colors.transparent,
         ),
-        cardTheme: const CardThemeData(
-          surfaceTintColor: Colors.transparent,
-        ),
+        cardTheme: const CardThemeData(surfaceTintColor: Colors.transparent),
         useMaterial3: true,
       ),
       initialRoute: '/splash',

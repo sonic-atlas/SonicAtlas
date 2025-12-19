@@ -18,11 +18,13 @@ class _UploadPageState extends State<UploadPage> {
   final _formKey = GlobalKey<FormState>();
   List<PlatformFile> _files = [];
   PlatformFile? _coverFile;
-  
+
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
-  final _yearController = TextEditingController(text: DateTime.now().year.toString());
-  
+  final _yearController = TextEditingController(
+    text: DateTime.now().year.toString(),
+  );
+
   String _releaseType = 'album';
   bool _extractAllCovers = false;
   bool _uploading = false;
@@ -31,7 +33,17 @@ class _UploadPageState extends State<UploadPage> {
   Future<void> _pickFiles() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['mp3', 'flac', 'wav', 'm4a', 'ogg', 'opus', 'aac', 'wma', 'alac'],
+      allowedExtensions: [
+        'mp3',
+        'flac',
+        'wav',
+        'm4a',
+        'ogg',
+        'opus',
+        'aac',
+        'wma',
+        'alac',
+      ],
       allowMultiple: true,
     );
 
@@ -88,9 +100,8 @@ class _UploadPageState extends State<UploadPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ReleaseEditorPage(
-              releaseId: result['release']['id'],
-            ),
+            builder: (_) =>
+                ReleaseEditorPage(releaseId: result['release']['id']),
           ),
         );
       }
@@ -110,7 +121,9 @@ class _UploadPageState extends State<UploadPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 480;
-        final maxWidth = constraints.maxWidth > 700 ? 700.0 : constraints.maxWidth;
+        final maxWidth = constraints.maxWidth > 700
+            ? 700.0
+            : constraints.maxWidth;
 
         final fileButton = Container(
           decoration: BoxDecoration(
@@ -119,16 +132,29 @@ class _UploadPageState extends State<UploadPage> {
           ),
           child: TextButton.icon(
             onPressed: _pickFiles,
-            icon: Icon(Icons.audio_file, color: Theme.of(context).colorScheme.primary),
+            icon: Icon(
+              Icons.audio_file,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             label: Text(
-              _files.isEmpty ? 'Select Audio Files' : '${_files.length} files selected',
+              _files.isEmpty
+                  ? 'Select Audio Files'
+                  : '${_files.length} files selected',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
-              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14, horizontal: 12)),
-              foregroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
-              overlayColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary.withValues(alpha: .06)),
-              shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+              ),
+              foregroundColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.primary,
+              ),
+              overlayColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.primary.withValues(alpha: .06),
+              ),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               backgroundColor: WidgetStateProperty.all(Colors.transparent),
             ),
           ),
@@ -141,16 +167,29 @@ class _UploadPageState extends State<UploadPage> {
           ),
           child: TextButton.icon(
             onPressed: _pickCover,
-            icon: Icon(Icons.image, color: Theme.of(context).colorScheme.primary),
+            icon: Icon(
+              Icons.image,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             label: Text(
-              _coverFile == null ? 'Select Cover Art (Optional)' : 'Cover: ${_coverFile!.name}',
+              _coverFile == null
+                  ? 'Select Cover Art (Optional)'
+                  : 'Cover: ${_coverFile!.name}',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
-              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14, horizontal: 12)),
-              foregroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
-              overlayColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary.withValues(alpha: .06)),
-              shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+              ),
+              foregroundColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.primary,
+              ),
+              overlayColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.primary.withValues(alpha: .06),
+              ),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               backgroundColor: WidgetStateProperty.all(Colors.transparent),
             ),
           ),
@@ -195,7 +234,10 @@ class _UploadPageState extends State<UploadPage> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   color: Colors.red.withValues(alpha: 0.2),
-                  child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 16),
               TextFormField(
@@ -224,7 +266,12 @@ class _UploadPageState extends State<UploadPage> {
                       initialValue: _releaseType,
                       decoration: const InputDecoration(labelText: 'Type'),
                       items: ['album', 'ep', 'single', 'compilation']
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t.toUpperCase())))
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.toUpperCase()),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _releaseType = v!),
                     ),
@@ -240,7 +287,7 @@ class _UploadPageState extends State<UploadPage> {
                 value: _extractAllCovers,
                 onChanged: (v) => setState(() => _extractAllCovers = v!),
               ),
-              
+
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _uploading ? null : _upload,
@@ -249,9 +296,9 @@ class _UploadPageState extends State<UploadPage> {
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                 ),
-                child: _uploading 
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('UPLOAD'),
+                child: _uploading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('UPLOAD'),
               ),
             ],
           ),

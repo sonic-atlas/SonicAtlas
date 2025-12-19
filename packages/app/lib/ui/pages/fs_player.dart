@@ -134,27 +134,28 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           ...Quality.values.map((quality) {
                             final isAvailable = _isQualityAvailable(quality);
                             final isSource =
-                                quality == _sourceQuality && quality != Quality.auto;
+                                quality == _sourceQuality &&
+                                quality != Quality.auto;
                             final isSelected = quality == selectedQuality;
                             final info = quality.info;
 
                             return ListTile(
                               enabled: isAvailable,
-                              leading: Radio<Quality>(
-                                value: quality,
-                              ),
+                              leading: Radio<Quality>(value: quality),
                               title: Row(
                                 children: [
                                   Text(
                                     info.label,
                                     style: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.bold : null,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : null,
                                       color: isAvailable
                                           ? (isSelected
-                                          ? Theme.of(
-                                        context,
-                                      ).colorScheme.primary
-                                          : null)
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary
+                                                : null)
                                           : Theme.of(context).disabledColor,
                                     ),
                                   ),
@@ -193,20 +194,22 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isAvailable
-                                      ? Theme.of(context).textTheme.bodySmall?.color
+                                      ? Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color
                                       : Theme.of(context).disabledColor,
                                 ),
                               ),
                               onTap: isAvailable
                                   ? () {
-                                settingsService.setAudioQuality(quality);
-                                setModalState(() {});
-                              }
+                                      settingsService.setAudioQuality(quality);
+                                      setModalState(() {});
+                                    }
                                   : null,
                             );
                           }),
-                        ]
-                      )
+                        ],
+                      ),
                     ),
 
                     if (qualityChanged) ...[
@@ -476,17 +479,45 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 final duration = audioService.duration;
                                 return Column(
                                   children: [
-                                    Slider(
-                                      value: position.inMilliseconds
-                                          .clamp(0, duration.inMilliseconds)
-                                          .toDouble(),
-                                      min: 0,
-                                      max: duration.inMilliseconds.toDouble(),
-                                      onChanged: (value) {
-                                        audioService.seek(
-                                          Duration(milliseconds: value.round()),
-                                        );
-                                      },
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        if (audioService.isBuffering)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24.0,
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              child:
+                                                  const LinearProgressIndicator(
+                                                    minHeight: 4,
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                          Color
+                                                        >(Colors.white54),
+                                                  ),
+                                            ),
+                                          ),
+                                        Slider(
+                                          value: position.inMilliseconds
+                                              .clamp(0, duration.inMilliseconds)
+                                              .toDouble(),
+                                          min: 0,
+                                          max: duration.inMilliseconds
+                                              .toDouble(),
+                                          onChanged: (value) {
+                                            audioService.seek(
+                                              Duration(
+                                                milliseconds: value.round(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
@@ -499,10 +530,18 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                           Text(_formatDuration(position)),
                                           GestureDetector(
                                             onTap: () {
-                                              settingsService.setRelativeDuration(!settingsService.relativeDuration);
+                                              settingsService
+                                                  .setRelativeDuration(
+                                                    !settingsService
+                                                        .relativeDuration,
+                                                  );
                                             },
-                                            child: Text(settingsService.relativeDuration ? '-${_formatDuration(duration - position)}' : _formatDuration(duration)),
-                                          )
+                                            child: Text(
+                                              settingsService.relativeDuration
+                                                  ? '-${_formatDuration(duration - position)}'
+                                                  : _formatDuration(duration),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -528,24 +567,16 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 24),
-                                StreamBuilder<bool>(
-                                  stream: audioService.playingStream,
-                                  initialData: audioService.isPlaying,
-                                  builder: (context, snapshot) {
-                                    final isPlaying = snapshot.data ?? false;
-
-                                    return IconButton(
-                                      icon: Icon(
-                                        isPlaying
-                                            ? Icons.pause_circle
-                                            : Icons.play_circle,
-                                      ),
-                                      iconSize: 64,
-                                      onPressed: isPlaying
-                                          ? audioService.pause
-                                          : audioService.play,
-                                    );
-                                  },
+                                IconButton(
+                                  icon: Icon(
+                                    audioService.isPlaying
+                                        ? Icons.pause_circle
+                                        : Icons.play_circle,
+                                  ),
+                                  iconSize: 64,
+                                  onPressed: audioService.isPlaying
+                                      ? audioService.pause
+                                      : audioService.play,
                                 ),
                                 const SizedBox(width: 24),
                                 IconButton(
@@ -553,7 +584,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                     Icons.skip_next,
                                     color: audioService.hasNext
                                         ? Colors.white
-                                        : Theme.of(context).disabledColor
+                                        : Theme.of(context).disabledColor,
                                   ),
                                   iconSize: 40,
                                   onPressed: audioService.hasNext

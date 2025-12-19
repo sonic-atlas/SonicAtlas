@@ -17,9 +17,9 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
     if (_ipController.text.isNotEmpty) {
       context.read<SettingsService>().setServerIp(_ipController.text);
       Navigator.pushReplacementNamed(
-          context,
-          '/login',
-          arguments: {'fromSetup': true}
+        context,
+        '/login',
+        arguments: {'fromSetup': true},
       );
     }
   }

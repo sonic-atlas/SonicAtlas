@@ -45,15 +45,21 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
     _socket = Provider.of<SocketService>(context, listen: false).socket;
     if (_socket == null) return;
 
-    _socket!.on('transcode:started', (data) => _handleSocketMessage(data, 'processing'));
+    _socket!.on(
+      'transcode:started',
+      (data) => _handleSocketMessage(data, 'processing'),
+    );
     _socket!.on('transcode:done', (data) => _handleSocketMessage(data, 'done'));
-    _socket!.on('transcode:error', (data) => _handleSocketMessage(data, 'error', error: data['error']));
+    _socket!.on(
+      'transcode:error',
+      (data) => _handleSocketMessage(data, 'error', error: data['error']),
+    );
   }
 
   void _handleSocketMessage(dynamic data, String status, {String? error}) {
     if (data == null || data is! Map || !data.containsKey('trackId')) return;
     final trackId = data['trackId'];
-    
+
     setState(() {
       _trackStatuses[trackId] = status;
       _updateTrackInList(trackId, status, error: error);
@@ -85,12 +91,12 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
     try {
       final release = await api.getRelease(widget.releaseId);
       final tracks = await api.getReleaseTracks(widget.releaseId);
-      
+
       if (mounted) {
         setState(() {
           _release = release;
           _tracks = tracks;
-          
+
           for (var i = 0; i < _tracks.length; i++) {
             final track = _tracks[i];
             if (_trackStatuses.containsKey(track.id)) {
@@ -109,7 +115,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
               );
             }
           }
-          
+
           _loading = false;
         });
       }
@@ -121,7 +127,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
   Future<void> _saveRelease() async {
     if (_release == null) return;
     setState(() => _saving = true);
-    
+
     final api = Provider.of<ApiService>(context, listen: false);
     await api.updateRelease(_release!.id, {
       'title': _release!.title,
@@ -129,9 +135,13 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
       'year': _release!.year,
       'releaseType': _release!.releaseType,
     });
-    
+
     setState(() => _saving = false);
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Release saved')));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Release saved')));
+    }
   }
 
   Future<void> _saveTrack(Track track) async {
@@ -147,8 +157,12 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_release == null) return const Scaffold(body: Center(child: Text('Release not found')));
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_release == null) {
+      return const Scaffold(body: Center(child: Text('Release not found')));
+    }
 
     final discs = <int, List<Track>>{};
     for (var t in _tracks) {
@@ -163,14 +177,15 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saving ? null : _saveRelease,
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (_tracks.isNotEmpty && _tracks.any((t) => t.transcodeStatus != 'done'))
+            if (_tracks.isNotEmpty &&
+                _tracks.any((t) => t.transcodeStatus != 'done'))
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
@@ -182,7 +197,11 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                     ),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
-                      value: _tracks.where((t) => t.transcodeStatus == 'done').length / _tracks.length,
+                      value:
+                          _tracks
+                              .where((t) => t.transcodeStatus == 'done')
+                              .length /
+                          _tracks.length,
                       backgroundColor: Theme.of(context).cardColor,
                     ),
                   ],
@@ -228,17 +247,22 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             ...sortedDiscs.map((discNum) {
               final discTracks = discs[discNum]!;
-              discTracks.sort((a, b) => (a.trackNumber ?? 0).compareTo(b.trackNumber ?? 0));
-              
+              discTracks.sort(
+                (a, b) => (a.trackNumber ?? 0).compareTo(b.trackNumber ?? 0),
+              );
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Disc $discNum', style: Theme.of(context).textTheme.titleMedium),
+                    child: Text(
+                      'Disc $discNum',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   ReorderableListView.builder(
                     shrinkWrap: true,
@@ -249,7 +273,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                       if (oldIndex < newIndex) newIndex -= 1;
                       final item = discTracks.removeAt(oldIndex);
                       discTracks.insert(newIndex, item);
-                      
+
                       for (int i = 0; i < discTracks.length; i++) {
                         final t = discTracks[i];
                         final updated = Track(
@@ -265,7 +289,9 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                           transcodeStatus: t.transcodeStatus,
                           error: t.error,
                         );
-                        final mainIndex = _tracks.indexWhere((tr) => tr.id == t.id);
+                        final mainIndex = _tracks.indexWhere(
+                          (tr) => tr.id == t.id,
+                        );
                         _tracks[mainIndex] = updated;
                         _saveTrack(updated);
                       }
@@ -277,12 +303,19 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                         key: ValueKey(track.id),
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Theme.of(context).dividerColor),
+                          border: Border.all(
+                            color: Theme.of(context).dividerColor,
+                          ),
                           borderRadius: BorderRadius.circular(8),
-                          color: Theme.of(context).cardColor.withValues(alpha: 0.02),
+                          color: Theme.of(
+                            context,
+                          ).cardColor.withValues(alpha: 0.02),
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           leading: _buildStatusIcon(track),
                           title: TextFormField(
                             initialValue: track.title,
@@ -309,12 +342,16 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                                 transcodeStatus: track.transcodeStatus,
                                 error: track.error,
                               );
-                              final mainIndex = _tracks.indexWhere((t) => t.id == track.id);
+                              final mainIndex = _tracks.indexWhere(
+                                (t) => t.id == track.id,
+                              );
                               _tracks[mainIndex] = updated;
                               _saveTrack(updated);
                             },
                           ),
-                          subtitle: Text('${track.artist} • Track ${track.trackNumber}'),
+                          subtitle: Text(
+                            '${track.artist} • Track ${track.trackNumber}',
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -322,39 +359,45 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                                 icon: const Icon(Icons.album_outlined),
                                 tooltip: 'Move to Disc',
                                 onSelected: (newDisc) {
-                                    final updated = Track(
-                                      id: track.id,
-                                      title: track.title,
-                                      artist: track.artist,
-                                      album: track.album,
-                                      duration: track.duration,
-                                      releaseId: track.releaseId,
-                                      releaseTitle: track.releaseTitle,
-                                      discNumber: newDisc,
-                                      trackNumber: track.trackNumber,
-                                      transcodeStatus: track.transcodeStatus,
-                                      error: track.error,
-                                    );
-                                    final mainIndex = _tracks.indexWhere((t) => t.id == track.id);
-                                    setState(() {
-                                      _tracks[mainIndex] = updated;
-                                    });
-                                    _saveTrack(updated);
-                                  },
-                                  itemBuilder: (context) {
-                                    final maxDisc = sortedDiscs.isEmpty ? 1 : sortedDiscs.last;
-                                    return [
-                                      ...sortedDiscs.map((d) => PopupMenuItem(
+                                  final updated = Track(
+                                    id: track.id,
+                                    title: track.title,
+                                    artist: track.artist,
+                                    album: track.album,
+                                    duration: track.duration,
+                                    releaseId: track.releaseId,
+                                    releaseTitle: track.releaseTitle,
+                                    discNumber: newDisc,
+                                    trackNumber: track.trackNumber,
+                                    transcodeStatus: track.transcodeStatus,
+                                    error: track.error,
+                                  );
+                                  final mainIndex = _tracks.indexWhere(
+                                    (t) => t.id == track.id,
+                                  );
+                                  setState(() {
+                                    _tracks[mainIndex] = updated;
+                                  });
+                                  _saveTrack(updated);
+                                },
+                                itemBuilder: (context) {
+                                  final maxDisc = sortedDiscs.isEmpty
+                                      ? 1
+                                      : sortedDiscs.last;
+                                  return [
+                                    ...sortedDiscs.map(
+                                      (d) => PopupMenuItem(
                                         value: d,
                                         child: Text('Disc $d'),
-                                      )),
-                                      PopupMenuItem(
-                                        value: maxDisc + 1,
-                                        child: Text('New Disc ${maxDisc + 1}'),
                                       ),
-                                    ];
-                                  },
-                                ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: maxDisc + 1,
+                                      child: Text('New Disc ${maxDisc + 1}'),
+                                    ),
+                                  ];
+                                },
+                              ),
                               const Icon(Icons.drag_handle),
                             ],
                           ),
@@ -372,9 +415,19 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
   }
 
   Widget _buildStatusIcon(Track track) {
-    if (track.transcodeStatus == 'done') return const Icon(Icons.check_circle, color: Colors.green);
-    if (track.transcodeStatus == 'processing') return const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
-    if (track.transcodeStatus == 'error') return const Icon(Icons.error, color: Colors.red);
+    if (track.transcodeStatus == 'done') {
+      return const Icon(Icons.check_circle, color: Colors.green);
+    }
+    if (track.transcodeStatus == 'processing') {
+      return const SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    if (track.transcodeStatus == 'error') {
+      return const Icon(Icons.error, color: Colors.red);
+    }
     return const Icon(Icons.circle_outlined);
   }
 }

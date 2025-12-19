@@ -45,7 +45,7 @@ extension ActivityAssetsCopyWith on ActivityAssets {
 }
 
 class DiscordService with ChangeNotifier {
-  final Client client = Client(clientId: '1438064057138806818'); // Don't change -- I won't :)
+  final Client client = Client(clientId: '1438064057138806818'); // Don't change
   final SettingsService _settingsService;
   AudioService? _audioService;
 
@@ -147,7 +147,7 @@ class DiscordService with ChangeNotifier {
     ActivityType? type,
     String? largeImage,
     String? largeText,
-    String? name
+    String? name,
   }) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
       name: name,

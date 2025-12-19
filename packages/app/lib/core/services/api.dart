@@ -224,21 +224,25 @@ class ApiService {
           mimeType = 'audio/flac';
         }
         final mediaType = MediaType.parse(mimeType);
-        request.files.add(await http.MultipartFile.fromPath(
-          'files[]',
-          path,
-          contentType: mediaType,
-        ));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'files[]',
+            path,
+            contentType: mediaType,
+          ),
+        );
       }
 
       if (coverPath != null) {
         final mimeType = lookupMimeType(coverPath) ?? 'image/jpeg';
         final mediaType = MediaType.parse(mimeType);
-        request.files.add(await http.MultipartFile.fromPath(
-          'cover',
-          coverPath,
-          contentType: mediaType,
-        ));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'cover',
+            coverPath,
+            contentType: mediaType,
+          ),
+        );
       }
 
       request.fields['releaseTitle'] = title;

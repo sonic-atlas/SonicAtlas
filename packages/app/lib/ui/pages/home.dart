@@ -37,10 +37,7 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: const Text('Sonic Atlas'),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _refresh,
-            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
