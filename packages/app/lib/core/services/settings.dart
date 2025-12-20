@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/models/quality.dart';
@@ -9,6 +9,7 @@ class SettingsService with ChangeNotifier {
   static const _audioQualityKey = 'audio_quality';
   static const _discordRPCEnabledKey = 'discord_rpc_enabled';
   static const _relativeDurationKey = 'relative_duration';
+  static const _themeModeKey = 'theme_mode';
 
   String? _serverIp;
   String? get serverIp => _serverIp;
@@ -22,11 +23,22 @@ class SettingsService with ChangeNotifier {
   bool _relativeDuration = false;
   bool get relativeDuration => _relativeDuration;
 
+  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode get themeMode => _themeMode;
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _serverIp = _prefs.getString(_serverIpKey);
     _discordRPCEnabled = _prefs.getBool(_discordRPCEnabledKey) ?? true;
     _relativeDuration = _prefs.getBool(_relativeDurationKey) ?? false;
+
+    final savedTheme = _prefs.getString(_themeModeKey);
+    if (savedTheme != null) {
+      _themeMode = ThemeMode.values.firstWhere(
+        (e) => e.toString() == savedTheme,
+        orElse: () => ThemeMode.system
+      );
+    }
 
     final savedQuality = _prefs.getString(_audioQualityKey);
     if (savedQuality != null) {
@@ -55,6 +67,12 @@ class SettingsService with ChangeNotifier {
   Future<void> setRelativeDuration(bool enabled) async {
     _relativeDuration = enabled;
     await _prefs.setBool(_relativeDurationKey, enabled);
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    await _prefs.setString(_themeModeKey, mode.toString());
     notifyListeners();
   }
 }

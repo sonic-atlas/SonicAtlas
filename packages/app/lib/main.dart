@@ -23,6 +23,7 @@ import 'ui/pages/server_setup.dart';
 import 'ui/pages/settings.dart';
 import 'ui/pages/splash.dart';
 import 'ui/pages/upload.dart';
+import 'ui/theme/app_theme.dart';
 
 late MediaSessionHandler audioHandler;
 LinuxMprisManager? linuxMpris;
@@ -122,12 +123,7 @@ class SonicAtlasApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color background = Color(0xFF121212);
-    const Color primaryColor = Color(0xFF1DB954);
-    const Color secondaryColor = Color(0xFFB954DB);
-    const Color textPrimaryColor = Color(0xFFFFFFFF);
-    const Color textSecondaryColor = Color(0xFFB3B3B3);
-    const Color surfaceColor = Color(0xFF141414);
+    final theme = context.select<SettingsService, ThemeMode>((s) => s.themeMode);
 
     return MaterialApp(
       title: 'Sonic Atlas',
@@ -139,138 +135,10 @@ class SonicAtlasApp extends StatelessWidget {
           PointerDeviceKind.unknown,
         },
       ),
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: background,
-        primaryColor: primaryColor,
-        colorScheme: ColorScheme.dark(
-          primary: primaryColor,
-          secondary: secondaryColor,
-          surface: surfaceColor,
-          surfaceContainerHighest: surfaceColor,
-          surfaceTint: Colors.transparent,
-          onPrimary: Colors.black,
-          onSecondary: Colors.black,
-          onSurface: textPrimaryColor,
-          onSurfaceVariant: background,
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: textPrimaryColor),
-          bodyMedium: TextStyle(color: textPrimaryColor),
-          bodySmall: TextStyle(color: textSecondaryColor),
-          titleLarge: TextStyle(color: textPrimaryColor),
-          titleMedium: TextStyle(color: textPrimaryColor),
-          titleSmall: TextStyle(color: textSecondaryColor),
-          headlineMedium: TextStyle(
-            color: textPrimaryColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: background,
-          elevation: 0,
-          foregroundColor: textPrimaryColor,
-        ),
-        listTileTheme: const ListTileThemeData(
-          iconColor: textSecondaryColor,
-          textColor: textPrimaryColor,
-          subtitleTextStyle: TextStyle(color: textSecondaryColor),
-        ),
-        iconButtonTheme: IconButtonThemeData(
-          style: ButtonStyle(
-            iconColor: WidgetStateProperty.all(textPrimaryColor),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: textPrimaryColor),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: textPrimaryColor,
-            side: const BorderSide(color: textSecondaryColor),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          labelStyle: TextStyle(color: textSecondaryColor),
-          hintStyle: TextStyle(color: textSecondaryColor),
-          floatingLabelStyle: TextStyle(color: textPrimaryColor),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: textSecondaryColor),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: primaryColor),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: surfaceColor,
-            foregroundColor: textPrimaryColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: primaryColor,
-          selectionColor: primaryColor.withValues(alpha: 0.25),
-          selectionHandleColor: primaryColor,
-        ),
-        sliderTheme: SliderThemeData(
-          activeTrackColor: primaryColor,
-          thumbColor: primaryColor,
-          inactiveTrackColor: textSecondaryColor.withValues(alpha: 0.3),
-        ),
-        checkboxTheme: CheckboxThemeData(
-          side: const BorderSide(color: textSecondaryColor, width: 2),
-          fillColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return primaryColor;
-            }
-            return null;
-          }),
-          checkColor: WidgetStateProperty.all(Colors.black),
-        ),
-        radioTheme: RadioThemeData(
-          fillColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return primaryColor;
-            }
-            return textSecondaryColor;
-          }),
-        ),
-        switchTheme: SwitchThemeData(
-          thumbColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return primaryColor;
-            }
-            return textSecondaryColor;
-          }),
-          trackColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return primaryColor.withValues(alpha: 0.5);
-            }
-            return surfaceColor;
-          }),
-          trackOutlineColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return Colors.transparent;
-            }
-            return textSecondaryColor;
-          }),
-        ),
-        bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: surfaceColor,
-          surfaceTintColor: Colors.transparent,
-        ),
-        popupMenuTheme: const PopupMenuThemeData(
-          surfaceTintColor: Colors.transparent,
-        ),
-        dialogTheme: const DialogThemeData(
-          surfaceTintColor: Colors.transparent,
-        ),
-        cardTheme: const CardThemeData(surfaceTintColor: Colors.transparent),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.fromBrightness(Brightness.light),
+      darkTheme: AppTheme.fromBrightness(Brightness.dark),
+      themeMode: theme,
+      themeAnimationDuration: const Duration(milliseconds: 0),
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashPage(),

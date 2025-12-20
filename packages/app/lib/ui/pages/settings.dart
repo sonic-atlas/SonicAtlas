@@ -81,6 +81,28 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ListTile(
+              title: const Text('Theme'),
+              trailing: RepaintBoundary(
+                child: Builder(
+                  builder: (context) {
+                    return DropdownButton<ThemeMode>(
+                      value: settings.themeMode,
+                      onChanged: (value) {
+                        if (value != null) {
+                          settings.setThemeMode(value);
+                        }
+                      },
+                      items: const [
+                        DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
+                        DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
+                        DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                      ]
+                    );
+                  }
+                )
+              )
+            ),
+            ListTile(
               title: const Text('Discord RPC'),
               subtitle: const Text('Enable Discord Rich Presence'),
               trailing: Switch(
