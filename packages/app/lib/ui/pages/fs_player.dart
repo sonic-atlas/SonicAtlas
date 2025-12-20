@@ -318,11 +318,11 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
               builder: (context, constraints) {
                 final useSideBySide =
                     constraints.maxWidth > constraints.maxHeight &&
-                    constraints.maxHeight < 500;
+                    constraints.maxHeight < 710;
 
                 final maxSize = constraints.maxHeight * 0.45;
                 final albumArtSize = useSideBySide
-                    ? constraints.maxHeight * 0.8
+                    ? constraints.maxHeight * 0.7
                     : (constraints.maxWidth * 0.7).clamp(200.0, maxSize);
 
                 final minimizeButton = IconButton(
