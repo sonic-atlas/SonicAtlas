@@ -97,8 +97,7 @@ class _UploadPageState extends State<UploadPage> {
       );
 
       if (mounted && result != null) {
-        Navigator.pushReplacement(
-          context,
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) =>
                 ReleaseEditorPage(releaseId: result['release']['id']),

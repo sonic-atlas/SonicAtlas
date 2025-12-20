@@ -5,10 +5,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'core/services/api.dart';
 import 'core/services/audio.dart';
 import 'core/services/auth.dart';
+import 'core/services/cla.dart';
 import 'core/services/discord.dart';
 import 'core/services/media_handler.dart';
 import 'core/services/mpris_service.dart';
@@ -25,7 +27,7 @@ import 'ui/pages/upload.dart';
 late MediaSessionHandler audioHandler;
 LinuxMprisManager? linuxMpris;
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   MediaKit.ensureInitialized();
@@ -44,6 +46,16 @@ void main() async {
     authService,
     settingsService,
   );
+
+  if (Platform.isWindows) {
+    await WindowsSingleInstance.ensureSingleInstance(
+          args,
+          'com.sonicatlas/player',
+          onSecondWindow: (args) {
+            handleCLA(args, audioService: audioService, apiService: apiService);
+          }
+      );
+  }
 
   discordService.setAudioService(audioService);
 
@@ -91,6 +103,10 @@ void main() async {
       child: const SonicAtlasApp(),
     ),
   );
+
+  if (args.isNotEmpty) {
+    handleCLA(args, audioService: audioService, apiService: apiService);
+  }
 
   Future.microtask(() => discordService.init());
 

@@ -2,9 +2,9 @@
 /// (https://github.com/alexmercerind/windows_taskbar).
 ///
 /// Copyright (c) 2021 & onwards, Hitesh Kumar Saini <saini123hitesh@gmail.com>.
-/// All rights reserved.
-/// Use of this source code is governed by MIT license that can be found in the
-/// LICENSE file.
+/// Modified 2025, SonicAtlas (https://github.com/sonic-atlas)
+///
+/// Use of this source code is governed by MIT license that can be found in the LICENSE file.
 
 #ifndef WINDOWS_TASKBAR_H_
 #define WINDOWS_TASKBAR_H_
@@ -21,6 +21,13 @@ struct ThumbnailToolbarButton {
   std::string icon;
   std::string tooltip;
   int32_t mode;
+};
+
+struct JumpListEntry {
+    std::string title;
+    std::string arguments;
+    std::string icon;
+    int iconIndex = 0;
 };
 
 class WindowsTaskbar {
@@ -56,6 +63,8 @@ class WindowsTaskbar {
   bool ResetWindowTitle();
 
   bool IsTaskbarVisible();
+
+  bool SetJumpList(const std::vector<JumpListEntry>& entries, const std::string& categoryName);
 
  private:
   HWND window_ = nullptr;

@@ -26,7 +26,7 @@ class WindowsTransport extends Transport {
 
     await read();
 
-    _timer = Timer.periodic(Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       readLoop();
     });
   }
@@ -76,7 +76,7 @@ class WindowsTransport extends Transport {
     int len = await _file!.length();
     do {
       len = await _file!.length();
-      sleep(Duration(milliseconds: 50));
+      sleep(const Duration(milliseconds: 50));
     } while (len == 0 && _timer == null);
 
     if (len == 0 && _timer != null) return <int>[];

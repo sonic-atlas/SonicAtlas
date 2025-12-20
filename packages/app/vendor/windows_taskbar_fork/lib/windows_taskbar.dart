@@ -1,7 +1,9 @@
-/// This file is a part of windows_taskbar (https://github.com/alexmercerind/windows_taskbar).
+/// This file is a part of windows_taskbar
+/// (https://github.com/alexmercerind/windows_taskbar).
 ///
 /// Copyright (c) 2021 & onwards, Hitesh Kumar Saini <saini123hitesh@gmail.com>.
-/// All rights reserved.
+/// Modified 2025, SonicAtlas (https://github.com/sonic-atlas)
+///
 /// Use of this source code is governed by MIT license that can be found in the LICENSE file.
 
 import 'dart:io';
@@ -41,6 +43,9 @@ const String _kSetWindowTitle = 'SetWindowTitle';
 /// Reset window title.
 const String _kResetWindowTitle = 'ResetWindowTitle';
 
+/// Sets the Jump List
+const String _kSetJumpList = 'SetJumpList';
+
 /// Declares mode of a [ThumbnailToolbarButton].
 /// Analog of `THUMBBUTTONFLAGS` in WIN32 API.
 ///
@@ -53,6 +58,9 @@ class ThumbnailToolbarButtonMode {
 
   /// Do not draw a button border, use only the image.
   static const int noBackground = 0x4;
+
+  /// Do not draw the button
+  static const int hidden = 0x8;
 
   /// The button is enabled but not interactive; no pressed button state is drawn.
   /// This value is intended for instances where the button is used in a notification.
@@ -147,6 +155,35 @@ class ThumbnailToolbarButton {
         'tooltip': tooltip,
         'mode': mode,
       };
+}
+
+class TaskbarJumpListEntry {
+  /// The title of the entry.
+  final String title;
+
+  /// The arguments used to start the app when clicked.
+  final String arguments;
+
+  /// Icon of the entry.
+  final ThumbnailToolbarAssetIcon icon;
+
+  /// Index of the icon in the icon list. Optional, defaults to order in the list.
+  final int iconIndex;
+
+  TaskbarJumpListEntry(
+    this.title,
+    this.arguments,
+    this.icon, {
+    this.iconIndex = 0
+  });
+
+  /// Conversion to `flutter::EncodableMap` for method channel transfer.
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'arguments': arguments,
+    'icon': icon.path,
+    'iconIndex': iconIndex
+  };
 }
 
 /// WindowsTaskbar
@@ -346,6 +383,40 @@ class WindowsTaskbar {
     return await _kChannel.invokeMethod(
       'IsTaskbarVisible',
       {},
+    );
+  }
+
+  /// Sets the jump list for the taskbar context menu.
+  /// Takes list of jump list entries.
+  ///
+  /// ```dart
+  /// WindowsTaskbar.setJumpList(
+  ///   [
+  ///     TaskbarJumpListEntry(
+  ///       'Entry 1',
+  ///       '--test',
+  ///       ThumbnailToolbarAssetIcon('res/test.ico')
+  ///     ),
+  ///     TaskbarJumpListEntry(
+  ///       'Entry 2',
+  ///       '--test2',
+  ///       ThumbnailToolbarAssetIcon('res/test2.ico),
+  ///       iconIndex: 1
+  ///     )
+  ///   ],
+  ///   'TestName'
+  /// );
+  /// ```
+  ///
+  static Future<void> setJumpList(List<TaskbarJumpListEntry> entries, String categoryName) async {
+    return await _kChannel.invokeMethod(
+      _kSetJumpList,
+      {
+        'entries': entries.map((entry) {
+          return entry.toJson();
+        }).toList(),
+        'categoryName': categoryName
+      }
     );
   }
 

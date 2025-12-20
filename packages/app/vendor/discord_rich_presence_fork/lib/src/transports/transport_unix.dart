@@ -84,7 +84,7 @@ class UnixTransport extends Transport {
       final String path = _getIpcPath(id);
       final InternetAddress host = InternetAddress(path, type: InternetAddressType.unix);
       
-      final Socket conn = await Socket.connect(host, 0, timeout: Duration(seconds: 3));
+      final Socket conn = await Socket.connect(host, 0, timeout: const Duration(seconds: 3));
       return conn;
     } catch (err) {
       return _getIpc(id: id + 1);

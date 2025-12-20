@@ -54,7 +54,7 @@ class TrackListItem extends StatelessWidget {
           width: 40,
           height: 40,
           fit: BoxFit.cover,
-          fadeInDuration: Duration(milliseconds: 0),
+          fadeInDuration: const Duration(milliseconds: 0),
           errorWidget: (context, url, error) => const Icon(Icons.album),
           placeholder: (context, url) =>
               Container(width: 40, height: 40, color: Colors.grey[900]),

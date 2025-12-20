@@ -2,14 +2,24 @@
 /// (https://github.com/alexmercerind/windows_taskbar).
 ///
 /// Copyright (c) 2021 & onwards, Hitesh Kumar Saini <saini123hitesh@gmail.com>.
-/// All rights reserved.
-/// Use of this source code is governed by MIT license that can be found in the
-/// LICENSE file.
+/// Modified 2025, SonicAtlas (https://github.com/sonic-atlas)
+///
+/// Use of this source code is governed by MIT license that can be found in the LICENSE file.
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 
 #include "windows_taskbar.h"
 
 #include <WinUser.h>
 #include <strsafe.h>
+#include <ShObjIdl.h>
+#include <ShObjIdl_core.h>
+#include <Shlguid.h>
+#include <PropVarUtil.h>
+#include <PropKey.h>
+#include <atlbase.h>
 
 #include "utils.h"
 
@@ -97,8 +107,13 @@ bool WindowsTaskbar::SetThumbnailToolbar(
             t.dwFlags = (THUMBBUTTONFLAGS)buttons[i].mode | THBF_ENABLED;
             t.iId = kMinThumbButtonID + i;
 
-            HICON hIcon = (HICON)LoadImage(NULL, Utf16FromUtf8(buttons[i].icon).c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-
+            // Actually support multi-res .ico
+            HICON hIcon = (HICON)LoadImage(
+                    NULL,
+                    Utf16FromUtf8(buttons[i].icon).c_str(),
+                    IMAGE_ICON,
+                    0, 0,
+                    LR_LOADFROMFILE | LR_DEFAULTSIZE);
             if (!hIcon) {
                 OutputDebugString(L"Failed to load thumbnail toolbar icon\n");
             }
@@ -254,4 +269,80 @@ bool WindowsTaskbar::IsTaskbarVisible() {
   }
 
   return true;
+}
+
+bool WindowsTaskbar::SetJumpList(const std::vector<JumpListEntry> &entries,
+                                 const std::string &category_name) {
+  if (!::IsWindowVisible(window_)) {
+    return false;
+  }
+
+  ICustomDestinationList *destination_list = nullptr;
+  HRESULT hr = ::CoCreateInstance(CLSID_DestinationList, NULL,
+                                  CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&destination_list));
+  if (FAILED(hr) || !destination_list) return false;
+
+  destination_list->SetAppID(L"dev.heggo.sonic_atlas");
+
+  UINT max_slots;
+  IObjectArray *removed_objects = nullptr;
+  hr = destination_list->BeginList(&max_slots, IID_PPV_ARGS(&removed_objects));
+  if (FAILED(hr)) return false;
+
+  IObjectCollection* collection = nullptr;
+  hr = ::CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARGS(&collection));
+  if (FAILED(hr) || !collection) return false;
+
+  wchar_t exe_path[MAX_PATH];
+  ::GetModuleFileNameW(NULL, exe_path, MAX_PATH);
+
+  for (const auto &entry: entries) {
+    IShellLinkW *shell_link = nullptr;
+    hr = ::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                            IID_PPV_ARGS(&shell_link));
+    if (FAILED(hr) || !shell_link) continue;
+
+    shell_link->SetPath(exe_path);
+    shell_link->SetArguments(Utf16FromUtf8(entry.arguments).c_str());
+
+    if (!entry.icon.empty()) {
+      shell_link->SetIconLocation(Utf16FromUtf8(entry.icon).c_str(), entry.iconIndex);
+    }
+
+    IPropertyStore *property_store = nullptr;
+    if (SUCCEEDED(shell_link->QueryInterface(IID_PPV_ARGS(&property_store)))) {
+      PROPVARIANT pv;
+      if (SUCCEEDED(::InitPropVariantFromString(
+              Utf16FromUtf8(entry.title).c_str(), &pv))) {
+        property_store->SetValue(PKEY_Title, pv);
+        ::PropVariantClear(&pv);
+      }
+      property_store->Commit();
+      property_store->Release();
+    }
+
+    collection->AddObject(shell_link);
+    shell_link->Release();
+
+    IObjectArray *object_array = nullptr;
+    if (SUCCEEDED(collection->QueryInterface(IID_PPV_ARGS(&object_array)))) {
+      hr = destination_list->AppendCategory(
+              Utf16FromUtf8(category_name).c_str(),
+              object_array);
+      object_array->Release();
+    }
+
+    collection->Release();
+  }
+
+  if (SUCCEEDED(hr))
+    hr = destination_list->CommitList();
+
+  if (removed_objects)
+    removed_objects->Release();
+
+  destination_list->Release();
+
+  return SUCCEEDED(hr);
 }

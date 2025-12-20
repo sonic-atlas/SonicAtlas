@@ -64,6 +64,54 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/:trackId', async (req, res) => {
+    const { trackId: id } = req.params;
+
+    try {
+        const track = await db.query.tracks.findFirst({
+            with: {
+                metadata: true,
+                releaseTracks: {
+                    with: {
+                        release: true
+                    }
+                }
+            },
+            where: {
+                id
+            }
+        });
+
+        if (!track) {
+            return res.status(404).json({
+                error: 'NOT_FOUND',
+                code: 'TRACK_001',
+                message: 'Track not found'
+            });
+        }
+
+        const hasReleaseCover = track.releaseTracks.some(rt => rt.release?.coverArtPath);
+        const coverArtPath = track.coverArtPath ?? (hasReleaseCover ? `/api/metadata/${track.id}/cover` : null);
+
+        const { releaseTracks, ...rest } = track;
+        const primaryRelease = track.releaseTracks[0]?.release;
+
+        return res.json({
+            ...rest,
+            coverArtPath,
+            releaseId: primaryRelease?.id,
+            releaseTitle: primaryRelease?.title,
+            album: primaryRelease?.title
+        });
+    } catch (err) {
+        logger.error(`(GET /api/track) Unknown Error Occurred:\n${err}`);
+        return res.status(500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to fetch track'
+        });
+    }
+});
+
 class UnsupportedMediaTypeError extends Error {
     statusCode = 415;
     constructor(message: string) {

@@ -75,6 +75,26 @@ class ApiService {
     }
   }
 
+  Future<Track?> getTrack(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/tracks/$id'),
+        headers: _headers
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return Track.fromJson(body);
+      }
+      return null;
+    } catch (e) {
+        if (kDebugMode) {
+          print('Get track error: $e');
+        }
+        return null;
+    }
+  }
+
   Future<List<Track>> searchTracks(
     String query, {
     int limit = 50,
