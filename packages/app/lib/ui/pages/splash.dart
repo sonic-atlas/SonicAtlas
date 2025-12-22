@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/core/services/auth.dart';
-import '/core/services/settings.dart';
+import '../../core/services/auth/auth.dart';
+import '../../core/services/config/settings.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/models/quality.dart';
-import '/core/services/api.dart';
-import '/core/services/audio.dart';
-import '/core/services/settings.dart';
+import '../../core/services/network/api.dart';
+import '../../core/services/playback/audio.dart';
+import '../../core/services/config/settings.dart';
 import '/ui/pages/queue.dart';
 
 class FullScreenPlayerPage extends StatefulWidget {

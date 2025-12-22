@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
-import 'audio.dart';
+import '../playback/audio.dart';
 
 class WTaskbarService {
   static final WTaskbarService _instance = WTaskbarService._internal();

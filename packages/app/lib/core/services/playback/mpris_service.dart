@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/services.dart';
-import 'package:sonic_atlas/core/services/audio.dart' as sa_audio;
+import 'package:sonic_atlas/core/services/playback/audio.dart' as sa_audio;
 
 class LinuxMprisManager {
   static const MethodChannel _channel = MethodChannel('sonic_atlas/mpris');

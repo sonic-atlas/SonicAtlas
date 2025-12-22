@@ -4,8 +4,8 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '/core/models/release.dart';
 import '/core/models/track.dart';
-import '/core/services/api.dart';
-import '/core/services/socket.dart';
+import '../../core/services/network/api.dart';
+import '../../core/services/network/socket.dart';
 
 class ReleaseEditorPage extends StatefulWidget {
   final String releaseId;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/core/services/api.dart';
-import '/core/services/audio.dart';
+import '../../core/services/network/api.dart';
+import '../../core/services/playback/audio.dart';
 
 class QueuePage extends StatelessWidget {
   const QueuePage({super.key});

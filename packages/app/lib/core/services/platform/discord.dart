@@ -4,9 +4,9 @@ import 'dart:io' show Platform;
 import 'package:discord_rich_presence/discord_rich_presence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sonic_atlas/core/models/track.dart';
-import 'package:sonic_atlas/core/services/settings.dart';
+import 'package:sonic_atlas/core/services/config/settings.dart';
 
-import 'audio.dart';
+import '../playback/audio.dart';
 
 extension ActivityCopyWith on Activity {
   Activity copyWith({

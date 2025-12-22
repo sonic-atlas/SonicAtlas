@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
-import '/core/services/api.dart';
-import '/core/services/socket.dart';
+import '../../core/services/network/api.dart';
+import '../../core/services/network/socket.dart';
 import 'release_editor.dart';
 
 class UploadPage extends StatefulWidget {

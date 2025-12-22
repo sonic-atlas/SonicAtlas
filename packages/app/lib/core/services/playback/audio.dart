@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as media_kit;
-import 'package:sonic_atlas/core/services/media_handler.dart';
+import 'package:sonic_atlas/core/services/playback/media_handler.dart';
 
-import '../models/quality.dart';
-import '../models/track.dart' as models;
-import 'api.dart';
-import 'auth.dart';
-import 'settings.dart';
+import '../../models/quality.dart';
+import '../../models/track.dart' as models;
+import '../network/api.dart';
+import '../auth/auth.dart';
+import '../config/settings.dart';
 
 class AudioService with ChangeNotifier {
   final media_kit.Player _player;

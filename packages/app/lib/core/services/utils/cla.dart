@@ -1,5 +1,5 @@
-import './audio.dart';
-import './api.dart';
+import '../playback/audio.dart';
+import '../network/api.dart';
 
 void handleCLA(List<String> args, {required AudioService audioService, required ApiService apiService}) async {
   for (var i = 0; i < args.length; i++) {

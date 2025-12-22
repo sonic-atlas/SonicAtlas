@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/models/track.dart';
-import '/core/services/api.dart';
+import '../../core/services/network/api.dart';
 import '/ui/components/track_list_item.dart';
 import '/ui/pages/search.dart';
 import '../components/layout.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'settings.dart';
+import '../config/settings.dart';
 
 class SocketService extends ChangeNotifier {
   final SettingsService _settingsService;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/core/services/settings.dart';
+import '../../core/services/config/settings.dart';
 
 class ServerSetupPage extends StatefulWidget {
   const ServerSetupPage({super.key});

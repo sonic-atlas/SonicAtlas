@@ -8,8 +8,8 @@ import 'package:mime/mime.dart';
 import '/core/models/quality.dart';
 import '/core/models/track.dart';
 import '/core/models/release.dart';
-import 'auth.dart';
-import 'settings.dart';
+import '../auth/auth.dart';
+import '../config/settings.dart';
 
 class ApiService {
   final SettingsService _settingsService;
