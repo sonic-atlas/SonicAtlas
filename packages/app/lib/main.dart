@@ -7,6 +7,8 @@ import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
+import 'package:sonic_recorder/sonic_recorder.dart' as sonic_recorder;
+
 import 'core/services/network/api.dart';
 import 'core/services/playback/audio.dart';
 import 'core/services/auth/auth.dart';
@@ -29,6 +31,12 @@ late MediaSessionHandler audioHandler;
 LinuxMprisManager? linuxMpris;
 
 void main(List<String> args) async {
+  try {
+    debugPrint('FFI_TEST: Sum(10, 20) = ${sonic_recorder.sum(10, 20)}');
+  } catch (e) {
+    debugPrint('FFI_TEST: Error $e');
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
 
   MediaKit.ensureInitialized();
