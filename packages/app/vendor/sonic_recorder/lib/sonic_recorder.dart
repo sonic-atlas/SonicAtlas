@@ -1,131 +1,161 @@
-
-import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:isolate';
+import 'package:ffi/ffi.dart';
 
-import 'sonic_recorder_bindings_generated.dart';
+final class SonicDeviceInfo extends Struct {
+  @Array(256)
+  external Array<Uint8> name;
 
-/// A very short-lived native function.
-///
-/// For very short-lived functions, it is fine to call them on the main isolate.
-/// They will block the Dart execution while running the native function, so
-/// only do this for native functions which are guaranteed to be short-lived.
-int sum(int a, int b) => _bindings.sum(a, b);
+  @Array(256)
+  external Array<Uint8> id;
 
-/// A longer lived native function, which occupies the thread calling it.
-///
-/// Do not call these kind of native functions in the main isolate. They will
-/// block Dart execution. This will cause dropped frames in Flutter applications.
-/// Instead, call these native functions on a separate isolate.
-///
-/// Modify this to suit your own use case. Example use cases:
-///
-/// 1. Reuse a single isolate for various different kinds of requests.
-/// 2. Use multiple helper isolates for parallel execution.
-Future<int> sumAsync(int a, int b) async {
-  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
-  final int requestId = _nextSumRequestId++;
-  final _SumRequest request = _SumRequest(requestId, a, b);
-  final Completer<int> completer = Completer<int>();
-  _sumRequests[requestId] = completer;
-  helperIsolateSendPort.send(request);
-  return completer.future;
+  @Int32()
+  external int isDefault;
+
+  @Int32()
+  external int backend;
 }
 
-const String _libName = 'sonic_recorder';
+typedef InitContextC = Int32 Function();
+typedef InitContextDart = int Function();
 
-/// The dynamic library in which the symbols for [SonicRecorderBindings] can be found.
-final DynamicLibrary _dylib = () {
-  if (Platform.isMacOS || Platform.isIOS) {
-    return DynamicLibrary.open('$_libName.framework/$_libName');
+typedef GetDeviceCountC = Int32 Function();
+typedef GetDeviceCountDart = int Function();
+
+typedef GetDeviceInfoC =
+    Void Function(Int32 index, Pointer<SonicDeviceInfo> info);
+typedef GetDeviceInfoDart =
+    void Function(int index, Pointer<SonicDeviceInfo> info);
+
+typedef RecorderStartC =
+    Int32 Function(Int32 deviceIndex, Int32 sampleRate, Int32 channels, Int32 bitDepth);
+typedef RecorderStartDart =
+    int Function(int deviceIndex, int sampleRate, int channels, int bitDepth);
+
+typedef RecorderStopC = Int32 Function();
+typedef RecorderStopDart = int Function();
+
+typedef RecorderReadC =
+    Int32 Function(Pointer<Int16> pOutput, Int32 frameCount);
+typedef RecorderReadDart = int Function(Pointer<Int16> pOutput, int frameCount);
+
+typedef RecorderReadS32C =
+    Int32 Function(Pointer<Int32> pOutput, Int32 frameCount);
+typedef RecorderReadS32Dart = int Function(Pointer<Int32> pOutput, int frameCount);
+
+class SonicRecorder {
+  static const String _libName = 'sonic_recorder';
+  late final DynamicLibrary _dylib;
+  late final InitContextDart _initContext;
+  late final GetDeviceCountDart _getDeviceCount;
+  late final GetDeviceInfoDart _getDeviceInfo;
+  late final RecorderStartDart _start;
+  late final RecorderStopDart _stop;
+  late final RecorderReadDart _read;
+  late final RecorderReadS32Dart _readS32;
+
+  SonicRecorder() {
+    if (Platform.isLinux) {
+      _dylib = DynamicLibrary.open('lib$_libName.so');
+    } else if (Platform.isWindows) {
+      _dylib = DynamicLibrary.open('$_libName.dll');
+    } else {
+      throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
+    }
+
+    _initContext = _dylib.lookupFunction<InitContextC, InitContextDart>(
+      'sonic_recorder_init_context',
+    );
+    _getDeviceCount = _dylib
+        .lookupFunction<GetDeviceCountC, GetDeviceCountDart>(
+          'sonic_recorder_get_device_count',
+        );
+    _getDeviceInfo = _dylib.lookupFunction<GetDeviceInfoC, GetDeviceInfoDart>(
+      'sonic_recorder_get_device_info',
+    );
+    _start = _dylib.lookupFunction<RecorderStartC, RecorderStartDart>(
+      'sonic_recorder_start',
+    );
+    _stop = _dylib.lookupFunction<RecorderStopC, RecorderStopDart>(
+      'sonic_recorder_stop',
+    );
+    _read = _dylib.lookupFunction<RecorderReadC, RecorderReadDart>(
+      'sonic_recorder_read',
+    );
+    _readS32 = _dylib.lookupFunction<RecorderReadS32C, RecorderReadS32Dart>(
+       'sonic_recorder_read_s32',
+    );
   }
-  if (Platform.isAndroid || Platform.isLinux) {
-    return DynamicLibrary.open('lib$_libName.so');
+
+  int start(int deviceIndex, int sampleRate, int channels, int bitDepth) =>
+      _start(deviceIndex, sampleRate, channels, bitDepth);
+  int stop() => _stop();
+  int read(Pointer<Int16> buffer, int frameCount) => _read(buffer, frameCount);
+  int readS32(Pointer<Int32> buffer, int frameCount) => _readS32(buffer, frameCount);
+
+  int init() {
+    return _initContext();
   }
-  if (Platform.isWindows) {
-    return DynamicLibrary.open('$_libName.dll');
-  }
-  throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
-}();
 
-/// The bindings to the native functions in [_dylib].
-final SonicRecorderBindings _bindings = SonicRecorderBindings(_dylib);
+  List<AudioDevice> getDevices() {
+    final count = _getDeviceCount();
+    if (count <= 0) return [];
 
+    final devices = <AudioDevice>[];
 
-/// A request to compute `sum`.
-///
-/// Typically sent from one isolate to another.
-class _SumRequest {
-  final int id;
-  final int a;
-  final int b;
+    final infoPointer = calloc<SonicDeviceInfo>();
 
-  const _SumRequest(this.id, this.a, this.b);
-}
+    try {
+      for (var i = 0; i < count; i++) {
+        _getDeviceInfo(i, infoPointer);
 
-/// A response with the result of `sum`.
-///
-/// Typically sent from one isolate to another.
-class _SumResponse {
-  final int id;
-  final int result;
+        Pointer<Utf8> namePtr = Pointer.fromAddress(
+          infoPointer.address,
+        ).cast<Utf8>();
+        String deviceName = namePtr.toDartString();
 
-  const _SumResponse(this.id, this.result);
-}
-
-/// Counter to identify [_SumRequest]s and [_SumResponse]s.
-int _nextSumRequestId = 0;
-
-/// Mapping from [_SumRequest] `id`s to the completers corresponding to the correct future of the pending request.
-final Map<int, Completer<int>> _sumRequests = <int, Completer<int>>{};
-
-/// The SendPort belonging to the helper isolate.
-Future<SendPort> _helperIsolateSendPort = () async {
-  // The helper isolate is going to send us back a SendPort, which we want to
-  // wait for.
-  final Completer<SendPort> completer = Completer<SendPort>();
-
-  // Receive port on the main isolate to receive messages from the helper.
-  // We receive two types of messages:
-  // 1. A port to send messages on.
-  // 2. Responses to requests we sent.
-  final ReceivePort receivePort = ReceivePort()
-    ..listen((dynamic data) {
-      if (data is SendPort) {
-        // The helper isolate sent us the port on which we can sent it requests.
-        completer.complete(data);
-        return;
-      }
-      if (data is _SumResponse) {
-        // The helper isolate sent us a response to a request we sent.
-        final Completer<int> completer = _sumRequests[data.id]!;
-        _sumRequests.remove(data.id);
-        completer.complete(data.result);
-        return;
-      }
-      throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
-    });
-
-  // Start the helper isolate.
-  await Isolate.spawn((SendPort sendPort) async {
-    final ReceivePort helperReceivePort = ReceivePort()
-      ..listen((dynamic data) {
-        // On the helper isolate listen to requests and respond to them.
-        if (data is _SumRequest) {
-          final int result = _bindings.sum_long_running(data.a, data.b);
-          final _SumResponse response = _SumResponse(data.id, result);
-          sendPort.send(response);
-          return;
+        final backendId = infoPointer.ref.backend;
+        String backendName = "Unknown";
+        if (backendId == 1) {
+          backendName = 'ALSA';
+        } else if (backendId == 2) {
+          backendName = 'PulseAudio';
+        } else if (backendId == 3) {
+          backendName = 'WASAPI';
+        } else {
+          backendName = 'Unknown ($backendId)';
         }
-        throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
-      });
 
-    // Send the port to the main isolate on which we can receive requests.
-    sendPort.send(helperReceivePort.sendPort);
-  }, receivePort.sendPort);
+        devices.add(
+          AudioDevice(
+            name: deviceName,
+            isDefault: infoPointer.ref.isDefault != 0,
+            backend: backendName,
+            id: "$backendName:$i",
+          ),
+        );
+      }
+    } finally {
+      calloc.free(infoPointer);
+    }
 
-  // Wait until the helper isolate has sent us back the SendPort on which we
-  // can start sending requests.
-  return completer.future;
-}();
+    return devices;
+  }
+}
+
+class AudioDevice {
+  final String name;
+  final bool isDefault;
+  final String backend;
+  final String id;
+
+  AudioDevice({
+    required this.name,
+    required this.isDefault,
+    required this.backend,
+    required this.id,
+  });
+
+  @override
+  String toString() => "$name [$backend] ${isDefault ? '(Default)' : ''}";
+}
