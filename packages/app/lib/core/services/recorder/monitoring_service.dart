@@ -14,7 +14,8 @@ class MonitoringService {
 
     try {
       String format = 's16le';
-      if (bitDepth == RecordingBitDepth.int24 || bitDepth == RecordingBitDepth.int32) {
+      if (bitDepth == RecordingBitDepth.int24 ||
+          bitDepth == RecordingBitDepth.int32) {
         format = 's32le';
       }
 
@@ -22,32 +23,47 @@ class MonitoringService {
 
       if (Platform.isLinux) {
         String aplayFormat = 'S16_LE';
-        if (bitDepth == RecordingBitDepth.int24 || bitDepth == RecordingBitDepth.int32) {
+        if (bitDepth == RecordingBitDepth.int24 ||
+            bitDepth == RecordingBitDepth.int32) {
           aplayFormat = 'S32_LE';
         }
 
         _monitorProcess = await Process.start('aplay', [
-          '-t', 'raw',
-          '-f', aplayFormat,
-          '-r', sampleRate.toString(),
-          '-c', '2',
+          '-t',
+          'raw',
+          '-f',
+          aplayFormat,
+          '-r',
+          sampleRate.toString(),
+          '-c',
+          '2',
           '-',
-          '--buffer-size', '2048',
+          '--buffer-size',
+          '2048',
         ]);
       } else {
         _monitorProcess = await Process.start('ffplay', [
           '-nodisp',
-          '-loglevel', 'warning',
+          '-loglevel',
+          'warning',
           '-nostats',
-          '-f', format,
-          '-ar', sampleRate.toString(),
-          '-ch_layout', 'stereo',
-          '-i', 'pipe:0',
-          '-fflags', 'nobuffer',
-          '-flags', 'low_delay',
+          '-f',
+          format,
+          '-ar',
+          sampleRate.toString(),
+          '-ch_layout',
+          'stereo',
+          '-i',
+          'pipe:0',
+          '-fflags',
+          'nobuffer',
+          '-flags',
+          'low_delay',
           '-framedrop',
-          '-probesize', '32',
-          '-analyzeduration', '0',
+          '-probesize',
+          '32',
+          '-analyzeduration',
+          '0',
         ]);
       }
 

@@ -79,7 +79,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/api/tracks/$id'),
-        headers: _headers
+        headers: _headers,
       );
 
       if (response.statusCode == 200) {
@@ -88,10 +88,10 @@ class ApiService {
       }
       return null;
     } catch (e) {
-        if (kDebugMode) {
-          print('Get track error: $e');
-        }
-        return null;
+      if (kDebugMode) {
+        print('Get track error: $e');
+      }
+      return null;
     }
   }
 

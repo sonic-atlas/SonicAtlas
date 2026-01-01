@@ -55,12 +55,12 @@ void main(List<String> args) async {
 
   if (Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
-          args,
-          'com.sonicatlas/player',
-          onSecondWindow: (args) {
-            handleCLA(args, audioService: audioService, apiService: apiService);
-          }
-      );
+      args,
+      'com.sonicatlas/player',
+      onSecondWindow: (args) {
+        handleCLA(args, audioService: audioService, apiService: apiService);
+      },
+    );
   }
 
   discordService.setAudioService(audioService);
@@ -130,7 +130,9 @@ class SonicAtlasApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.select<SettingsService, ThemeMode>((s) => s.themeMode);
+    final theme = context.select<SettingsService, ThemeMode>(
+      (s) => s.themeMode,
+    );
 
     return MaterialApp(
       title: 'Sonic Atlas',

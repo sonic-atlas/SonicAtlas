@@ -93,14 +93,23 @@ class SettingsPage extends StatelessWidget {
                         }
                       },
                       items: const [
-                        DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                        DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                        DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-                      ]
+                        DropdownMenuItem(
+                          value: ThemeMode.system,
+                          child: Text('System'),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.light,
+                          child: Text('Light'),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.dark,
+                          child: Text('Dark'),
+                        ),
+                      ],
                     );
-                  }
-                )
-              )
+                  },
+                ),
+              ),
             ),
             ListTile(
               title: const Text('Discord RPC'),

@@ -44,9 +44,8 @@ class SonicRecorderService extends ChangeNotifier {
       await _engine.init();
       _isInitialized = true;
       await refreshDevices();
-      
+
       _engine.audioStream.listen(_onAudioChunk);
-      
     } catch (e) {
       _error = 'Initialization error: $e';
       notifyListeners();
@@ -104,7 +103,10 @@ class SonicRecorderService extends ChangeNotifier {
     }
   }
 
-  Future<void> startRecording(AudioDevice device, {int sampleRate = 48000}) async {
+  Future<void> startRecording(
+    AudioDevice device, {
+    int sampleRate = 48000,
+  }) async {
     if (!_isInitialized || _isRecording) return;
 
     try {
@@ -113,18 +115,24 @@ class SonicRecorderService extends ChangeNotifier {
       final index = int.tryParse(parts.last) ?? 0;
 
       final dir = await getApplicationDocumentsDirectory();
-      final recordingsDir = Directory(path.join(dir.path, 'SonicAtlas', 'Recordings'));
+      final recordingsDir = Directory(
+        path.join(dir.path, 'SonicAtlas', 'Recordings'),
+      );
       if (!await recordingsDir.exists()) {
         await recordingsDir.create(recursive: true);
       }
 
-      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+      final timestamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .split('.')
+          .first;
       final wavPath = path.join(recordingsDir.path, 'recording_$timestamp.wav');
 
       await _writer.start(wavPath, sampleRate, _bitDepth);
 
       _engine.start(index, sampleRate, _bitDepth);
-      
+
       _isRecording = true;
       _error = null;
       _recordDuration = Duration.zero;
@@ -147,11 +155,11 @@ class SonicRecorderService extends ChangeNotifier {
 
     _engine.stop();
     await _writer.stop();
-    
+
     if (_writer.currentPath != null) {
       _sessionFiles.add(_writer.currentPath!);
     }
-    
+
     _isRecording = false;
     _durationTimer?.cancel();
     _durationTimer = null;

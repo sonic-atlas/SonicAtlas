@@ -8,20 +8,29 @@ class FileWriterService {
   String? _currentPath;
   String? get currentPath => _currentPath;
 
-  Future<void> start(String path, int sampleRate, RecordingBitDepth bitDepth) async {
+  Future<void> start(
+    String path,
+    int sampleRate,
+    RecordingBitDepth bitDepth,
+  ) async {
     _currentPath = path;
-    
+
     String ffmpegFormat = 's16le';
-    if (bitDepth == RecordingBitDepth.int24 || bitDepth == RecordingBitDepth.int32) {
+    if (bitDepth == RecordingBitDepth.int24 ||
+        bitDepth == RecordingBitDepth.int32) {
       ffmpegFormat = 's32le';
     }
 
     final args = [
       '-y',
-      '-f', ffmpegFormat,
-      '-ar', sampleRate.toString(),
-      '-ac', '2',
-      '-i', 'pipe:0',
+      '-f',
+      ffmpegFormat,
+      '-ar',
+      sampleRate.toString(),
+      '-ac',
+      '2',
+      '-i',
+      'pipe:0',
     ];
 
     if (bitDepth == RecordingBitDepth.int24) {

@@ -22,7 +22,11 @@ class RecordingStatus extends StatelessWidget {
       children: [
         Text(
           _formatDuration(recorderService.recordDuration),
-          style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+          style: const TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'monospace',
+          ),
         ),
         const SizedBox(height: 24),
         const Text(
@@ -32,12 +36,20 @@ class RecordingStatus extends StatelessWidget {
         const SizedBox(height: 8),
         const Text(
           'You can edit tracks and remove silence after recording is finished.',
-          style: TextStyle(fontSize: 14, color: Colors.grey, fontStyle: FontStyle.italic),
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
         ),
         const Text(
           'You should stop recording when switching sides/tracks.',
-          style: TextStyle(fontSize: 14, color: Colors.grey, fontStyle: FontStyle.italic),
-        )
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
       ],
     );
   }

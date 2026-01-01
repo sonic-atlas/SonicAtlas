@@ -17,7 +17,7 @@ class AudioChunk {
 class AudioEngine {
   final SonicRecorder _recorder = SonicRecorder();
   Timer? _readTimer;
-  
+
   final _audioController = StreamController<AudioChunk>.broadcast();
   Stream<AudioChunk> get audioStream => _audioController.stream;
 
@@ -67,7 +67,10 @@ class AudioEngine {
       _readBuffer = calloc<Int16>(_readBufferSize * 2);
     }
 
-    _readTimer = Timer.periodic(const Duration(milliseconds: 20), (_) => _readLoop());
+    _readTimer = Timer.periodic(
+      const Duration(milliseconds: 20),
+      (_) => _readLoop(),
+    );
   }
 
   void stop() {
@@ -109,8 +112,10 @@ class AudioEngine {
         final sampleFloat = samplePcm / 32768.0;
         sumSquares += sampleFloat * sampleFloat;
       }
-      
-      final rms = (totalSamples > 0) ? math.sqrt(sumSquares / totalSamples) : 0.0;
+
+      final rms = (totalSamples > 0)
+          ? math.sqrt(sumSquares / totalSamples)
+          : 0.0;
       _audioController.add(AudioChunk(pcmBytes, rms, totalSamples));
     }
   }
@@ -120,7 +125,9 @@ class AudioEngine {
     if (framesRead > 0) {
       double sumSquares = 0.0;
       final totalSamples = framesRead * 2;
-      final pcmBytes = _readBufferS32!.cast<Uint8>().asTypedList(totalSamples * 4);
+      final pcmBytes = _readBufferS32!.cast<Uint8>().asTypedList(
+        totalSamples * 4,
+      );
 
       for (var i = 0; i < totalSamples; i++) {
         final samplePcm = _readBufferS32![i];
@@ -128,7 +135,9 @@ class AudioEngine {
         sumSquares += sampleFloat * sampleFloat;
       }
 
-      final rms = (totalSamples > 0) ? math.sqrt(sumSquares / totalSamples) : 0.0;
+      final rms = (totalSamples > 0)
+          ? math.sqrt(sumSquares / totalSamples)
+          : 0.0;
       _audioController.add(AudioChunk(pcmBytes, rms, totalSamples));
     }
   }

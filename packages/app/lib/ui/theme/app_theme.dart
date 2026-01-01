@@ -14,7 +14,7 @@ class _ThemeColors {
     required this.background,
     required this.surface,
     required this.textPrimary,
-    required this.textSecondary
+    required this.textSecondary,
   });
 }
 
@@ -44,7 +44,7 @@ class AppTheme {
           background: darkBackground,
           surface: darkSurface,
           textPrimary: darkTextPrimary,
-          textSecondary: textSecondaryColor
+          textSecondary: textSecondaryColor,
         );
       case Brightness.light:
         return const _ThemeColors(
@@ -53,7 +53,7 @@ class AppTheme {
           background: lightBackground,
           surface: lightSurface,
           textPrimary: lightTextPrimary,
-          textSecondary: textSecondaryColor
+          textSecondary: textSecondaryColor,
         );
     }
   }
@@ -86,11 +86,13 @@ class AppTheme {
         surfaceContainerHighest: c.surface,
         surfaceTint: Colors.transparent,
         onPrimary: brightness == Brightness.dark ? Colors.black : Colors.white,
-        onSecondary: brightness == Brightness.dark ? Colors.black : Colors.white,
+        onSecondary: brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
         onSurface: c.textPrimary,
         onSurfaceVariant: c.background,
         error: Color(0xFFFF5540),
-        onError: Color(0xFF1F0A08)
+        onError: Color(0xFF1F0A08),
       ),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: c.textPrimary),
@@ -161,7 +163,9 @@ class AppTheme {
           }
           return null;
         }),
-        checkColor: WidgetStateProperty.all(brightness == Brightness.dark ? Colors.black : Colors.white,),
+        checkColor: WidgetStateProperty.all(
+          brightness == Brightness.dark ? Colors.black : Colors.white,
+        ),
       ),
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
@@ -194,7 +198,7 @@ class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surface,
         surfaceTintColor: Colors.transparent,
-      )
+      ),
     );
   }
 }

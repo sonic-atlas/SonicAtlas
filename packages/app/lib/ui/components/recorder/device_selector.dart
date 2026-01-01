@@ -29,7 +29,10 @@ class DeviceSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Input Device', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text(
+          'Input Device',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -37,7 +40,10 @@ class DeviceSelector extends StatelessWidget {
               child: InputDecorator(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<AudioDevice>(
@@ -49,12 +55,14 @@ class DeviceSelector extends StatelessWidget {
                           d.toString(),
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyLarge?.color
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
                       );
                     }).toList(),
-                    onChanged: recorderService.isRecording ? null : onDeviceChanged,
+                    onChanged: recorderService.isRecording
+                        ? null
+                        : onDeviceChanged,
                     hint: const Text('Select a device'),
                     value: selectedDevice,
                   ),
@@ -64,19 +72,30 @@ class DeviceSelector extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: recorderService.isRecording ? null : () => recorderService.refreshDevices(),
+              onPressed: recorderService.isRecording
+                  ? null
+                  : () => recorderService.refreshDevices(),
               tooltip: 'Refresh Devices',
             ),
             const SizedBox(width: 8),
             IconButton.filledTonal(
-              icon: Icon(recorderService.isMonitoring ? Icons.volume_up : Icons.volume_off),
-              onPressed: () => recorderService.toggleMonitor(sampleRate: sampleRate),
+              icon: Icon(
+                recorderService.isMonitoring
+                    ? Icons.volume_up
+                    : Icons.volume_off,
+              ),
+              onPressed: () =>
+                  recorderService.toggleMonitor(sampleRate: sampleRate),
               tooltip: 'Monitor Output',
               style: IconButton.styleFrom(
-                backgroundColor: recorderService.isMonitoring ? Theme.of(context).colorScheme.primary : null,
-                foregroundColor: recorderService.isMonitoring ? Theme.of(context).colorScheme.onPrimary : null,
+                backgroundColor: recorderService.isMonitoring
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+                foregroundColor: recorderService.isMonitoring
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : null,
               ),
-            )
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -86,12 +105,18 @@ class DeviceSelector extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Sample Rate', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Sample Rate',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   InputDecorator(
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<int>(
@@ -102,7 +127,9 @@ class DeviceSelector extends StatelessWidget {
                             child: Text('${sr}Hz'),
                           );
                         }).toList(),
-                        onChanged: recorderService.isRecording ? null : onSampleRateChanged,
+                        onChanged: recorderService.isRecording
+                            ? null
+                            : onSampleRateChanged,
                         value: sampleRate,
                       ),
                     ),
@@ -115,12 +142,18 @@ class DeviceSelector extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Bit Depth', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Bit Depth',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   InputDecorator(
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<RecordingBitDepth>(
@@ -139,7 +172,9 @@ class DeviceSelector extends StatelessWidget {
                             child: Text('32-bit (Studio)'),
                           ),
                         ],
-                        onChanged: recorderService.isRecording ? null : onBitDepthChanged,
+                        onChanged: recorderService.isRecording
+                            ? null
+                            : onBitDepthChanged,
                         value: bitDepth,
                       ),
                     ),

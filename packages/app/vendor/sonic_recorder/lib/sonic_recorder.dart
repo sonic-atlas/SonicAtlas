@@ -28,7 +28,12 @@ typedef GetDeviceInfoDart =
     void Function(int index, Pointer<SonicDeviceInfo> info);
 
 typedef RecorderStartC =
-    Int32 Function(Int32 deviceIndex, Int32 sampleRate, Int32 channels, Int32 bitDepth);
+    Int32 Function(
+      Int32 deviceIndex,
+      Int32 sampleRate,
+      Int32 channels,
+      Int32 bitDepth,
+    );
 typedef RecorderStartDart =
     int Function(int deviceIndex, int sampleRate, int channels, int bitDepth);
 
@@ -41,7 +46,8 @@ typedef RecorderReadDart = int Function(Pointer<Int16> pOutput, int frameCount);
 
 typedef RecorderReadS32C =
     Int32 Function(Pointer<Int32> pOutput, Int32 frameCount);
-typedef RecorderReadS32Dart = int Function(Pointer<Int32> pOutput, int frameCount);
+typedef RecorderReadS32Dart =
+    int Function(Pointer<Int32> pOutput, int frameCount);
 
 class SonicRecorder {
   static const String _libName = 'sonic_recorder';
@@ -83,7 +89,7 @@ class SonicRecorder {
       'sonic_recorder_read',
     );
     _readS32 = _dylib.lookupFunction<RecorderReadS32C, RecorderReadS32Dart>(
-       'sonic_recorder_read_s32',
+      'sonic_recorder_read_s32',
     );
   }
 
@@ -91,7 +97,8 @@ class SonicRecorder {
       _start(deviceIndex, sampleRate, channels, bitDepth);
   int stop() => _stop();
   int read(Pointer<Int16> buffer, int frameCount) => _read(buffer, frameCount);
-  int readS32(Pointer<Int32> buffer, int frameCount) => _readS32(buffer, frameCount);
+  int readS32(Pointer<Int32> buffer, int frameCount) =>
+      _readS32(buffer, frameCount);
 
   int init() {
     return _initContext();

@@ -36,7 +36,7 @@ class SettingsService with ChangeNotifier {
     if (savedTheme != null) {
       _themeMode = ThemeMode.values.firstWhere(
         (e) => e.toString() == savedTheme,
-        orElse: () => ThemeMode.system
+        orElse: () => ThemeMode.system,
       );
     }
 
