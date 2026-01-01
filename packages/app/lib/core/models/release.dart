@@ -5,6 +5,7 @@ class Release {
   final int? year;
   final String? releaseType;
   final String? coverArtPath;
+  final String? genre;
   final DateTime? createdAt;
 
   Release({
@@ -14,6 +15,7 @@ class Release {
     this.year,
     this.releaseType,
     this.coverArtPath,
+    this.genre,
     this.createdAt,
   });
 
@@ -25,6 +27,7 @@ class Release {
       year: json['year'],
       releaseType: json['releaseType'],
       coverArtPath: json['coverArtPath'],
+      genre: json['genre'],
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : null,
@@ -39,6 +42,7 @@ class Release {
       'year': year,
       'releaseType': releaseType,
       'coverArtPath': coverArtPath,
+      'genre': genre,
       'createdAt': createdAt?.toIso8601String(),
     };
   }

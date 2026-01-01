@@ -17,12 +17,17 @@ import 'core/services/playback/mpris_service.dart';
 import 'core/services/config/settings.dart';
 import 'core/services/network/socket.dart';
 import 'core/services/platform/wtaskbar.dart';
+import 'core/services/recorder/recorder_service.dart';
+import 'core/services/recorder/processing_service.dart';
+
 import 'ui/pages/home.dart';
 import 'ui/pages/login.dart';
 import 'ui/pages/server_setup.dart';
 import 'ui/pages/settings.dart';
 import 'ui/pages/splash.dart';
 import 'ui/pages/upload.dart';
+import 'ui/pages/recorder/recording_page.dart';
+import 'ui/pages/recorder/editor_page.dart';
 import 'ui/theme/app_theme.dart';
 
 late MediaSessionHandler audioHandler;
@@ -90,6 +95,8 @@ void main(List<String> args) async {
         ChangeNotifierProvider.value(value: authService),
         ChangeNotifierProvider.value(value: discordService),
         ChangeNotifierProvider.value(value: audioService),
+        ChangeNotifierProvider(create: (_) => SonicRecorderService()),
+        ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
 
         ProxyProvider2<SettingsService, AuthService, ApiService>(
           update: (context, settings, auth, previous) =>
@@ -147,6 +154,8 @@ class SonicAtlasApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/settings': (context) => const SettingsPage(),
         '/upload': (context) => const UploadPage(),
+        '/recorder': (context) => const RecordingPage(),
+        '/editor': (context) => const EditorPage(),
       },
     );
   }
