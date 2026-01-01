@@ -1,0 +1,53 @@
+:root {
+  --md-sys-color-primary: #1db954;
+  --md-sys-color-on-primary: #000000;
+  --md-sys-color-primary-container: #005321;
+  --md-sys-color-on-primary-container: #82f6a6;
+
+  --md-sys-color-secondary: #bb86fc;
+  --md-sys-color-on-secondary: #000000;
+  --md-sys-color-secondary-container: #6200ee;
+  --md-sys-color-on-secondary-container: #ffffff;
+
+  --md-sys-color-tertiary: #a7cdff;
+  --md-sys-color-on-tertiary: #003362;
+  --md-sys-color-tertiary-container: #1b4a80;
+  --md-sys-color-on-tertiary-container: #d4e3ff;
+
+  --md-sys-color-error: #ffb4ab;
+  --md-sys-color-on-error: #690005;
+  --md-sys-color-error-container: #93000a;
+  --md-sys-color-on-error-container: #ffdad6;
+
+  --md-sys-color-background: #121212;
+  --md-sys-color-on-background: #ffffff;
+
+  --md-sys-color-surface-dim: #121212;
+  --md-sys-color-surface: #1e1e1e;
+  --md-sys-color-surface-container-low: #1e1e1e;
+  --md-sys-color-surface-container: #252525;
+  --md-sys-color-surface-container-high: #2c2c2c;
+  --md-sys-color-surface-container-highest: #383838;
+
+  --md-sys-color-on-surface: #ffffff;
+  --md-sys-color-on-surface-variant: #b3b3b3;
+
+  --md-sys-color-outline: #8c9199;
+  --md-sys-color-outline-variant: #42474e;
+
+  --md-sys-typescale-body-large-font: 'Barlow', sans-serif;
+  --md-sys-typescale-body-medium-font: 'Barlow', sans-serif;
+  --md-sys-typescale-body-small-font: 'Barlow', sans-serif;
+  --md-sys-typescale-label-large-font: 'Barlow', sans-serif;
+  --md-sys-typescale-label-medium-font: 'Barlow', sans-serif;
+  --md-sys-typescale-label-small-font: 'Barlow', sans-serif;
+  --md-sys-typescale-title-large-font: 'Barlow', sans-serif;
+  --md-sys-typescale-title-medium-font: 'Barlow', sans-serif;
+  --md-sys-typescale-title-small-font: 'Barlow', sans-serif;
+  --md-sys-typescale-headline-large-font: 'Barlow', sans-serif;
+  --md-sys-typescale-headline-medium-font: 'Barlow', sans-serif;
+  --md-sys-typescale-headline-small-font: 'Barlow', sans-serif;
+  --md-sys-typescale-display-large-font: 'Barlow', sans-serif;
+  --md-sys-typescale-display-medium-font: 'Barlow', sans-serif;
+  --md-sys-typescale-display-small-font: 'Barlow', sans-serif;
+}

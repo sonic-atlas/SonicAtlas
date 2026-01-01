@@ -1,23 +1,43 @@
 :root {
-  --background: #121212;
-  --primary-color: #1db954;
-  --primary-surface-color: #141914;
-  --secondary-color: #b954db;
-  --text-primary-color: #ffffff;
-  --text-secondary-color: #b3b3b3;
-  --surface-color: #141414;
-  --error-color: #ff5555;
-  --success-color: #55ff55;
-  --border-color: #333333;
+  --primary-color: var(--md-sys-color-primary);
+  --secondary-color: var(--md-sys-color-secondary);
+  --background-color: var(--md-sys-color-background);
+  --surface-color: var(--md-sys-color-surface);
+  --border-color: var(--md-sys-color-outline-variant);
+
+  --text-primary-color: var(--md-sys-color-on-surface);
+  --text-secondary-color: var(--md-sys-color-on-surface-variant);
+  --on-primary-color: var(--md-sys-color-on-primary);
+  --on-secondary-color: var(--md-sys-color-on-secondary);
+  --primary-container: var(--md-sys-color-primary-container);
+  --on-primary-container: var(--md-sys-color-on-primary-container);
+
+  --success-color: var(--md-sys-color-primary);
+  --error-color: var(--md-sys-color-error);
+
+  --surface-dim: var(--md-sys-color-surface-dim);
+  --surface-low: var(--md-sys-color-surface-container-low);
+  --surface-base: var(--md-sys-color-surface-container);
+  --surface-high: var(--md-sys-color-surface-container-high);
+  --surface-highest: var(--md-sys-color-surface-container-highest);
 }
 
 body {
-  background: var(--background);
+  background: var(--background-color);
   color: var(--text-primary-color);
   margin: 0;
   padding: 0;
+  font-family: 'Barlow', sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+:root {
+  --md-icon-font: 'Material Symbols Rounded';
+}
+
+md-icon {
+  font-family: 'Material Symbols Rounded';
 }

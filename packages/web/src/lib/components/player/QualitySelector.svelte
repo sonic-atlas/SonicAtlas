@@ -1,4 +1,6 @@
 <script lang="ts">
+    import '@material/web/select/outlined-select.js';
+    import '@material/web/select/select-option.js';
     import type { Quality, TrackMetadata } from '$lib/types';
     import { apiGet } from '$lib/api';
     import { onMount } from 'svelte';
@@ -32,7 +34,6 @@
             if (res.ok) {
                 const data = await res.json();
                 sourceQuality = data.sourceQuality || 'auto';
-
                 availableQualities = data.availableQualities || [];
             }
         } catch (err) {
@@ -61,60 +62,38 @@
         if (q === 'auto') {
             return availableQualities.length > 0;
         }
-
         return availableQualities.includes(q);
-    }
-
-    function getQualityNote(q: Quality): string | null {
-        if (q === sourceQuality) {
-            return 'Source Quality';
-        }
-        if (q !== 'auto' && !isQualityAvailable(q)) {
-            return 'Not available for this file';
-        }
-        return null;
-    }
-
-    function handleQualityClick(q: Quality) {
-        if (isQualityAvailable(q)) {
-            quality = q;
-        }
     }
 </script>
 
 <div class="qualitySelector">
-    <div class="labelText">Playback Quality</div>
-
     {#if isFirefox}
-        <div class="firefox-notice">
+        <div class="firefoxNotice">
             Hi-Res streaming is not fully supported on Firefox and is disabled.
         </div>
     {/if}
 
-    <div class="options" role="group" aria-label="Playback Quality">
+    <md-outlined-select
+        label="Playback Quality"
+        class="qualityDropdown"
+        value={quality}
+        onchange={(e: Event) => {
+            const target = e.target as HTMLSelectElement;
+            quality = target.value as Quality;
+        }}
+    >
         {#each qualities as q (q.value)}
             {@const available = isQualityAvailable(q.value)}
-            {@const note = getQualityNote(q.value)}
-            <button
-                class="qualityOption"
-                class:active={quality === q.value}
-                class:disabled={!available}
-                disabled={!available}
-                onclick={() => handleQualityClick(q.value)}
-            >
-                <div class="label">
+            <md-select-option value={q.value} disabled={!available}>
+                <div slot="headline">
                     {q.label}
                     {#if q.value === sourceQuality}
-                        <span class="badge">Source</span>
+                        <span class="sourceBadge">Source</span>
                     {/if}
                 </div>
-                <div class="description">{q.description}</div>
-                {#if note && !available}
-                    <div class="note">{note}</div>
-                {/if}
-            </button>
+            </md-select-option>
         {/each}
-    </div>
+    </md-outlined-select>
 </div>
 
 <style>
@@ -122,85 +101,32 @@
         margin-bottom: 20px;
     }
 
-    .firefox-notice {
+    .qualityDropdown {
+        width: 100%;
+        --md-menu-item-selected-container-color: var(--primary-color);
+        --md-menu-item-selected-label-text-color: var(--on-primary-color);
+        --md-sys-color-secondary-container: var(--primary-color);
+        --md-sys-color-on-secondary-container: var(--on-primary-color);
+    }
+
+    .firefoxNotice {
         font-size: 12px;
-        background-color: var(--surface-color);
-        border: 1px solid #ff9800;
-        color: #ff9800;
+        background-color: var(--surface-base);
+        border: 1px solid var(--error-color);
+        color: var(--error-color);
         padding: 10px;
         border-radius: 4px;
         margin-bottom: 10px;
         text-align: center;
     }
 
-    .labelText {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 10px;
-        color: var(--text-primary-color);
-    }
-
-    .options {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 10px;
-    }
-
-    .qualityOption {
-        padding: 10px;
-        border: 1px solid var(--text-secondary-color);
-        border-radius: 4px;
-        background: var(--background);
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.2s;
-    }
-
-    .qualityOption:hover:not(:disabled) {
-        background: var(--primary-surface-color);
-    }
-
-    .qualityOption.active {
-        border-color: var(--primary-color);
-        background: var(--primary-surface-color);
-    }
-
-    .qualityOption.disabled,
-    .qualityOption:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        background: var(--surface-color);
-    }
-
-    .label {
-        font-weight: bold;
-        font-size: 12px;
-        margin-bottom: 2px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--text-primary-color);
-    }
-
-    .badge {
-        font-size: 9px;
-        font-weight: normal;
-        background: var(--secondary-color);
-        color: var(--text-primary-color);
-        padding: 2px 6px;
-        border-radius: 3px;
-    }
-
-    .description {
+    .sourceBadge {
         font-size: 10px;
-        color: var(--text-secondary-color);
-    }
-
-    .note {
-        font-size: 9px;
-        color: var(--text-secondary-color);
-        margin-top: 4px;
-        font-style: italic;
+        background-color: var(--secondary-color);
+        color: var(--on-secondary-color);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+        vertical-align: middle;
     }
 </style>

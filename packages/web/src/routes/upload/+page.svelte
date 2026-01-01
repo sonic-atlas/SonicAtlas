@@ -8,6 +8,7 @@
     let release = $state<any>(null);
     let tracks = $state<any[]>([]);
     let loading = $state(true);
+    let isExistingRelease = $state(false);
 
     onMount(async () => {
         const id = page.url.searchParams.get('id');
@@ -18,6 +19,7 @@
                     const data = await res.json();
                     release = data.release;
                     tracks = data.tracks;
+                    isExistingRelease = true;
                 } else {
                     console.error('Failed to load release');
                 }
@@ -31,21 +33,22 @@
     function onUploadComplete(data: { release: any; tracks: any[] }) {
         release = data.release;
         tracks = data.tracks;
+        isExistingRelease = false;
     }
 </script>
 
-<div class="upload-page">
+<div class="uploadPage">
     {#if loading}
         <p>Loading...</p>
     {:else if release}
-        <ReleaseEditor {release} {tracks} />
+        <ReleaseEditor {release} {tracks} {isExistingRelease} />
     {:else}
         <UploadReleaseForm {onUploadComplete} />
     {/if}
 </div>
 
 <style>
-    .upload-page {
+    .uploadPage {
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem;

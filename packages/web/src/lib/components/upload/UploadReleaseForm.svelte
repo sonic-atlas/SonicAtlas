@@ -1,6 +1,12 @@
 <script lang="ts">
     import { apiPostFormData } from '$lib/api';
     import { socket } from '$lib/stores/socket.svelte';
+    import '@material/web/textfield/outlined-text-field.js';
+    import '@material/web/button/filled-button.js';
+    import '@material/web/button/outlined-button.js';
+    import '@material/web/checkbox/checkbox.js';
+    import '@material/web/select/outlined-select.js';
+    import '@material/web/select/select-option.js';
 
     let { onUploadComplete } = $props<{ onUploadComplete: (data: any) => void }>();
 
@@ -55,6 +61,25 @@
             uploading = false;
         }
     }
+    let dragging = $state(false);
+
+    function handleDragOver(e: DragEvent) {
+        e.preventDefault();
+        dragging = true;
+    }
+
+    function handleDragLeave(e: DragEvent) {
+        e.preventDefault();
+        dragging = false;
+    }
+
+    function handleDrop(e: DragEvent) {
+        e.preventDefault();
+        dragging = false;
+        if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+            files = e.dataTransfer.files;
+        }
+    }
 </script>
 
 <form onsubmit={handleSubmit} class="uploadForm">
@@ -66,61 +91,125 @@
 
     <div class="formGroup">
         <label for="files">Audio Files</label>
-        <input
-            type="file"
-            id="files"
-            multiple
-            accept="audio/*"
-            onchange={(e) => (files = (e.target as HTMLInputElement).files)}
-            required
-        />
+        <div
+            class="dropZone"
+            class:dragging
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}
+            role="button"
+            tabindex="0"
+            aria-label="Drop audio files here"
+        >
+            <md-icon class="uploadIcon">cloud_upload</md-icon>
+            <p>
+                {#if files && files.length > 0}
+                    {files.length} files selected
+                {:else}
+                    Drag audio files here or click to select
+                {/if}
+            </p>
+            <input
+                type="file"
+                id="files"
+                multiple
+                accept="audio/*"
+                onchange={(e) => (files = (e.target as HTMLInputElement).files)}
+                required={!files || files.length === 0}
+                class="fileInput"
+            />
+        </div>
     </div>
 
     <div class="formGroup">
         <label for="cover">Release Cover (Optional)</label>
-        <input
-            type="file"
-            id="cover"
-            accept="image/*"
-            onchange={(e) => (coverFile = (e.target as HTMLInputElement).files?.[0] ?? null)}
-        />
+        <div class="fileInputWrapper">
+            <md-outlined-button
+                type="button"
+                onclick={() => document.getElementById('cover')?.click()}
+                onkeydown={(e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ')
+                        document.getElementById('cover')?.click();
+                }}
+                role="button"
+                tabindex="0"
+            >
+                Choose File
+            </md-outlined-button>
+            <span class="fileName">{coverFile ? coverFile.name : 'No file chosen'}</span>
+            <input
+                type="file"
+                id="cover"
+                accept="image/*"
+                style="display: none;"
+                onchange={(e) => (coverFile = (e.target as HTMLInputElement).files?.[0] ?? null)}
+            />
+        </div>
     </div>
 
     <div class="formGroup">
-        <label for="title">Release Title</label>
-        <input type="text" id="title" bind:value={releaseTitle} placeholder="Album Title" />
+        <md-outlined-text-field
+            label="Release Title"
+            value={releaseTitle}
+            oninput={(e: Event) => (releaseTitle = (e.target as HTMLInputElement).value)}
+            required
+        ></md-outlined-text-field>
     </div>
 
     <div class="formGroup">
-        <label for="artist">Primary Artist</label>
-        <input type="text" id="artist" bind:value={primaryArtist} placeholder="Artist Name" />
+        <md-outlined-text-field
+            label="Primary Artist"
+            value={primaryArtist}
+            oninput={(e: Event) => (primaryArtist = (e.target as HTMLInputElement).value)}
+            required
+        ></md-outlined-text-field>
     </div>
 
     <div class="row">
         <div class="formGroup">
-            <label for="year">Year</label>
-            <input type="number" id="year" bind:value={year} />
+            <md-outlined-text-field
+                label="Year"
+                type="number"
+                value={year}
+                oninput={(e: Event) => (year = (e.target as HTMLInputElement).value)}
+                required
+            ></md-outlined-text-field>
         </div>
 
         <div class="formGroup">
-            <label for="type">Type</label>
-            <select id="type" bind:value={releaseType}>
-                <option value="album">Album</option>
-                <option value="ep">EP</option>
-                <option value="single">Single</option>
-                <option value="compilation">Compilation</option>
-            </select>
+            <md-outlined-select
+                label="Type"
+                value={releaseType}
+                onchange={(e: Event) => (releaseType = (e.target as HTMLSelectElement).value)}
+            >
+                <md-select-option value="album">
+                    <div slot="headline">Album</div>
+                </md-select-option>
+                <md-select-option value="ep">
+                    <div slot="headline">EP</div>
+                </md-select-option>
+                <md-select-option value="single">
+                    <div slot="headline">Single</div>
+                </md-select-option>
+                <md-select-option value="compilation">
+                    <div slot="headline">Compilation</div>
+                </md-select-option>
+            </md-outlined-select>
         </div>
     </div>
 
     <div class="formGroup checkboxGroup">
-        <input type="checkbox" id="extractAllCovers" bind:checked={extractAllCovers} />
+        <md-checkbox
+            id="extractAllCovers"
+            checked={extractAllCovers}
+            onchange={(e: Event) => (extractAllCovers = (e.target as HTMLInputElement).checked)}
+        ></md-checkbox>
         <label for="extractAllCovers">Extract individual track covers</label>
     </div>
 
-    <button type="submit" disabled={uploading}>
+    <md-filled-button type="submit" disabled={uploading}>
         {uploading ? 'Uploading...' : 'Upload'}
-    </button>
+    </md-filled-button>
 </form>
 
 <style>
@@ -132,6 +221,41 @@
         padding: 1.5rem;
         background: var(--surface-color);
         border-radius: 8px;
+    }
+
+    .dropZone {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition:
+            background 0.2s,
+            border-color 0.2s;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        background: var(--surface-color);
+        color: var(--text-secondary-color);
+    }
+
+    .dropZone:hover,
+    .dropZone.dragging {
+        background: var(--surface-high);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .fileInput {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
     }
 
     .formGroup {
@@ -154,35 +278,28 @@
     .row .formGroup {
         flex: 1;
     }
-
-    input,
-    select {
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-        background: var(--primary-surface-color);
-        color: var(--text-primary-color);
-    }
-
-    button {
-        padding: 0.75rem;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    button:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-
     .error {
         color: var(--error-color);
         background: #ff000020;
         padding: 0.5rem;
         border-radius: 4px;
+    }
+
+    .fileInputWrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .fileName {
+        color: var(--text-secondary-color);
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .uploadIcon {
+        font-size: 48px;
     }
 </style>

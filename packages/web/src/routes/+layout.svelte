@@ -1,4 +1,5 @@
 <script lang="ts">
+    import '../theme.css';
     import '../app.css';
     import favicon from '$lib/assets/favicon.svg';
     import { socket } from '$lib/stores/socket.svelte';

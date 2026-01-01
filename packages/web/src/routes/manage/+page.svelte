@@ -1,6 +1,8 @@
 <script lang="ts">
     import { apiDelete, API_BASE_URL } from '$lib/api';
     import { invalidateAll } from '$app/navigation';
+    import '@material/web/button/filled-button.js';
+    import '@material/web/button/outlined-button.js';
 
     let { data } = $props();
     let releases = $derived(data.releases);
@@ -28,21 +30,21 @@
     }
 </script>
 
-<div class="manage-page">
+<div class="managePage">
     <h1>Manage Releases</h1>
 
-    <div class="release-list">
+    <div class="releaseList">
         {#each releases as release (release.id)}
-            <div class="release-item">
-                <div class="release-content">
+            <div class="releaseItem">
+                <div class="releaseContent">
                     {#if release.coverArtPath}
                         <img
                             src="{API_BASE_URL}{release.coverArtPath}?size=small"
                             alt={release.title}
-                            class="cover-art"
+                            class="coverArt"
                         />
                     {:else}
-                        <div class="cover-placeholder">💿</div>
+                        <div class="coverPlaceholder">💿</div>
                     {/if}
                     <div class="info">
                         <h3>{release.title}</h3>
@@ -50,14 +52,19 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <a href="/upload?id={release.id}" class="editButton">Edit</a>
-                    <button
+                    <md-filled-button href="/upload?id={release.id}">Edit</md-filled-button>
+                    <md-outlined-button
                         class="deleteButton"
                         onclick={() => deleteRelease(release.id)}
+                        onkeydown={(e: KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') deleteRelease(release.id);
+                        }}
+                        role="button"
+                        tabindex="0"
                         disabled={deleting === release.id}
                     >
                         {deleting === release.id ? 'Deleting...' : 'Delete'}
-                    </button>
+                    </md-outlined-button>
                 </div>
             </div>
         {/each}
@@ -69,7 +76,7 @@
 </div>
 
 <style>
-    .manage-page {
+    .managePage {
         max-width: 800px;
         margin: 0 auto;
         padding: 2rem;
@@ -79,13 +86,13 @@
         margin-bottom: 2rem;
     }
 
-    .release-list {
+    .releaseList {
         display: flex;
         flex-direction: column;
         gap: 1rem;
     }
 
-    .release-item {
+    .releaseItem {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -94,20 +101,20 @@
         background: var(--surface-color);
     }
 
-    .release-content {
+    .releaseContent {
         display: flex;
         align-items: center;
         gap: 1rem;
     }
 
-    .cover-art {
+    .coverArt {
         width: 60px;
         height: 60px;
         object-fit: cover;
         border-radius: 4px;
     }
 
-    .cover-placeholder {
+    .coverPlaceholder {
         width: 60px;
         height: 60px;
         display: flex;
@@ -134,44 +141,7 @@
     }
 
     .deleteButton {
-        padding: 8px 16px;
-        background: #f44336;
-        color: var(--text-primary-color);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: opacity 0.2s;
-    }
-
-    .deleteButton:hover {
-        opacity: 0.9;
-    }
-
-    .deleteButton:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .editButton {
-        padding: 8px 16px;
-        background: var(--primary-color);
-        color: var(--text-primary-color);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 14px;
-        transition: opacity 0.2s;
-    }
-
-    .editButton:hover {
-        opacity: 0.9;
-    }
-
-    .editButton:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+        --md-outlined-button-label-text-color: var(--error-color);
     }
 
     .empty {

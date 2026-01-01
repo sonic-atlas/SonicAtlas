@@ -1,6 +1,8 @@
 <script lang="ts">
+    import '@material/web/icon/icon.js';
     import '@material/web/progress/linear-progress.js';
     import '@material/web/progress/circular-progress.js';
+    import '@material/web/slider/slider.js';
     import type { Track, TrackMetadata, Quality, QualityInfo } from '$lib/types';
     import QualitySelector from './QualitySelector.svelte';
     import { apiGet, getStreamUrl, API_BASE_URL } from '$lib/api';
@@ -50,7 +52,13 @@
         hires: { label: 'Hi-Res', codec: 'FLAC', sampleRate: 'Original' }
     };
 
-    let currentQualityInfo = $derived(qualityInfoMap[quality]);
+    let currentQualityInfo = $derived.by(() => {
+        const info = { ...qualityInfoMap[quality] };
+        if (quality === 'hires' && metadata?.sampleRate) {
+            info.sampleRate = `${metadata.sampleRate / 1000}kHz`;
+        }
+        return info;
+    });
 
     async function loadMetadata() {
         const res = await apiGet(`/api/metadata/${track.id}`);
@@ -62,6 +70,33 @@
     function preloadImage(url: string) {
         const img = new Image();
         img.src = url;
+    }
+
+    let volume = $state(100);
+    let isMuted = $state(false);
+    let previousVolume = 100;
+
+    function handleVolumeChange(e: Event) {
+        const target = e.target as HTMLInputElement;
+        volume = Number(target.value);
+        if (audio) {
+            audio.volume = volume / 100;
+            isMuted = volume === 0;
+        }
+    }
+
+    function toggleMute() {
+        if (isMuted) {
+            volume = previousVolume || 100;
+            isMuted = false;
+        } else {
+            previousVolume = volume;
+            volume = 0;
+            isMuted = true;
+        }
+        if (audio) {
+            audio.volume = volume / 100;
+        }
     }
 
     function togglePlay() {
@@ -440,7 +475,9 @@
         {#if track.coverArtPath}
             <img src={`${API_BASE_URL}${track.coverArtPath}`} alt="Album cover" />
         {:else}
-            <div class="icon">🎵</div>
+            <div class="icon">
+                <md-icon class="coverIcon">music_note</md-icon>
+            </div>
         {/if}
     </div>
 
@@ -456,54 +493,6 @@
     </div>
 
     <QualitySelector bind:quality {metadata} trackId={track.id} />
-
-    <div class="qualityBadge">
-        <strong>{currentQualityInfo.label}</strong>
-        <div class="qualityDetails">
-            {#if isAdaptive}
-                {currentQualityInfo.codec} · ABR Active
-            {:else}
-                {currentQualityInfo.codec}
-                {#if currentQualityInfo.bitrate}
-                    · {currentQualityInfo.bitrate}
-                {/if}
-                {#if currentQualityInfo.sampleRate}
-                    · {currentQualityInfo.sampleRate}
-                {/if}
-            {/if}
-        </div>
-    </div>
-
-    <audio
-        bind:this={audio}
-        onplay={handlePlay}
-        onpause={handlePause}
-        ontimeupdate={handleTimeUpdate}
-        onloadedmetadata={handleLoadedMetadata}
-        onloadstart={handleLoadStart}
-        oncanplay={handleCanPlay}
-        onwaiting={() => {
-            console.log('Playback waiting/buffering...');
-            loading = true;
-        }}
-        onplaying={() => {
-            console.log('Playback resumed');
-            loading = false;
-        }}
-        onerror={handleError}
-        preload="none"
-    ></audio>
-
-    <div class="controls">
-        <button
-            onclick={(e) => {
-                togglePlay();
-            }}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-        >
-            {isPlaying ? '⏸' : '▶'}
-        </button>
-    </div>
 
     <div class="progress">
         <div
@@ -544,38 +533,114 @@
             <span>{formatTime(duration)}</span>
         </div>
     </div>
+
+    <audio
+        bind:this={audio}
+        onplay={handlePlay}
+        onpause={handlePause}
+        ontimeupdate={handleTimeUpdate}
+        onloadedmetadata={handleLoadedMetadata}
+        onloadstart={handleLoadStart}
+        oncanplay={handleCanPlay}
+        onwaiting={() => {
+            console.log('Playback waiting/buffering...');
+            loading = true;
+        }}
+        onplaying={() => {
+            console.log('Playback resumed');
+            loading = false;
+        }}
+        onerror={handleError}
+        preload="none"
+    ></audio>
+
+    <div class="controls">
+        <button
+            onclick={(e) => {
+                togglePlay();
+            }}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+        >
+            <md-icon class="playIcon">{isPlaying ? 'pause' : 'play_arrow'}</md-icon>
+        </button>
+    </div>
+
+    <div class="footerRow">
+        <div class="qualityBadge">
+            <div class="qualityDetails">
+                {#if isAdaptive}
+                    {currentQualityInfo.codec} <br /> ABR
+                {:else}
+                    {currentQualityInfo.codec}
+                    {#if currentQualityInfo.bitrate}
+                        <br /> {currentQualityInfo.bitrate}
+                    {/if}
+                    {#if currentQualityInfo.sampleRate}
+                        <br />{currentQualityInfo.sampleRate}
+                    {/if}
+                {/if}
+            </div>
+        </div>
+
+        <div class="volumeControls">
+            <md-icon-button
+                onclick={toggleMute}
+                onkeydown={(e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        toggleMute();
+                        e.preventDefault();
+                    }
+                }}
+                role="button"
+                tabindex="0"
+            >
+                <md-icon
+                    >{volume === 0 || isMuted
+                        ? 'volume_off'
+                        : volume < 50
+                          ? 'volume_down'
+                          : 'volume_up'}</md-icon
+                >
+            </md-icon-button>
+            <md-slider min="0" max="100" value={volume} oninput={handleVolumeChange}></md-slider>
+            <span class="volumeText">{Math.round(volume)}%</span>
+        </div>
+    </div>
 </div>
 
 <style>
     .player {
-        border: 1px solid var(--text-secondary-color);
-        padding: 20px;
-        border-radius: 8px;
-        position: sticky;
-        top: 20px;
-        background: var(--background);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
     }
 
     h2 {
         margin-top: 0;
         color: var(--text-primary-color);
+        text-align: center;
+        flex-shrink: 0;
     }
 
     .cover {
-        width: 100%;
-        aspect-ratio: 1;
+        flex: 1;
+        min-height: 0;
         background: var(--surface-color);
         border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 20px;
+        width: 100%;
+        overflow: hidden;
     }
 
     .cover img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         border-radius: 8px;
     }
 
@@ -602,16 +667,10 @@
 
     .qualityBadge {
         background: var(--surface-color);
-        border: 1px solid var(--primary-color);
+        border: 1px solid var(--secondary-color);
         padding: 12px;
         border-radius: 8px;
         margin-bottom: 20px;
-    }
-
-    .qualityBadge strong {
-        display: block;
-        color: var(--primary-color);
-        margin-bottom: 4px;
     }
 
     .qualityDetails {
@@ -649,6 +708,20 @@
         cursor: not-allowed;
     }
 
+    .volumeControls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        padding: 0 10px;
+    }
+
+    .volumeControls md-slider {
+        flex: 1;
+        --md-slider-handle-height: 12px;
+        --md-slider-handle-width: 12px;
+    }
+
     .progress {
         margin-top: 20px;
     }
@@ -664,14 +737,13 @@
         position: relative;
         width: 100%;
         height: 6px;
-        background: var(--surface-color);
+        background: var(--surface-highest);
         border-radius: 3px;
         overflow: hidden;
-        transition: height 0.2s ease;
     }
 
     .progressContainer:hover .progressTrack {
-        height: 8px;
+        cursor: pointer;
     }
 
     .progressFilled {
@@ -747,8 +819,45 @@
         top: 100%;
         left: 50%;
         transform: translateX(-50%);
-        border: 5px solid transparent;
-        border-top-color: var(--primary-color);
+        border: 4px solid transparent;
+        border-top-color: var(--surface-color);
+    }
+
+    .footerRow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .footerRow .qualityBadge {
+        margin-bottom: 0;
+        padding: 8px 12px;
+        flex-shrink: 0;
+        min-width: 80px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .footerRow .volumeControls {
+        margin-bottom: 0;
+        flex: 1;
+        padding: 0;
+        min-width: 0;
+    }
+
+    .footerRow .volumeControls md-slider {
+        min-width: 0;
+    }
+
+    .volumeText {
+        font-size: 12px;
+        color: var(--text-secondary-color);
+        min-width: 32px;
+        text-align: right;
     }
 
     .time {
@@ -756,5 +865,18 @@
         justify-content: space-between;
         font-size: 12px;
         color: var(--text-secondary-color);
+    }
+
+    .coverIcon {
+        font-size: 80px;
+    }
+
+    .trackInfo {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .playIcon {
+        font-size: 32px;
     }
 </style>
