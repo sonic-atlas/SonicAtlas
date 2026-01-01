@@ -481,7 +481,7 @@ router.delete('/:id', async (req, res) => {
             const metadataDir = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
             const entries = await fsp.readdir(metadataDir).catch(() => [] as string[]);
             for (const entry of entries) {
-                if (entry.startsWith(`release_${id}_cover.`)) {
+                if (entry.startsWith(`release_${id}_cover`)) {
                     const p = path.join(metadataDir, entry);
                     try {
                         await fsp.unlink(p);
