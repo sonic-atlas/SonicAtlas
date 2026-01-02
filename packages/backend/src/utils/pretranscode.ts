@@ -12,8 +12,8 @@ const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
 
 const qualities: Record<Exclude<Quality, 'auto'>, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
-    efficiency: { bitrate: '128k', codec: 'aac', maxRate: '128k', bufsize: '256k' },
-    high: { bitrate: '320k', codec: 'aac', maxRate: '320k', bufsize: '640k' },
+    efficiency: { bitrate: '128k', codec: 'libopus', maxRate: '128k', bufsize: '256k' },
+    high: { bitrate: '320k', codec: 'libopus', maxRate: '320k', bufsize: '640k' },
     cd: { codec: 'flac', sampleRate: '44100', audioBitrate: null },
     hires: { codec: 'flac', audioBitrate: null }
 }

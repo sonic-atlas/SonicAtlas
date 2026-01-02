@@ -46,8 +46,8 @@
 
     const qualityInfoMap: Record<Quality, QualityInfo> = {
         auto: { label: 'Auto (ABR)', codec: 'Adaptive', bitrate: 'Varies' },
-        efficiency: { label: 'Efficiency', codec: 'AAC', bitrate: '128k' },
-        high: { label: 'High', codec: 'AAC', bitrate: '320k' },
+        efficiency: { label: 'Efficiency', codec: 'Opus', bitrate: '128k' },
+        high: { label: 'High', codec: 'Opus', bitrate: '320k' },
         cd: { label: 'CD', codec: 'FLAC', sampleRate: '44.1kHz' },
         hires: { label: 'Hi-Res', codec: 'FLAC', sampleRate: 'Original' }
     };
