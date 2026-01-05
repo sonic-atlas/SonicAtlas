@@ -5,7 +5,7 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '../../core/services/network/api.dart';
 import '../../core/services/network/socket.dart';
-import 'release_editor.dart';
+import 'release_editor_page.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});

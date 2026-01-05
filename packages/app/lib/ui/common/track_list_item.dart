@@ -6,11 +6,21 @@ import 'package:provider/provider.dart';
 import '/core/models/track.dart';
 import '../../core/services/network/api.dart';
 import '../../core/services/playback/audio.dart';
+import '/ui/library/album_page.dart';
 
 class TrackListItem extends StatelessWidget {
   final Track track;
+  final VoidCallback? onTapOverride;
+  final int? trackNumber;
+  final bool showCover;
 
-  const TrackListItem({super.key, required this.track});
+  const TrackListItem({
+    super.key,
+    required this.track,
+    this.onTapOverride,
+    this.trackNumber,
+    this.showCover = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,16 +58,41 @@ class TrackListItem extends StatelessWidget {
     return Listener(
       onPointerDown: handlePointerDown,
       child: ListTile(
-        leading: CachedNetworkImage(
-          imageUrl: apiService.getAlbumArtUrl(track.id, size: 'small'),
-          httpHeaders: context.read<ApiService>().headers,
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-          fadeInDuration: const Duration(milliseconds: 0),
-          errorWidget: (context, url, error) => const Icon(Icons.album),
-          placeholder: (context, url) =>
-              Container(width: 40, height: 40, color: Colors.grey[900]),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (trackNumber != null) ...[
+              SizedBox(
+                width: 30,
+                child: Center(
+                  child: Text(
+                    trackNumber.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isPlaying
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+            if (showCover)
+              CachedNetworkImage(
+                imageUrl: apiService.getAlbumArtUrl(track.id, size: 'small'),
+                httpHeaders: context.read<ApiService>().headers,
+                memCacheWidth: 80,
+                memCacheHeight: 80,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                fadeInDuration: const Duration(milliseconds: 0),
+                errorWidget: (context, url, error) => const Icon(Icons.album),
+                placeholder: (context, url) =>
+                    Container(width: 40, height: 40, color: Colors.grey[900]),
+              ),
+          ],
         ),
         title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
@@ -65,13 +100,16 @@ class TrackListItem extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        onTap: () {
+        onTap: onTapOverride ?? () {
           context.read<AudioService>().playTrack(track);
         },
         onLongPress: () {
           _showTrackMenu(context, track);
         },
         trailing: trailingWidget,
+        selected: isPlaying,
+        selectedTileColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
       ),
     );
   }
@@ -82,6 +120,25 @@ class TrackListItem extends StatelessWidget {
       context: context,
       builder: (context) => Wrap(
         children: <Widget>[
+          if (track.releaseId != null)
+            ListTile(
+              leading: const Icon(Icons.album),
+              title: const Text('View Album'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AlbumPage(
+                      releaseId: track.releaseId!,
+                      releaseTitle: track.releaseTitle ?? track.album,
+                      releaseArtist: track.artist,
+                    ),
+                  ),
+                );
+              },
+            ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.playlist_play),
             title: const Text('Play next'),

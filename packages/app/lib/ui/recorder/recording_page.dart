@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sonic_recorder/sonic_recorder.dart';
-import '../../../../core/services/recorder/recorder_service.dart';
-import '../../components/recorder/device_selector.dart';
-import '../../components/recorder/vu_meter.dart';
-import '../../components/recorder/recording_status.dart';
+import '/core/services/recorder/recorder_service.dart';
+import 'components/device_selector.dart';
+import 'components/vu_meter.dart';
+import 'components/recording_status.dart';
 
 class RecordingPage extends StatelessWidget {
   const RecordingPage({super.key});
@@ -45,9 +45,17 @@ class _AnalogTabState extends State<_AnalogTab> {
   AudioDevice? _selectedDevice;
   int _sampleRate = 48000;
 
+  late final SonicRecorderService _recorderService;
+
+  @override
+  void initState() {
+    super.initState();
+    _recorderService = context.read<SonicRecorderService>();
+  }
+
   @override
   void dispose() {
-    context.read<SonicRecorderService>().stopMonitor();
+    _recorderService.stopMonitor();
     super.dispose();
   }
 
@@ -103,12 +111,15 @@ class _AnalogTabState extends State<_AnalogTab> {
                       const RecordingStatus(),
 
                       if (!recorderService.isRecording)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(bottom: 24.0),
                           child: Text(
                             'Record the entire side or album as one continuous track.\nYou can stop recording when switching sides; multiple recordings will be grouped into a session.\nYou can split tracks and remove silence in the editor after recording.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
 

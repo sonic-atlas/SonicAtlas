@@ -4,9 +4,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/services/network/api.dart';
-import '../../core/services/playback/audio.dart';
-import '/ui/pages/fs_player.dart';
+import '../../../core/services/network/api.dart';
+import '../../../core/services/playback/audio.dart';
+import '../fs_player_page.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
@@ -77,6 +77,8 @@ class MiniPlayer extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: imageUrl,
                       httpHeaders: apiService.headers,
+                      memCacheWidth: 96,
+                      memCacheHeight: 96,
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,

@@ -122,6 +122,9 @@ class ApiService {
             artist: json['artist'] ?? 'Unknown Artist',
             album: json['album'] ?? 'Unknown Album',
             duration: fullTrack?.duration ?? 0,
+            releaseId: json['releaseId'],
+            releaseTitle: fullTrack?.releaseTitle,
+            releaseArtist: fullTrack?.releaseArtist,
           );
         }).toList();
       }
@@ -180,6 +183,14 @@ class ApiService {
     return url;
   }
 
+  String getReleaseCoverUrl(String releaseId, {String? size}) {
+    final url = '$_baseUrl/api/releases/$releaseId/cover';
+    if (size != null) {
+      return '$url?size=$size';
+    }
+    return url;
+  }
+
   Future<Release?> getRelease(String id) async {
     try {
       final response = await http.get(
@@ -210,7 +221,18 @@ class ApiService {
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         final List<dynamic> tracks = body['tracks'];
-        return tracks.map((json) => Track.fromJson(json)).toList();
+        final Map<String, dynamic> release = body['release'];
+        final String releaseTitle = release['title'];
+        final String? releaseArtist = release['primaryArtist'];
+
+        return tracks.map((json) {
+          json['releaseTitle'] = releaseTitle;
+          json['releaseArtist'] = releaseArtist;
+          if (json['album'] == 'Unknown Album' || json['album'] == null) {
+            json['album'] = releaseTitle;
+          }
+          return Track.fromJson(json);
+        }).toList();
       }
       return [];
     } catch (e) {

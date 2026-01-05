@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '/core/models/quality.dart';
 import '../../core/services/auth/auth.dart';
 import '../../core/services/config/settings.dart';
-import '/ui/components/layout.dart';
+import '/ui/common/layout.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

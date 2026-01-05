@@ -50,6 +50,7 @@ router.get('/', async (req, res) => {
                 coverArtPath,
                 releaseId: primaryRelease?.id,
                 releaseTitle: primaryRelease?.title,
+                releaseArtist: primaryRelease?.primaryArtist,
                 album: primaryRelease?.title
             };
         });
@@ -101,6 +102,7 @@ router.get('/:trackId', async (req, res) => {
             coverArtPath,
             releaseId: primaryRelease?.id,
             releaseTitle: primaryRelease?.title,
+            releaseArtist: primaryRelease?.primaryArtist,
             album: primaryRelease?.title
         });
     } catch (err) {

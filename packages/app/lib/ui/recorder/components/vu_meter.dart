@@ -8,12 +8,15 @@ class VUMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.shade800),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       padding: const EdgeInsets.all(4),
       child: StreamBuilder<double>(
@@ -30,7 +33,7 @@ class VUMeter extends StatelessWidget {
           if (percent > 1) percent = 1;
 
           return CustomPaint(
-            painter: _VUPainter(percent, db),
+            painter: _VUPainter(percent, db, context),
             size: Size.infinite,
           );
         },
@@ -42,11 +45,15 @@ class VUMeter extends StatelessWidget {
 class _VUPainter extends CustomPainter {
   final double percent;
   final double currentDb;
+  final BuildContext context;
 
-  _VUPainter(this.percent, this.currentDb);
+  _VUPainter(this.percent, this.currentDb, this.context);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     final width = size.width;
     final height = size.height;
     final barHeight = height * 0.7;
@@ -57,16 +64,17 @@ class _VUPainter extends CustomPainter {
 
     for (var i = 0; i < totalSegments; i++) {
       final x = i * (segmentWidth + 1);
-      Color color = Colors.grey.shade900;
+      Color color = colorScheme.outlineVariant;
 
       if (i < activeSegments) {
         final p = i / totalSegments;
-        if (p < 0.6)
+        if (p < 0.6) {
           color = Colors.green;
-        else if (p < 0.85)
-          color = Colors.yellow;
-        else
+        } else if (p < 0.85) {
+          color = Colors.orange;
+        } else {
           color = Colors.red;
+        }
       }
 
       canvas.drawRect(
@@ -85,7 +93,7 @@ class _VUPainter extends CustomPainter {
 
       textPainter.text = TextSpan(
         text: '$dbVal',
-        style: const TextStyle(color: Colors.grey, fontSize: 10),
+        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 10),
       );
       textPainter.layout();
       textPainter.paint(
@@ -101,8 +109,8 @@ class _VUPainter extends CustomPainter {
 
     textPainter.text = TextSpan(
       text: '$validDisplay dB',
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: colorScheme.onSurface,
         fontSize: 12,
         fontWeight: FontWeight.bold,
       ),
@@ -116,5 +124,7 @@ class _VUPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VUPainter oldDelegate) =>
-      oldDelegate.percent != percent || oldDelegate.currentDb != currentDb;
+      oldDelegate.percent != percent || 
+      oldDelegate.currentDb != currentDb ||
+      oldDelegate.context != context;
 }

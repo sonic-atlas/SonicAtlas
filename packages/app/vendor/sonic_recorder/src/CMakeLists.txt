@@ -9,7 +9,7 @@ add_library(sonic_recorder SHARED
   "context.c"
   "discovery.c"
   "capture.c"
-  "vendor/miniaudio.c"
+  "../vendor/miniaudio.c"
 )
 
 set_target_properties(sonic_recorder PROPERTIES

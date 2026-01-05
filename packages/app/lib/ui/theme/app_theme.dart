@@ -34,6 +34,7 @@ class AppTheme {
   static const Color lightTextPrimary = Color(0xFF121212);
 
   static const Color textSecondaryColor = Color(0xFFB3B3B3);
+  static const Color lightTextSecondaryColor = Color(0xFF616161);
 
   static _ThemeColors _colors(Brightness brightness) {
     switch (brightness) {
@@ -53,7 +54,7 @@ class AppTheme {
           background: lightBackground,
           surface: lightSurface,
           textPrimary: lightTextPrimary,
-          textSecondary: textSecondaryColor,
+          textSecondary: lightTextSecondaryColor,
         );
     }
   }
@@ -90,7 +91,9 @@ class AppTheme {
             ? Colors.black
             : Colors.white,
         onSurface: c.textPrimary,
-        onSurfaceVariant: c.background,
+        onSurfaceVariant: c.textSecondary,
+        outline: c.textSecondary,
+        outlineVariant: c.textSecondary.withValues(alpha: 0.25),
         error: Color(0xFFFF5540),
         onError: Color(0xFF1F0A08),
       ),
@@ -198,6 +201,25 @@ class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.surface,
         surfaceTintColor: Colors.transparent,
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: c.primary,
+        unselectedLabelColor: c.textSecondary,
+        indicatorColor: c.primary,
+        dividerColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(c.primary.withValues(alpha: 0.1)),
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: c.surface,
+        disabledColor: c.surface.withValues(alpha: 0.5),
+        selectedColor: c.primary,
+        secondarySelectedColor: c.secondary,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        labelStyle: TextStyle(color: c.textPrimary),
+        secondaryLabelStyle: TextStyle(color: c.textPrimary),
+        brightness: brightness,
       ),
     );
   }

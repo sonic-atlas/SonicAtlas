@@ -2,9 +2,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sonic_recorder/sonic_recorder.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 import '../../../../core/services/recorder/processing_service.dart';
 import '../../../../core/models/release.dart';
@@ -21,7 +19,6 @@ class EditorPage extends StatefulWidget {
 class _EditorPageState extends State<EditorPage>
     with SingleTickerProviderStateMixin {
   late final Player _player;
-  late final VideoController _controller;
   late final TabController _tabController;
 
   final Map<String, List<TrackSplit>> _fileSplits = {};
@@ -37,7 +34,6 @@ class _EditorPageState extends State<EditorPage>
   void initState() {
     super.initState();
     _player = Player();
-    _controller = VideoController(_player);
 
     _player.stream.position.listen((pos) {
       if (mounted) setState(() => _currentPosition = pos);
@@ -61,7 +57,6 @@ class _EditorPageState extends State<EditorPage>
 
   Future<void> _loadTracks() async {
     final recorder = context.read<SonicRecorderService>();
-    final processor = context.read<ProcessingService>();
 
     _files = List.from(recorder.sessionFiles);
 
@@ -89,9 +84,11 @@ class _EditorPageState extends State<EditorPage>
           _isLoading = false;
         });
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error loading: $e')));
+        }
         setState(() => _isLoading = false);
       }
     } else {
@@ -223,7 +220,7 @@ class _EditorPageState extends State<EditorPage>
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: releaseType,
+                  initialValue: releaseType,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: ['album', 'ep', 'single', 'compilation']
                       .map(
@@ -404,9 +401,9 @@ class _EditorPageState extends State<EditorPage>
   }
 
   String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
     String millis = (d.inMilliseconds % 1000).toString().padLeft(3, '0');
-    return "${twoDigits(d.inMinutes)}:${twoDigits(d.inSeconds.remainder(60))}.$millis";
+    return '${twoDigits(d.inMinutes)}:${twoDigits(d.inSeconds.remainder(60))}.$millis';
   }
 
   @override
@@ -415,8 +412,9 @@ class _EditorPageState extends State<EditorPage>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     final currentPath = _files.isNotEmpty ? _files[_tabController.index] : null;
     final splits = currentPath != null ? _fileSplits[currentPath] : null;

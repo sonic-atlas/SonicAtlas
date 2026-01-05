@@ -375,6 +375,11 @@ class AudioService with ChangeNotifier {
     notifyListeners();
   }
 
+  void addAllToQueue(List<models.Track> tracks) {
+    _queue.addAll(tracks);
+    notifyListeners();
+  }
+
   void addNextToQueue(models.Track track) {
     if (_currentIndex >= 0 && _currentIndex < _queue.length - 1) {
       _queue.insert(_currentIndex + 1, track);

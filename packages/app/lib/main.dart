@@ -20,14 +20,14 @@ import 'core/services/platform/wtaskbar.dart';
 import 'core/services/recorder/recorder_service.dart';
 import 'core/services/recorder/processing_service.dart';
 
-import 'ui/pages/home.dart';
-import 'ui/pages/login.dart';
-import 'ui/pages/server_setup.dart';
-import 'ui/pages/settings.dart';
-import 'ui/pages/splash.dart';
-import 'ui/pages/upload.dart';
-import 'ui/pages/recorder/recording_page.dart';
-import 'ui/pages/recorder/editor_page.dart';
+import 'ui/home/home_page.dart';
+import 'ui/auth/login_page.dart';
+import 'ui/auth/server_setup_page.dart';
+import 'ui/settings/settings_page.dart';
+import 'ui/splash/splash_page.dart';
+import 'ui/upload/upload_page.dart';
+import 'ui/recorder/recording_page.dart';
+import 'ui/recorder/editor_page.dart';
 import 'ui/theme/app_theme.dart';
 
 late MediaSessionHandler audioHandler;

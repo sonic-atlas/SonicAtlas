@@ -15,7 +15,6 @@ class ProcessingService extends ChangeNotifier {
   bool _isProcessing = false;
   bool get isProcessing => _isProcessing;
 
-  String? _currentFile;
   double? _progress = 0.0;
   double? get progress => _progress;
 
@@ -50,7 +49,6 @@ class ProcessingService extends ChangeNotifier {
         final track = splits[i];
         final nextTrack = (i < splits.length - 1) ? splits[i + 1] : null;
 
-        _currentFile = 'Track ${track.number}: ${track.title}';
         notifyListeners();
 
         final safeTitle = track.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
@@ -87,10 +85,12 @@ class ProcessingService extends ChangeNotifier {
           '-metadata',
           'disc=$discNumber',
         ]);
-        if (metadata.year != null)
+        if (metadata.year != null) {
           args.addAll(['-metadata', 'date=${metadata.year}']);
-        if (metadata.genre != null)
+        }
+        if (metadata.genre != null) {
           args.addAll(['-metadata', 'genre=${metadata.genre}']);
+        }
 
         args.addAll(['-c:a', 'flac', '-compression_level', '8', outPath]);
 
@@ -117,13 +117,11 @@ class ProcessingService extends ChangeNotifier {
       rethrow;
     } finally {
       _isProcessing = false;
-      _currentFile = null;
       notifyListeners();
     }
   }
 
   Future<void> uploadAll(List<String> files, Release metadata) async {
-    _currentFile = 'Uploading to Server...';
     _progress = null;
     notifyListeners();
 
@@ -140,12 +138,12 @@ class ProcessingService extends ChangeNotifier {
   }
 
   String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String threeDigits(int n) => n.toString().padLeft(3, "0");
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String threeDigits(int n) => n.toString().padLeft(3, '0');
 
     String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
     String threeDigitMillis = threeDigits(d.inMilliseconds.remainder(1000));
-    return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds.$threeDigitMillis";
+    return '${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds.$threeDigitMillis';
   }
 }

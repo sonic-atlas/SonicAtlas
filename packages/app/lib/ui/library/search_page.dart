@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import '/core/models/track.dart';
 import '../../core/services/network/api.dart';
-import '/ui/components/track_list_item.dart';
+import '/ui/common/track_list_item.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -106,7 +106,6 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onSearchChanged(String query) {
-    // Debounce search input to avoid excessive API calls when typing
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       _hasMoreResults = true;

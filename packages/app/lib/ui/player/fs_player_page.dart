@@ -9,7 +9,8 @@ import '/core/models/quality.dart';
 import '../../core/services/network/api.dart';
 import '../../core/services/playback/audio.dart';
 import '../../core/services/config/settings.dart';
-import '/ui/pages/queue.dart';
+import 'queue_page.dart';
+import '../theme/app_theme.dart';
 
 class FullScreenPlayerPage extends StatefulWidget {
   const FullScreenPlayerPage({super.key});
@@ -326,7 +327,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     : (constraints.maxWidth * 0.7).clamp(200.0, maxSize);
 
                 final minimizeButton = IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_down),
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 );
 
@@ -346,19 +347,19 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                             ),
                             if (playingQuality != null &&
                                 playingQuality != currentQuality)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 4),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4),
                                 child: Icon(
                                   Icons.pending,
                                   size: 12,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
+                                  color: AppTheme.secondaryColor,
                                 ),
                               ),
                           ],
                         ),
                         style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
@@ -368,7 +369,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                       ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.queue_music),
+                      icon: const Icon(Icons.queue_music, color: Colors.white),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -423,7 +424,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                   children: [
                     Text(
                       track.title,
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -432,9 +436,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     Text(
                       track.artist,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -444,9 +446,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     Text(
                       track.releaseTitle ?? track.album,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -482,6 +482,9 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 ),
                               ),
                             Slider(
+                              activeColor: AppTheme.primaryColor,
+                              inactiveColor: Colors.white24,
+                              thumbColor: AppTheme.primaryColor,
                               value: position.inMilliseconds
                                   .clamp(0, duration.inMilliseconds)
                                   .toDouble(),
@@ -500,7 +503,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(_formatDuration(position)),
+                              Text(
+                                _formatDuration(position),
+                                style: const TextStyle(color: Colors.white),
+                              ),
                               GestureDetector(
                                 onTap: () {
                                   settingsService.setRelativeDuration(
@@ -511,6 +517,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                   settingsService.relativeDuration
                                       ? '-${_formatDuration(duration - position)}'
                                       : _formatDuration(duration),
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],
@@ -529,7 +536,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         Icons.skip_previous,
                         color: audioService.hasPrevious
                             ? Colors.white
-                            : Theme.of(context).disabledColor,
+                            : Colors.white38,
                       ),
                       iconSize: 40,
                       onPressed: audioService.hasPrevious
@@ -542,6 +549,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         audioService.isPlaying
                             ? Icons.pause_circle
                             : Icons.play_circle,
+                        color: Colors.white,
                       ),
                       iconSize: 64,
                       onPressed: audioService.isPlaying
@@ -554,7 +562,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         Icons.skip_next,
                         color: audioService.hasNext
                             ? Colors.white
-                            : Theme.of(context).disabledColor,
+                            : Colors.white38,
                       ),
                       iconSize: 40,
                       onPressed: audioService.hasNext
@@ -611,36 +619,27 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                   );
                 }
 
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                minimizeButton,
-                                const Spacer(),
-                                qualityAndQueueButtons,
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            albumArtWidget,
-                            const SizedBox(height: 24),
-                            trackInfoWidget,
-                            const SizedBox(height: 24),
-                            progressBarWidget,
-                            const SizedBox(height: 16),
-                            controlsWidget,
-                            const SizedBox(height: 24),
-                          ],
-                        ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          minimizeButton,
+                          const Spacer(),
+                          qualityAndQueueButtons,
+                        ],
                       ),
-                    ),
+                      const Spacer(),
+                      albumArtWidget,
+                      const Spacer(),
+                      trackInfoWidget,
+                      const SizedBox(height: 24),
+                      progressBarWidget,
+                      const SizedBox(height: 16),
+                      controlsWidget,
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 );
               },
