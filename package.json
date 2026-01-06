@@ -1,6 +1,6 @@
 {
   "name": "sonic-atlas",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Open-source music streaming for self-hosting",
   "private": true,
   "workspaces": [
