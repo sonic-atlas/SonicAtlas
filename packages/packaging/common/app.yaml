@@ -1,0 +1,12 @@
+name: SonicAtlas
+displayName: Sonic Atlas
+exeName: sonic_atlas
+id: dev.heggo.sonic_atlas
+
+version:
+  major: 0
+  minor: 1
+  patch: 0
+  build: 1
+
+company: SonicAtlas

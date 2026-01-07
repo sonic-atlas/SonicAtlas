@@ -1,0 +1,7 @@
+﻿!define APP_NAME "Sonic Atlas"
+!define APP_PNAME "SonicAtlas"
+!define APP_EXENAME "sonic_atlas"
+!define APP_ID "dev.heggo.sonic_atlas"
+!define APP_VERSION "0.1.0"
+!define APP_BUILD "1"
+!define COMPANY "SonicAtlas"
