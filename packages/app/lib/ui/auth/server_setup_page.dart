@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,16 +14,54 @@ class ServerSetupPage extends StatefulWidget {
 
 class _ServerSetupPageState extends State<ServerSetupPage> {
   final _ipController = TextEditingController();
+  String? _errorMessage;
+
+  bool _isValidIpAddress(String ip) {
+    return InternetAddress.tryParse(ip) != null;
+  }
+
+  bool _isValidHostname(String hostname) {
+    final looksLikeIp = RegExp(r'^[0-9.]+$').hasMatch(hostname);
+    if (looksLikeIp && !_isValidIpAddress(hostname)) {
+      return false;
+    }
+
+    final hostnamePattern = RegExp(
+      r'^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*'
+      r'([A-Za-z0-9]|[A-Za-z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$',
+    );
+    return hostnamePattern.hasMatch(hostname) && hostname.length <= 253;
+  }
 
   void _saveServerIp() {
-    if (_ipController.text.isNotEmpty) {
-      context.read<SettingsService>().setServerIp(_ipController.text);
-      Navigator.pushReplacementNamed(
-        context,
-        '/login',
-        arguments: {'fromSetup': true},
-      );
+    final trimmedInput = _ipController.text.trim();
+
+    setState(() {
+      _errorMessage = null;
+    });
+
+    if (trimmedInput.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter a server IP or hostname';
+      });
+      return;
     }
+
+    if (!_isValidIpAddress(trimmedInput) && !_isValidHostname(trimmedInput)) {
+      setState(() {
+        _errorMessage = 'Invalid IP address or hostname';
+      });
+      return;
+    }
+
+    _ipController.text = trimmedInput;
+
+    context.read<SettingsService>().setServerIp(trimmedInput);
+    Navigator.pushReplacementNamed(
+      context,
+      '/login',
+      arguments: {'fromSetup': true},
+    );
   }
 
   @override
@@ -38,18 +78,28 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
-              const Text('Please enter your server IP address to begin.'),
+              const Text(
+                'Please enter your server IP address or hostname to begin.',
+              ),
               const SizedBox(height: 24),
               TextField(
                 controller: _ipController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Server IP or Hostname',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   hintText: 'e.g., 192.168.1.100',
+                  errorText: _errorMessage,
                 ),
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.go,
                 onSubmitted: (_) => _saveServerIp(),
+                onChanged: (_) {
+                  if (_errorMessage != null) {
+                    setState(() {
+                      _errorMessage = null;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 16),
               ElevatedButton(
