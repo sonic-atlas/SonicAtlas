@@ -33,8 +33,10 @@ declare module '@sonic-atlas/shared' {
         bitDepth?: number;
         metadata?: TrackMetadata;
         album?: string;
-        releaseId?: string;
-        releaseTitle?: string;
+        releaseId: string;
+        releaseTitle: string;
+        releaseArtist: string;
+        releaseYear: number;
     }
 
     export interface TrackMetadata {

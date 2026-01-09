@@ -1,8 +1,8 @@
 <script lang="ts">
     import '@material/web/list/list-item.js';
     import '@material/web/icon/icon.js';
-    import type { Track, TrackMetadata } from '$lib/types';
-    import { apiGet, API_BASE_URL } from '$lib/api';
+    import type { Track } from '$lib/types';
+    import { API_BASE_URL } from '$lib/api';
 
     interface Props {
         track: Track;
@@ -12,38 +12,26 @@
 
     let { track, isPlaying, onClick }: Props = $props();
 
-    let metadata = $state<TrackMetadata | null>(null);
-    let releaseYear = $state<number | null>(null);
-    let releaseTitle = $state<string | null>(null);
-
-    async function loadMetadata() {
-        const res = await apiGet(`/api/metadata/${track.id}`);
-        if (res.ok) {
-            metadata = await res.json();
-        }
-    }
-
-    async function loadRelease() {
-        if (track.releaseId) {
-            const res = await apiGet(`/api/releases/${track.releaseId}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.release) {
-                    releaseYear = data.release.year;
-                    releaseTitle = data.release.title;
-                }
-            }
-        }
-    }
-
-    $effect(() => {
-        loadMetadata();
-        loadRelease();
-    });
-
     function formatFileSize(bytes: number): string {
         const mb = bytes / (1024 * 1024);
         return `${mb.toFixed(2)} MB`;
+    }
+
+    function lazyLoad(node: HTMLImageElement, src: string) {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                node.src = src;
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(node);
+
+        return {
+            destroy() {
+                observer.disconnect();
+            }
+        };
     }
 </script>
 
@@ -59,33 +47,33 @@
 >
     <div slot="start" class="thumbnail">
         {#if track.coverArtPath}
-            <img src={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
+            <img use:lazyLoad={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
         {:else}
             <md-icon>{isPlaying ? 'equalizer' : 'music_note'}</md-icon>
         {/if}
     </div>
 
     <div slot="headline" class="headline">
-        {metadata?.title || track.originalFilename || track.filename}
+        {track.metadata?.title || track.originalFilename || track.filename}
     </div>
     <div slot="supporting-text" class="supportingText">
-        {metadata?.artist || 'Unknown Artist'}
-        · {releaseTitle}
-        · {releaseYear}
+        {track.metadata?.artist || track.releaseArtist}
+        · {track.releaseTitle}
+        · {track.releaseYear}
     </div>
 
     <div slot="end" class="techInfo">
-        {#if metadata?.codec}
-            <span class="badge">{metadata.codec.toUpperCase()}</span>
+        {#if track.metadata?.codec}
+            <span class="badge">{track.metadata.codec.toUpperCase()}</span>
         {/if}
-        {#if metadata?.bitrate}
-            <span class="badge">{Math.round(metadata.bitrate / 1000)}k</span>
+        {#if track.metadata?.bitrate}
+            <span class="badge">{Math.round(track.metadata.bitrate / 1000)}k</span>
         {/if}
-        {#if metadata?.sampleRate}
-            <span class="badge">{(metadata.sampleRate / 1000).toFixed(1)}kHz</span>
+        {#if track.sampleRate}
+            <span class="badge">{(track.sampleRate / 1000).toFixed(1)}kHz</span>
         {/if}
-        {#if metadata?.bitDepth}
-            <span class="badge">{metadata.bitDepth}bit</span>
+        {#if track.bitDepth}
+            <span class="badge">{track.bitDepth}bit</span>
         {/if}
         <span class="badge">{formatFileSize(track.fileSize)}</span>
     </div>
