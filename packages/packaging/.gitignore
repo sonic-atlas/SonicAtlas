@@ -1,0 +1,2 @@
+# Signing batch file. Ignored so any password added in isn't committed
+windows/sign-install.bat
