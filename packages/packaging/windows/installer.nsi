@@ -24,7 +24,7 @@ VIAddVersionKey "CompanyName" "${COMPANY}"
 VIAddVersionKey "FileVersion" "${APP_VERSION}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "FileDescription" "${APP_NAME} Installer"
-VIAddVersionKey "LegalCopyright" "© 2025 ${COMPANY}"
+VIAddVersionKey "LegalCopyright" "© 2026 ${COMPANY}"
 
 ; --- Signing directives ---
 !finalize        'sign-install.bat "%1"' = 0
