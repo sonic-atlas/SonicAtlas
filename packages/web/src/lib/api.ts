@@ -37,21 +37,19 @@ export async function apiPost(
     body?: BodyInit,
     additionalHeaders?: HeadersInit
 ): Promise<Response> {
-    const headers = { ...getAuthHeaders(), ...additionalHeaders };
-
-    return fetch(`${API_BASE_URL}${path}`, {
+    return apiFetch(path, {
         method: 'POST',
-        headers,
+        headers: additionalHeaders,
         body
     });
 }
 
 export async function apiPostFormData(path: string, formData: FormData): Promise<Response> {
-    const headers = getAuthHeaders();
+    const authHeaders = getAuthHeaders();
 
     return fetch(`${API_BASE_URL}${path}`, {
         method: 'POST',
-        headers: headers as HeadersInit,
+        headers: authHeaders as HeadersInit,
         body: formData
     });
 }
@@ -61,21 +59,17 @@ export async function apiPatch(
     body?: BodyInit,
     additionalHeaders?: HeadersInit
 ): Promise<Response> {
-    const headers = { ...getAuthHeaders(), ...additionalHeaders };
-
-    return fetch(`${API_BASE_URL}${path}`, {
+    return apiFetch(path, {
         method: 'PATCH',
-        headers,
+        headers: additionalHeaders,
         body
     });
 }
 
 export async function apiDelete(path: string, additionalHeaders?: HeadersInit): Promise<Response> {
-    const headers = { ...getAuthHeaders(), ...additionalHeaders };
-
-    return fetch(`${API_BASE_URL}${path}`, {
+    return apiFetch(path, {
         method: 'DELETE',
-        headers
+        headers: additionalHeaders
     });
 }
 

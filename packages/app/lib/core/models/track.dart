@@ -47,4 +47,8 @@ class Track {
       error: json['error'],
     );
   }
+  @override
+  String toString() {
+    return 'Track(id: $id, title: $title, artist: $artist, album: $album)';
+  }
 }

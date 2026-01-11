@@ -101,9 +101,6 @@ class ApiService {
     int offset = 0,
   }) async {
     try {
-      final allTracksList = await getTracks();
-      final allTracksMap = {for (var track in allTracksList) track.id: track};
-
       final response = await http.get(
         Uri.parse(
           '$_baseUrl/api/search?q=${Uri.encodeComponent(query)}&limit=$limit&offset=$offset',
@@ -115,17 +112,9 @@ class ApiService {
         final body = jsonDecode(response.body);
         final List<dynamic> results = body['results'] ?? [];
         return results.map((json) {
-          final fullTrack = allTracksMap[json['id']];
-          return Track(
-            id: json['id'],
-            title: json['title'] ?? 'Unknown Title',
-            artist: json['artist'] ?? 'Unknown Artist',
-            album: json['album'] ?? 'Unknown Album',
-            duration: fullTrack?.duration ?? 0,
-            releaseId: json['releaseId'],
-            releaseTitle: fullTrack?.releaseTitle,
-            releaseArtist: fullTrack?.releaseArtist,
-          );
+           json['album'] = json['album'] ?? json['releaseTitle'] ?? 'Unknown Album';
+           json['artist'] = json['artist'] ?? json['releaseArtist'] ?? 'Unknown Artist';
+           return Track.fromJson(json);
         }).toList();
       }
       return [];
