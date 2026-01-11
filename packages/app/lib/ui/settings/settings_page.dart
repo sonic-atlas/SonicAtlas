@@ -129,6 +129,14 @@ class SettingsPage extends StatelessWidget {
                 Navigator.pushNamed(context, '/upload');
               },
             ),
+            ListTile(
+              title: const Text('Record Music'),
+              subtitle: const Text('Record releases from input devices or cd\'s'),
+              leading: const Icon(Icons.mic),
+              onTap: () {
+                Navigator.pushNamed(context, '/recorder');
+              }
+            ),
             const Divider(),
             ListTile(
               title: const Text('Log Out'),

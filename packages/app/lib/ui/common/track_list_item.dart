@@ -96,7 +96,7 @@ class TrackListItem extends StatelessWidget {
         ),
         title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          '${track.artist} • ${track.releaseTitle ?? track.album}',
+          '${track.artist} • ${track.releaseTitle ?? track.album}${track.releaseYear != null ? ' • ${track.releaseYear}' : ''}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
