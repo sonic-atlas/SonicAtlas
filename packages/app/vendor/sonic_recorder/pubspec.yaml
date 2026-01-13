@@ -1,5 +1,5 @@
 name: sonic_recorder
-description: "A new Flutter FFI plugin project."
+description: "Audio backend for sonic atlas"
 version: 0.1.0
 homepage:
 
