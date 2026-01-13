@@ -54,7 +54,7 @@ FFI_PLUGIN_EXPORT int sonic_recorder_start(int deviceIndex, int sampleRate,
   }
 
   if (!isRbInitialized) {
-    ma_uint32 bufferSizeInFrames = sampleRate * 0.5;
+    ma_uint32 bufferSizeInFrames = sampleRate / 2;
     if (ma_pcm_rb_init(captureFormat, channels, bufferSizeInFrames, NULL, NULL,
                        &rb) != MA_SUCCESS) {
       printf("SonicRecorder Error: Failed to init Ring Buffer\n");

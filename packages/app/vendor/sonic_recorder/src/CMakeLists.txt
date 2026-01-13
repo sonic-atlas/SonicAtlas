@@ -21,6 +21,8 @@ target_compile_definitions(sonic_recorder PUBLIC DART_SHARED_LIB)
 
 if (NOT MSVC)
     target_compile_options(sonic_recorder PRIVATE -O3 -msse2 -mavx2 -mfma)
+else()
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif()
 
 if (WIN32)
@@ -35,5 +37,3 @@ target_compile_definitions(sonic_recorder PRIVATE
     MA_NO_ENGINE 
     MA_NO_GENERATION
 )
-
-
