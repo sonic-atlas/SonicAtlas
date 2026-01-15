@@ -41,6 +41,7 @@ Function EnsureVCRedist
 
     DetailPrint "Installing Microsoft Visual C++ Runtime..."
     ExecWait '"$EXEDIR\redist\${VCREDIST}" /install /quiet /norestart'
+    Sleep 1000
 
 done:
 FunctionEnd
@@ -101,6 +102,9 @@ Section "-Prerequisites"
     SetOutPath "$EXEDIR\redist"
     File "redist\${VCREDIST}"
     Call EnsureVCRedist
+
+    Delete "$EXEDIR\redist\${VCREDIST}"
+    RMDir "$EXEDIR\redist"
 SectionEnd
 
 Section "-Main Program" SEC01
