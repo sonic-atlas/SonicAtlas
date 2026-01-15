@@ -34,8 +34,10 @@ VIAddVersionKey "LegalCopyright" "© 2026 ${COMPANY}"
 !define VCREDIST "vc_redist.x64.exe"
 
 Function EnsureVCRedist
-    IfFileExists "$SYSDIR\VCRUNTIME140.dll" 0 +2
-    goto done
+    ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
+    ${If} $0 == 1
+        goto done
+    ${EndIf}
 
     DetailPrint "Installing Microsoft Visual C++ Runtime..."
     ExecWait '"$EXEDIR\redist\${VCREDIST}" /install /quiet /norestart'
@@ -96,6 +98,8 @@ Function OptionsPageLeave
 FunctionEnd
 
 Section "-Prerequisites"
+    SetOutPath "$EXEDIR\redist"
+    File "redist\${VCREDIST}"
     Call EnsureVCRedist
 SectionEnd
 
