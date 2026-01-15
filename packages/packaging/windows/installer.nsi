@@ -9,14 +9,14 @@
 !define MUI_ICON "assets\icon.ico"
 !define MUI_UNICON "assets\icon.ico"
 
-SetCompressor /SOLID lzma
+SetCompressor /SOLID /FINAL lzma
 
 OutFile ".\build\${APP_PNAME}-${APP_VERSION}-setup.exe"
 
 Name "${APP_NAME}"
 InstallDir "$PROGRAMFILES64\${APP_PNAME}"
 RequestExecutionLevel admin
-ShowInstDetails show
+ShowInstDetails nevershow
 
 VIProductVersion "${APP_VERSION}.${APP_BUILD}"
 VIAddVersionKey "ProductName" "${APP_NAME}"
@@ -26,9 +26,22 @@ VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "FileDescription" "${APP_NAME} Installer"
 VIAddVersionKey "LegalCopyright" "© 2026 ${COMPANY}"
 
-; --- Signing directives ---
+; Signing directives
 !finalize        'sign-install.bat "%1"' = 0
 !uninstfinalize  'sign-install.bat "%1"' = 0
+
+; VC_redist
+!define VCREDIST "vc_redist.x64.exe"
+
+Function EnsureVCRedist
+    IfFileExists "$SYSDIR\VCRUNTIME140.dll" 0 +2
+    goto done
+
+    DetailPrint "Installing Microsoft Visual C++ Runtime..."
+    ExecWait '"$EXEDIR\redist\${VCREDIST}" /install /quiet /norestart'
+
+done:
+FunctionEnd
 
 ; MUI Pages
 !insertmacro MUI_PAGE_WELCOME
@@ -51,6 +64,7 @@ FunctionEnd
 ; Variables for opts
 Var Dialog
 Var CheckboxShortcut
+Var CheckboxSMShortcut
 
 Function OptionsPageCreate
     nsDialogs::Create /NOUNLOAD 1018
@@ -65,16 +79,29 @@ Function OptionsPageCreate
     Pop $CheckboxShortcut
     ${NSD_SetState} $CheckboxShortcut ${BST_CHECKED}
 
+    ; Start menu shortcut
+    ${NSD_CreateCheckBox} 0 35u 100% 30u "Create start menu shortcut"
+    Pop $CheckboxSMShortcut
+    ${NSD_SetState} $CheckboxSMShortcut ${BST_CHECKED}
+
     nsDialogs::Show
 FunctionEnd
 
 Function OptionsPageLeave
     ${NSD_GetState} $CheckboxShortcut $0
     StrCpy $CheckboxShortcut $0
+
+    ${NSD_GetState} $CheckboxSMShortcut $0
+    StrCpy $CheckboxSMShortcut $0
 FunctionEnd
+
+Section "-Prerequisites"
+    Call EnsureVCRedist
+SectionEnd
 
 Section "-Main Program" SEC01
     SetOutPath "$INSTDIR"
+    DetailPrint "Copying files..."
     File /r "..\..\app\build\windows\x64\runner\Release\*"
 
     SetRegView 64
@@ -96,15 +123,24 @@ Section "-Main Program" SEC01
     IntFmt $0 "0x%08X" $0
     WriteRegDWORD HKLM "${UNINST_KEY}" "EstimatedSize" "$0"
 
-    CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXENAME}.exe"
+    ${If} $CheckboxShortcut == ${BST_CHECKED}
+        ${OrIf} $CheckboxSMShortcut == ${BST_CHECKED}
+            DetailPrint "Creating shortcuts..."
+        ${EndIf}
+
     ${If} $CheckboxShortcut == ${BST_CHECKED}
         CreateShortCut "$DESKTOP\${APP_EXENAME}.lnk" "$INSTDIR\${APP_EXENAME}.exe"
+    ${EndIf}
+    ${If} $CheckboxSMShortcut == ${BST_CHECKED}
+        CreateDirectory "$SMPROGRAMS\${APP_NAME}"
+        CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXENAME}.exe"
     ${EndIf}
 SectionEnd
 
 Section "Uninstall"
+    IfFileExists "$DESKTOP\${APP_EXENAME}.lnk" 0 +2
     Delete "$DESKTOP\${APP_EXENAME}.lnk"
+    IfFileExists "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" 0 +2
     Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
 
     SetRegView 64
@@ -112,6 +148,5 @@ Section "Uninstall"
     DeleteRegKey HKLM "${UNINST_KEY}"
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\App Paths\${APP_EXENAME}.exe"
 
-    Delete "$INSTDIR\uninstall.exe"
     RMDir /r "$INSTDIR"
 SectionEnd

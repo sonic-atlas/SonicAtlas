@@ -1,2 +1,5 @@
 # Signing batch file. Ignored so any password added in isn't committed
 windows/sign-install.bat
+
+# VC_redist.x64.exe --- 	https://aka.ms/vc14/vc_redist.x64.exe
+windows/redist/
