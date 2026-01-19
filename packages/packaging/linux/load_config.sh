@@ -6,10 +6,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export YAML_PATH="$SCRIPT_DIR/../common/app.yaml"
 
 # --- Validation ---
-if ! command -v yq &> /dev/null; then
-    echo "Error: 'yq' is required but not installed."
-    echo "Install with: sudo pacman -S yq"
-    exit 1
+if ! command -v yq &>/dev/null; then
+  echo "Error: 'yq' is required but not installed."
+  echo "Install with: sudo pacman -S yq"
+  exit 1
 fi
 
 get_yaml() { yq e "$1" "$YAML_PATH"; }

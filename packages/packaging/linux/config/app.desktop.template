@@ -7,3 +7,4 @@ Icon={{APP_EXE}}
 Terminal=false
 Categories=AudioVideo;Audio;Music;Player;
 Keywords=music;streaming;player;audio;
+StartupWMClass={{APP_ID}}
