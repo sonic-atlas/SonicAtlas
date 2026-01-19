@@ -6,6 +6,7 @@ class Track {
   final String? releaseTitle;
   final String? releaseArtist;
   final int? releaseYear;
+  final String? releaseType;
   final String album;
   final int duration;
   final int discNumber;
@@ -21,6 +22,7 @@ class Track {
     required this.duration,
     this.releaseId,
     this.releaseTitle,
+    this.releaseType,
     this.releaseArtist,
     this.releaseYear,
     this.discNumber = 1,
@@ -35,12 +37,17 @@ class Track {
       id: json['id'],
       title: metadata['title'] ?? json['title'] ?? 'Unknown Title',
       artist: metadata['artist'] ?? json['artist'] ?? 'Unknown Artist',
-      album: json['releaseTitle'] ?? json['album'] ?? metadata['album'] ?? 'Unknown Album',
+      album:
+          json['releaseTitle'] ??
+          json['album'] ??
+          metadata['album'] ??
+          'Unknown Album',
       duration: (json['duration'] ?? 0.0).round(),
       releaseId: json['releaseId'],
       releaseTitle: json['releaseTitle'],
       releaseArtist: json['releaseArtist'],
       releaseYear: json['releaseYear'],
+      releaseType: json['releaseType'],
       discNumber: json['discNumber'] ?? 1,
       trackNumber: json['trackNumber'],
       transcodeStatus: json['transcodeStatus'],

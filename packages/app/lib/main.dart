@@ -64,6 +64,7 @@ void main(List<String> args) async {
   }
 
   discordService.setAudioService(audioService);
+  discordService.setApiService(apiService);
 
   audioHandler = await audio_service.AudioService.init(
     builder: () => MediaSessionHandler(

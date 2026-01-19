@@ -46,6 +46,7 @@ class Release {
       'createdAt': createdAt?.toIso8601String(),
     };
   }
+
   @override
   String toString() {
     return 'Release(id: $id, title: $title, artist: $primaryArtist, year: $year)';

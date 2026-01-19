@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:http/http.dart' as http;
 import 'package:discord_rich_presence/discord_rich_presence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sonic_atlas/core/models/track.dart';
 import 'package:sonic_atlas/core/services/config/settings.dart';
+import 'package:sonic_atlas/core/services/network/api.dart';
 
 import '../playback/audio.dart';
 
@@ -48,6 +51,7 @@ class DiscordService with ChangeNotifier {
   final Client client = Client(clientId: '1438064057138806818'); // Don't change
   final SettingsService _settingsService;
   AudioService? _audioService;
+  ApiService? _apiService;
 
   Track? _currentlyPlaying;
   DateTime? _trackStartTime;
@@ -68,6 +72,10 @@ class DiscordService with ChangeNotifier {
   DiscordService(this._settingsService) {
     _settingsService.addListener(_onSettingsChanged);
     _isEnabled = isEnabled;
+  }
+
+  void setApiService(ApiService service) {
+    _apiService = service;
   }
 
   void setAudioService(AudioService service) {
@@ -140,6 +148,53 @@ class DiscordService with ChangeNotifier {
     }
   }
 
+  // Cover art logic
+  Future<String> _resolveCoverUrl(Track track) async {
+    const defaultAsset = 'sonic_atlas_logo';
+    if (_apiService == null) return defaultAsset;
+
+    final serverIp = _settingsService.serverIp ?? '';
+    final isLocal =
+        serverIp.contains('localhost') ||
+        serverIp.contains('127.0.0.1') ||
+        serverIp.contains('192.168.') ||
+        serverIp.contains('10.');
+
+    if (!isLocal) {
+      final url = _apiService!.getAlbumArtUrl(track.id);
+      if (url.length < 128) {
+        return url;
+      } else {
+        if (kDebugMode) {
+          print('DiscordRPC: Custom URL too long (${url.length} chars).');
+        }
+      }
+    }
+
+    try {
+      final searchTerm = '${track.artist} ${track.releaseTitle}';
+      final encodedQuery = Uri.encodeComponent(searchTerm);
+
+      final response = await http.get(
+        Uri.parse(
+          'https://itunes.apple.com/search?term=$encodedQuery&entity=album&explicit=yes&limit=1',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // (low priority) TODO: Fallback to musicbrainz when 0 results.
+        if (data['resultCount'] > 0) {
+          String art = data['results'][0]['artworkUrl100'];
+          return art.replaceAll('100x100bb', '512x512bb');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('DiscordRPC: iTunes fallback failed: $e');
+    }
+    return defaultAsset;
+  }
+
   Future<void> _updateActivity({
     String? details,
     String? state,
@@ -147,6 +202,8 @@ class DiscordService with ChangeNotifier {
     ActivityType? type,
     String? largeImage,
     String? largeText,
+    String? smallImage,
+    String? smallText,
     String? name,
   }) async {
     _currentActivity = (_currentActivity ?? _templateActivity).copyWith(
@@ -158,6 +215,8 @@ class DiscordService with ChangeNotifier {
       assets: (_currentActivity?.assets ?? _templateActivity.assets)?.copyWith(
         largeImage: largeImage,
         largeText: largeText,
+        smallImage: smallImage,
+        smallText: smallText,
       ),
     );
 
@@ -173,10 +232,16 @@ class DiscordService with ChangeNotifier {
     _trackStartTime = DateTime.now();
     _pauseTime = null;
 
+    final coverImage = await _resolveCoverUrl(track);
+
     await _updateActivity(
-      name: '${track.title} — ${track.artist}',
+      name: 'Sonic Atlas',
       details: track.title,
       state: track.artist,
+      largeImage: coverImage,
+      largeText: track.releaseTitle,
+      smallImage: 'sonic_atlas_logo',
+      smallText: 'Sonic Atlas',
       timestamps: ActivityTimestamps(
         start: _trackStartTime!,
         end: _trackStartTime!.add(Duration(seconds: track.duration)),
