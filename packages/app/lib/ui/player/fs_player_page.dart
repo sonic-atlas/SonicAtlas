@@ -327,7 +327,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     : (constraints.maxWidth * 0.7).clamp(200.0, maxSize);
 
                 final minimizeButton = IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 );
 
@@ -424,7 +427,8 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                   children: [
                     Text(
                       track.title,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -620,7 +624,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                 }
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Column(
                     children: [
                       Row(

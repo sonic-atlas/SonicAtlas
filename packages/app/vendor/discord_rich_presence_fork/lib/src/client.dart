@@ -28,9 +28,8 @@ class Client {
       details: activity.details != null
           ? _truncateTo128Bytes(activity.details!)
           : null,
-      state: activity.state != null
-          ? _truncateTo128Bytes(activity.state!)
-          : null,
+      state:
+          activity.state != null ? _truncateTo128Bytes(activity.state!) : null,
       type: activity.type,
       url: activity.url,
       timestamps: activity.timestamps,
@@ -47,7 +46,8 @@ class Client {
     );
   }
 
-  Future<void> _request(String cmd, Map<String, dynamic> args, String event) async {
+  Future<void> _request(
+      String cmd, Map<String, dynamic> args, String event) async {
     final Uuid uuid = Uuid();
     final String nonce = uuid.v4();
 
@@ -62,10 +62,9 @@ class Client {
   void _rpcMessage(Event message) async {
     switch (message.type) {
       case 'close':
-        await disconnect(); 
+        await disconnect();
 
       default:
-        
     }
   }
 
@@ -89,5 +88,4 @@ class Client {
 
     return '${text.substring(0, cutIndex)}...';
   }
-
 }

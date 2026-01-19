@@ -131,11 +131,13 @@ class SettingsPage extends StatelessWidget {
             ),
             ListTile(
               title: const Text('Record Music'),
-              subtitle: const Text('Record releases from input devices or cd\'s'),
+              subtitle: const Text(
+                'Record releases from input devices or cd\'s',
+              ),
               leading: const Icon(Icons.mic),
               onTap: () {
                 Navigator.pushNamed(context, '/recorder');
-              }
+              },
             ),
             const Divider(),
             ListTile(

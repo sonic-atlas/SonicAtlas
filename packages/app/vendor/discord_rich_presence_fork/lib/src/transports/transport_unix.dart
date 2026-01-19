@@ -17,13 +17,12 @@ class UnixTransport extends Transport {
     _socket = socket;
     events.add(Event('open'));
 
-    _socket?.add(encode(
-      OPCodes.handshake,
-      <String, Object?>{
+    _socket?.add(
+      encode(OPCodes.handshake, <String, Object?>{
         'v': 1,
         'client_id': client?.clientId,
-      }
-    ),);
+      }),
+    );
 
     _socket?.listen((Uint8List data) {
       final (OPCodes? code, Map<String, dynamic> cmd) = decode(data);
@@ -40,7 +39,7 @@ class UnixTransport extends Transport {
           events.add(Event('close', cmd));
 
         default:
-          // Do nothing
+        // Do nothing
       }
     });
   }
@@ -68,7 +67,6 @@ class UnixTransport extends Transport {
       {'TMPDIR': final String dir} => dir,
       {'TMP': final String dir} => dir,
       {'TEMP': final String dir} => dir,
-
       _ => '/tmp'
     };
 
@@ -82,9 +80,11 @@ class UnixTransport extends Transport {
 
     try {
       final String path = _getIpcPath(id);
-      final InternetAddress host = InternetAddress(path, type: InternetAddressType.unix);
-      
-      final Socket conn = await Socket.connect(host, 0, timeout: const Duration(seconds: 3));
+      final InternetAddress host =
+          InternetAddress(path, type: InternetAddressType.unix);
+
+      final Socket conn =
+          await Socket.connect(host, 0, timeout: const Duration(seconds: 3));
       return conn;
     } catch (err) {
       return _getIpc(id: id + 1);

@@ -17,7 +17,8 @@ enum OPCodes {
   const OPCodes(this.code);
   final int code;
 
-  static OPCodes? fromCode(int code) => OPCodes.values.firstWhereOrNull((OPCodes op) => op.code == code);
+  static OPCodes? fromCode(int code) =>
+      OPCodes.values.firstWhereOrNull((OPCodes op) => op.code == code);
 }
 
 class Event {

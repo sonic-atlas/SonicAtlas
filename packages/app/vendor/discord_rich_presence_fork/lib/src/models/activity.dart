@@ -11,7 +11,14 @@ enum ActivityType {
 }
 
 class Activity {
-  Activity({required this.name, this.details, this.state, this.type = ActivityType.playing, this.url, this.timestamps, this.assets});
+  Activity(
+      {required this.name,
+      this.details,
+      this.state,
+      this.type = ActivityType.playing,
+      this.url,
+      this.timestamps,
+      this.assets});
 
   final String name;
   final String? details;
@@ -35,7 +42,6 @@ class Activity {
       'state': state,
       'type': type.id,
       'url': url,
-
       'timestamps': _timestamps,
       'assets': _assets,
     };
@@ -46,15 +52,15 @@ class Activity {
   }
 }
 
-enum ActivityAssetsImageSize {
-  small,
-  large
-}
+enum ActivityAssetsImageSize { small, large }
 
 class ActivityAssets {
-  const ActivityAssets({this.largeImage, this.largeText, this.smallImage, this.smallText});
+  const ActivityAssets(
+      {this.largeImage, this.largeText, this.smallImage, this.smallText});
 
-  factory ActivityAssets.fromExternalLink(String url, {String? text, ActivityAssetsImageSize size = ActivityAssetsImageSize.large}) {
+  factory ActivityAssets.fromExternalLink(String url,
+      {String? text,
+      ActivityAssetsImageSize size = ActivityAssetsImageSize.large}) {
     if (size == ActivityAssetsImageSize.large) {
       return ActivityAssets(
         largeImage: url,
@@ -78,7 +84,6 @@ class ActivityAssets {
     return <String, String?>{
       'large_image': largeImage,
       'large_text': largeText,
-
       'small_image': smallImage,
       'small_text': smallText,
     };

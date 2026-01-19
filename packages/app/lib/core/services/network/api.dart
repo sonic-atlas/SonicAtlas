@@ -112,9 +112,11 @@ class ApiService {
         final body = jsonDecode(response.body);
         final List<dynamic> results = body['results'] ?? [];
         return results.map((json) {
-           json['album'] = json['album'] ?? json['releaseTitle'] ?? 'Unknown Album';
-           json['artist'] = json['artist'] ?? json['releaseArtist'] ?? 'Unknown Artist';
-           return Track.fromJson(json);
+          json['album'] =
+              json['album'] ?? json['releaseTitle'] ?? 'Unknown Album';
+          json['artist'] =
+              json['artist'] ?? json['releaseArtist'] ?? 'Unknown Artist';
+          return Track.fromJson(json);
         }).toList();
       }
       return [];

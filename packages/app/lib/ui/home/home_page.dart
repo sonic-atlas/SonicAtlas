@@ -44,7 +44,6 @@ class _HomePageState extends State<HomePage> {
               tabs: [
                 Tab(text: 'Tracks'),
                 Tab(text: 'Albums'),
-
               ],
             ),
             actions: [
@@ -73,7 +72,9 @@ class _HomePageState extends State<HomePage> {
               if (snapshot.hasError ||
                   !snapshot.hasData ||
                   snapshot.data!.isEmpty) {
-                return const Center(child: Text('Could not load tracks or no tracks found.'));
+                return const Center(
+                  child: Text('Could not load tracks or no tracks found.'),
+                );
               }
 
               final tracks = snapshot.data!;
@@ -93,7 +94,6 @@ class _HomePageState extends State<HomePage> {
                     onRefresh: _refresh,
                     child: AlbumGrid(tracks: tracks),
                   ),
-
                 ],
               );
             },

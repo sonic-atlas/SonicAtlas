@@ -70,9 +70,9 @@ class AlbumGrid extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: CachedNetworkImage(
-                    imageUrl: context
-                        .read<ApiService>()
-                        .getReleaseCoverUrl(releaseId),
+                    imageUrl: context.read<ApiService>().getReleaseCoverUrl(
+                      releaseId,
+                    ),
                     memCacheWidth: 400,
                     memCacheHeight: 400,
                     fit: BoxFit.cover,
@@ -93,8 +93,8 @@ class AlbumGrid extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 artist,

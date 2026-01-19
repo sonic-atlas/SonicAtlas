@@ -33,7 +33,9 @@ class _AlbumPageState extends State<AlbumPage> {
   @override
   void initState() {
     super.initState();
-    _tracksFuture = context.read<ApiService>().getReleaseTracks(widget.releaseId);
+    _tracksFuture = context.read<ApiService>().getReleaseTracks(
+      widget.releaseId,
+    );
   }
 
   @override
@@ -96,24 +98,35 @@ class _AlbumPageState extends State<AlbumPage> {
                             children: [
                               Text(
                                 widget.releaseTitle,
-                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 widget.releaseArtist ?? 'Unknown Artist',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                               ),
                               if (widget.releaseYear != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
                                   widget.releaseYear.toString(),
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
                                 ),
                               ],
                               const SizedBox(height: 16),
@@ -124,9 +137,9 @@ class _AlbumPageState extends State<AlbumPage> {
                                   FilledButton.icon(
                                     onPressed: () {
                                       context.read<AudioService>().playTrack(
-                                            tracks.first,
-                                            queue: tracks,
-                                          );
+                                        tracks.first,
+                                        queue: tracks,
+                                      );
                                     },
                                     icon: const Icon(Icons.play_arrow),
                                     label: const Text('Play'),
@@ -136,7 +149,9 @@ class _AlbumPageState extends State<AlbumPage> {
                                       context
                                           .read<AudioService>()
                                           .addAllToQueue(tracks);
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         const SnackBar(
                                           content: Text('Album added to queue'),
                                         ),
@@ -176,6 +191,7 @@ class _AlbumPageState extends State<AlbumPage> {
             );
           },
         ),
-      ));
+      ),
+    );
   }
 }

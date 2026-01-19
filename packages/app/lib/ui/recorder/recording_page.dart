@@ -117,7 +117,9 @@ class _AnalogTabState extends State<_AnalogTab> {
                             'Record the entire side or album as one continuous track.\nYou can stop recording when switching sides; multiple recordings will be grouped into a session.\nYou can split tracks and remove silence in the editor after recording.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 14,
                             ),
                           ),

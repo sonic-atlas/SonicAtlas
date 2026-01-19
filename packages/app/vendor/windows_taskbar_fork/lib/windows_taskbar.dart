@@ -170,20 +170,16 @@ class TaskbarJumpListEntry {
   /// Index of the icon in the icon list. Optional, defaults to order in the list.
   final int iconIndex;
 
-  TaskbarJumpListEntry(
-    this.title,
-    this.arguments,
-    this.icon, {
-    this.iconIndex = 0
-  });
+  TaskbarJumpListEntry(this.title, this.arguments, this.icon,
+      {this.iconIndex = 0});
 
   /// Conversion to `flutter::EncodableMap` for method channel transfer.
   Map<String, dynamic> toJson() => {
-    'title': title,
-    'arguments': arguments,
-    'icon': icon.path,
-    'iconIndex': iconIndex
-  };
+        'title': title,
+        'arguments': arguments,
+        'icon': icon.path,
+        'iconIndex': iconIndex
+      };
 }
 
 /// WindowsTaskbar
@@ -408,16 +404,14 @@ class WindowsTaskbar {
   /// );
   /// ```
   ///
-  static Future<void> setJumpList(List<TaskbarJumpListEntry> entries, String categoryName) async {
-    return await _kChannel.invokeMethod(
-      _kSetJumpList,
-      {
-        'entries': entries.map((entry) {
-          return entry.toJson();
-        }).toList(),
-        'categoryName': categoryName
-      }
-    );
+  static Future<void> setJumpList(
+      List<TaskbarJumpListEntry> entries, String categoryName) async {
+    return await _kChannel.invokeMethod(_kSetJumpList, {
+      'entries': entries.map((entry) {
+        return entry.toJson();
+      }).toList(),
+      'categoryName': categoryName
+    });
   }
 
   /// Deprecated API present to avoid breaking changes.

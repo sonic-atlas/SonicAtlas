@@ -10,7 +10,7 @@ class VUMeter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Container(
       height: 60,
       decoration: BoxDecoration(
@@ -53,7 +53,7 @@ class _VUPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     final width = size.width;
     final height = size.height;
     final barHeight = height * 0.7;
@@ -124,7 +124,7 @@ class _VUPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VUPainter oldDelegate) =>
-      oldDelegate.percent != percent || 
+      oldDelegate.percent != percent ||
       oldDelegate.currentDb != currentDb ||
       oldDelegate.context != context;
 }

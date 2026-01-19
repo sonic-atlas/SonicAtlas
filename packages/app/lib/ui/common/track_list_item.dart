@@ -68,11 +68,11 @@ class TrackListItem extends StatelessWidget {
                   child: Text(
                     trackNumber.toString(),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: isPlaying
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: isPlaying
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -100,16 +100,19 @@ class TrackListItem extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        onTap: onTapOverride ?? () {
-          context.read<AudioService>().playTrack(track);
-        },
+        onTap:
+            onTapOverride ??
+            () {
+              context.read<AudioService>().playTrack(track);
+            },
         onLongPress: () {
           _showTrackMenu(context, track);
         },
         trailing: trailingWidget,
         selected: isPlaying,
-        selectedTileColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        selectedTileColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.1),
       ),
     );
   }
