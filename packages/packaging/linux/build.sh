@@ -116,7 +116,7 @@ main() {
     
     while true; do
         print_menu
-        read -rp "Enter choice [0-6]: " choice
+        read -rp "Enter choice [0-5]: " choice
         
         case $choice in
             1)
@@ -143,6 +143,10 @@ main() {
                 ./clean.sh
                 echo ""
                 read -rp "Press Enter to continue..."
+                ;;
+            0)
+                echo "Exiting..."
+                exit 0
                 ;;
             *)
                 log_error "Invalid option. Please try again."
