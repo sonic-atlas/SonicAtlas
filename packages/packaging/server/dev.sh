@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# Load color variables
-source "$(dirname "$0")/utils/colors.sh"
+# Load common helpers
+source "$(dirname "$0")/../common/helpers.sh"
 
 BUILD_FLAG=false
 DB_FLAG=false

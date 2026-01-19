@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name={{APP_DISPLAY}}
+Comment=Self hosted music streaming app
+Exec={{APP_EXE}}
+Icon={{APP_ID}}
+Terminal=false
+Categories=AudioVideo;Audio;Music;Player;
+Keywords=music;streaming;player;audio;

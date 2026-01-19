@@ -48,7 +48,7 @@ FunctionEnd
 
 ; MUI Pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "..\common\LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom OptionsPageCreate OptionsPageLeave
 !insertmacro MUI_PAGE_INSTFILES

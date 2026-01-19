@@ -3,3 +3,6 @@ windows/sign-install.bat
 
 # VC_redist.x64.exe --- 	https://aka.ms/vc14/vc_redist.x64.exe
 windows/redist/
+
+# Linux flatpak generated build directory
+linux/.flatpak-builder

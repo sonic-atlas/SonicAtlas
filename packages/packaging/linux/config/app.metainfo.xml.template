@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>{{APP_ID}}</id>
+  <name>{{APP_DISPLAY}}</name>
+  <developer_name>Sonic Atlas</developer_name>
+  <summary>Self hosted music streaming app</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>SonicAtlas is a self-hosted music streaming application that lets you stream your personal music library from anywhere.</p>
+  </description>
+  <launchable type="desktop-id">{{APP_ID}}.desktop</launchable>
+  <icon type="stock">{{APP_ID}}</icon>
+  <url type="homepage">https://github.com/sonic-atlas/SonicAtlas</url>
+  <releases>
+    <release version="{{VERSION}}" date="{{DATE}}"/>
+  </releases>
+    <content_rating type="oars-1.0" />
+  <categories>
+    <category>Audio</category>
+    <category>Music</category>
+    <category>Player</category>
+  </categories>
+</component>
