@@ -8,8 +8,6 @@ cd "$SCRIPT_DIR"
 source "$SCRIPT_DIR/../common/helpers.sh"
 source ./load_config.sh
 
-print_header "SonicAtlas Linux Tarball"
-
 # --- Package ---
 
 TARBALL_NAME="${APP_NAME}-${VERSION}-Linux.tar.gz"

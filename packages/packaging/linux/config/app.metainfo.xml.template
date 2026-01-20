@@ -2,14 +2,16 @@
 <component type="desktop-application">
   <id>{{APP_ID}}</id>
   <name>{{APP_DISPLAY}}</name>
-  <developer_name>Sonic Atlas</developer_name>
+  <developer id="dev.heggo.sonic_atlas">
+    <name>Sonic Atlas</name>
+  </developer>
   <summary>Self hosted music streaming app</summary>
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
   <description>
     <p>SonicAtlas is a self-hosted music streaming application that lets you stream your personal music library from anywhere.</p>
   </description>
-  <launchable type="desktop-id">{{APP_ID}}.desktop</launchable>
+  <launchable type="desktop-id">{{APP_EXE}}.desktop</launchable>
   <icon type="stock">{{APP_ID}}</icon>
   <url type="homepage">https://github.com/sonic-atlas/SonicAtlas</url>
   <releases>

@@ -63,8 +63,6 @@ do_build_tarball() {
 }
 
 do_build_appimage() {
-  print_section "Building AppImage..."
-
   do_build_tarball
 
   print_section "Packaging AppImage..."

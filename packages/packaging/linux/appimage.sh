@@ -43,22 +43,23 @@ rsvg-convert -w 256 -h 256 "$ICON_SVG" -o "$APPDIR/usr/share/icons/hicolor/256x2
 rsvg-convert -w 256 -h 256 "$ICON_SVG" -o "$APPDIR/${APP_EXE}.png"
 
 # --- Desktop Entry ---
-
+DESKTOP_FILE="${APP_ID}.desktop"
 TEMPLATE_DIR="$SCRIPT_DIR/config"
 sed -e "s/{{APP_DISPLAY}}/$APP_DISPLAY/g" \
   -e "s/{{APP_EXE}}/$APP_EXE/g" \
   -e "s/{{APP_ID}}/$APP_ID/g" \
-  "$TEMPLATE_DIR/app.desktop.template" >"$APPDIR/usr/share/applications/${APP_EXE}.desktop"
+  "$TEMPLATE_DIR/app.desktop.template" >"$APPDIR/usr/share/applications/$DESKTOP_FILE"
 
-cp "$APPDIR/usr/share/applications/${APP_EXE}.desktop" "$APPDIR/"
+cp "$APPDIR/usr/share/applications/$DESKTOP_FILE" "$APPDIR/"
 
 # --- AppStream Metadata ---
 
 sed -e "s/{{APP_ID}}/$APP_ID/g" \
   -e "s/{{APP_DISPLAY}}/$APP_DISPLAY/g" \
+  -e "s/{{APP_EXE}}.desktop/$DESKTOP_FILE/g" \
   -e "s/{{VERSION}}/$VERSION/g" \
   -e "s/{{DATE}}/$(date +%Y-%m-%d)/g" \
-  "$TEMPLATE_DIR/app.metainfo.xml.template" >"$APPDIR/usr/share/metainfo/${APP_EXE}.metainfo.xml"
+  "$TEMPLATE_DIR/app.metainfo.xml.template" >"$APPDIR/usr/share/metainfo/${APP_ID}.appdata.xml"
 
 # --- AppRun ---
 
