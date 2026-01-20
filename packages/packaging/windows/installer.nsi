@@ -63,19 +63,13 @@ Function OptionsPageCreate
         Abort
     ${EndIf}
 
-    ; Title
-    ${NSD_CreateLabel} 0 0 100% 18u "Installation Options"
-    Pop $0
-    SetCtlColors $0 "" "FFFFFF"
-
-
     ; Desktop shortcut
-    ${NSD_CreateCheckBox} 0 25u 100% 18u "Create shortcut on Desktop"
+    ${NSD_CreateCheckBox} 0 0 100% 30u "Create shortcut on Desktop"
     Pop $CheckboxShortcut
     ${NSD_SetState} $CheckboxShortcut ${BST_CHECKED}
 
     ; Start menu shortcut
-    ${NSD_CreateCheckBox} 0 50u 100% 18u "Create Start Menu shortcut"
+    ${NSD_CreateCheckBox} 0 35u 100% 30u "Create Start Menu shortcut"
     Pop $CheckboxSMShortcut
     ${NSD_SetState} $CheckboxSMShortcut ${BST_CHECKED}
 
