@@ -15,8 +15,10 @@ OutFile ".\build\${APP_PNAME}-${APP_VERSION}-setup.exe"
 
 Name "${APP_NAME}"
 InstallDir "$PROGRAMFILES64\${APP_PNAME}"
+
 RequestExecutionLevel admin
 ShowInstDetails nevershow
+ShowUninstDetails nevershow
 
 VIProductVersion "${APP_VERSION}.${APP_BUILD}"
 VIAddVersionKey "ProductName" "${APP_NAME}"
@@ -30,25 +32,9 @@ VIAddVersionKey "LegalCopyright" "© 2026 ${COMPANY}"
 !finalize        'sign-install.bat "%1"' = 0
 !uninstfinalize  'sign-install.bat "%1"' = 0
 
-; VC_redist
-!define VCREDIST "vc_redist.x64.exe"
-
-Function EnsureVCRedist
-    ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
-    ${If} $0 == 1
-        goto done
-    ${EndIf}
-
-    DetailPrint "Installing Microsoft Visual C++ Runtime..."
-    ExecWait '"$EXEDIR\redist\${VCREDIST}" /install /quiet /norestart'
-    Sleep 1000
-
-done:
-FunctionEnd
-
 ; MUI Pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "..\common\LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom OptionsPageCreate OptionsPageLeave
 !insertmacro MUI_PAGE_INSTFILES
@@ -77,13 +63,19 @@ Function OptionsPageCreate
         Abort
     ${EndIf}
 
+    ; Title
+    ${NSD_CreateLabel} 0 0 100% 18u "Installation Options"
+    Pop $0
+    SetCtlColors $0 "" "FFFFFF"
+
+
     ; Desktop shortcut
-    ${NSD_CreateCheckBox} 0 0 100% 30u "Create shortcut on Desktop"
+    ${NSD_CreateCheckBox} 0 25u 100% 18u "Create shortcut on Desktop"
     Pop $CheckboxShortcut
     ${NSD_SetState} $CheckboxShortcut ${BST_CHECKED}
 
     ; Start menu shortcut
-    ${NSD_CreateCheckBox} 0 35u 100% 30u "Create start menu shortcut"
+    ${NSD_CreateCheckBox} 0 50u 100% 18u "Create Start Menu shortcut"
     Pop $CheckboxSMShortcut
     ${NSD_SetState} $CheckboxSMShortcut ${BST_CHECKED}
 
@@ -98,19 +90,11 @@ Function OptionsPageLeave
     StrCpy $CheckboxSMShortcut $0
 FunctionEnd
 
-Section "-Prerequisites"
-    SetOutPath "$EXEDIR\redist"
-    File "redist\${VCREDIST}"
-    Call EnsureVCRedist
-
-    Delete "$EXEDIR\redist\${VCREDIST}"
-    RMDir "$EXEDIR\redist"
-SectionEnd
-
 Section "-Main Program" SEC01
     SetOutPath "$INSTDIR"
-    DetailPrint "Copying files..."
+    DetailPrint "Installing ${APP_NAME}..."
     File /r "..\..\app\build\windows\x64\runner\Release\*"
+    File /r "redist\*"
 
     SetRegView 64
 
