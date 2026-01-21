@@ -88,7 +88,6 @@ Section "-Main Program" SEC01
     SetOutPath "$INSTDIR"
     DetailPrint "Installing ${APP_NAME}..."
     File /r "..\..\app\build\windows\x64\runner\Release\*"
-    File /r "redist\*"
 
     SetRegView 64
 

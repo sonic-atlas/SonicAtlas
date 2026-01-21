@@ -63,3 +63,44 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string) {
   }
   return utf8_string;
 }
+
+std::wstring GetExeDir() {
+  wchar_t path[MAX_PATH];
+  GetModuleFileNameW(nullptr, path, MAX_PATH);
+  
+  std::wstring exePath(path);
+  size_t pos = exePath.find_last_of(L"\\/");
+  if (pos == std::wstring::npos) {
+    return L".";
+  }
+
+  return exePath.substr(0, pos);
+}
+
+void SetupCrtDir() {
+  SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+
+  std::wstring crtDir = GetExeDir() + L"\\crt";
+
+  DWORD attrs = GetFileAttributesW(crtDir.c_str());
+  if (attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+    MessageBoxW(
+      nullptr,
+      L"Required runtime files are missing.",
+      L"Please reinstall the application.",
+      MB_ICONERROR | MB_OK
+    );
+    ExitProcess(1);
+  }
+
+  DLL_DIRECTORY_COOKIE cookie = AddDllDirectory(crtDir.c_str());
+  if (!cookie) {
+    MessageBoxW(
+      nullptr,
+      L"Failed to initialise runtime libraries.",
+      L"Please reinstall the application",
+      MB_ICONERROR | MB_OK
+    );
+    ExitProcess(1);
+  }
+}

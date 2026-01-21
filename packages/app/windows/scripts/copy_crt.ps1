@@ -10,7 +10,7 @@ if (-not (Test-Path $crtPath)) {
     throw "CRT path not found: $crtPath"
 }
 
-$dest = "redist"
+$dest = Resolve-Path (Join-Path $PSScriptRoot "..\crt")
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 $dest | Out-Null
 
