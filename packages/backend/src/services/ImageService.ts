@@ -2,7 +2,7 @@
 import sharp from 'sharp';
 import path from 'path';
 import fsp from 'node:fs/promises';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger.ts';
 
 export class ImageService {
     static async processAndSaveCover(buffer: Buffer, outputDir: string, baseFilename: string): Promise<void> {

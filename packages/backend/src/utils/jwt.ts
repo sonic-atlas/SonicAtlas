@@ -1,5 +1,5 @@
 import jwt, { type SignOptions, type JwtPayload } from 'jsonwebtoken';
-import type { JwtUser } from '../../types/index.js';
+import type { JwtUser } from '../../types/index.ts';
 
 const SECRET = process.env.JWT_SECRET || 'super-secret-key';
 export const JWT_EXPIRY = (process.env.JWT_EXPIRY as SignOptions['expiresIn']) || '7d';

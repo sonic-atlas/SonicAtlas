@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { db } from '../../db/db.js';
-import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
-import { playlistItems, playlists } from '../../db/schema.js';
+import { db } from '../../db/db.ts';
+import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
+import { playlistItems, playlists } from '../../db/schema.ts';
 import { eq, and, count } from 'drizzle-orm';
-import { logger } from '../utils/logger.js';
-import { isUUID } from '../utils/isUUID.js';
+import { logger } from '../utils/logger.ts';
+import { isUUID } from '../utils/isUUID.ts';
 
 const router = Router();
 router.use(authMiddleware);

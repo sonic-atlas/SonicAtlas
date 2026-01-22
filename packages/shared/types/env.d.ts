@@ -4,7 +4,6 @@ declare namespace NodeJS {
         BACKEND_PORT?: `${number}`;
         JWT_SECRET?: string;
         JWT_EXPIRY?: string;
-        BCRYPT_SALT_ROUNDS?: `${number};`
 
         ADMIN_USERNAME?: string;
         ADMIN_PASSWORD?: string;

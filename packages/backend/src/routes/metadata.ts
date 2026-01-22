@@ -1,17 +1,13 @@
 import { Router } from 'express';
-import { db } from '../../db/db.js';
-import { authMiddleware, uploaderPerms } from '../middleware/auth.js';
+import { db } from '../../db/db.ts';
+import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
 import { eq, and } from 'drizzle-orm';
-import { trackMetadata, releaseTracks } from '../../db/schema.js';
+import { trackMetadata, releaseTracks } from '../../db/schema.ts';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { $rootDir } from '@sonic-atlas/shared';
-import { logger } from '../utils/logger.js';
-import { isUUID } from '../utils/isUUID.js';
-import dotenv from 'dotenv';
-import { $envPath } from '@sonic-atlas/shared';
-
-dotenv.config({ quiet: true, path: $envPath });
+import { logger } from '../utils/logger.ts';
+import { isUUID } from '../utils/isUUID.ts';
 
 const router = Router();
 

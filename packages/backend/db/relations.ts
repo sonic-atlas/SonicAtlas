@@ -1,5 +1,5 @@
 import { defineRelations } from 'drizzle-orm';
-import * as s from './schema.js';
+import * as s from './schema.ts';
 
 export const relations = defineRelations(s, (r) => ({
     tracks: {

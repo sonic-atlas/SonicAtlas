@@ -7,7 +7,6 @@ import { join, resolve } from 'node:path';
 const __dirname = import.meta.dirname;
 
 export const $rootDir = join(import.meta.dirname, '..', '..');
-export const $envPath = resolve($rootDir, '.env');
 
 // Logger. I can't be bothered to put in another file right now
 const colors = {

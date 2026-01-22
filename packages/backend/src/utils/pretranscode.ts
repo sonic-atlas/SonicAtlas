@@ -2,11 +2,11 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { $rootDir, type Quality } from '@sonic-atlas/shared';
-import { logger } from './logger.js';
+import { logger } from './logger.ts';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { tracks } from '../../db/schema.js';
-import { getSourceQuality, qualityHierarchy } from '../routes/stream.js';
-import { socket } from '../index.js';
+import type { tracks } from '../../db/schema.ts';
+import { getSourceQuality, qualityHierarchy } from '../routes/stream.ts';
+import { socket } from '../index.ts';
 
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);

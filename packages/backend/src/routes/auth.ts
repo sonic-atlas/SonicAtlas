@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { JWT_EXPIRY, signJwt } from '../utils/jwt.js';
-import { logger } from '../utils/logger.js';
+import { JWT_EXPIRY, signJwt } from '../utils/jwt.ts';
+import { logger } from '../utils/logger.ts';
 
 const router = Router();
 

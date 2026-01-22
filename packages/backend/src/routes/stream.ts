@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth.js';
-import { db } from '../../db/db.js';
+import { authMiddleware } from '../middleware/auth.ts';
+import { db } from '../../db/db.ts';
 import { type InferSelectModel } from 'drizzle-orm';
-import { tracks } from '../../db/schema.js';
+import { tracks } from '../../db/schema.ts';
 import path from 'node:path';
-import { isUUID } from '../utils/isUUID.js';
+import { isUUID } from '../utils/isUUID.ts';
 import { $rootDir } from '@sonic-atlas/shared';
 import fs from 'node:fs';
 

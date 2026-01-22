@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { db } from '../../db/db.js';
-import { trackMetadata, releases, releaseTracks, tracks } from '../../db/schema.js';
+import { db } from '../../db/db.ts';
+import { trackMetadata, releases, releaseTracks, tracks } from '../../db/schema.ts';
 import { sql, eq } from 'drizzle-orm';
-import { authMiddleware } from '../middleware/auth.js';
-import { logger } from '../utils/logger.js';
+import { authMiddleware } from '../middleware/auth.ts';
+import { logger } from '../utils/logger.ts';
 
 const router = Router();
 

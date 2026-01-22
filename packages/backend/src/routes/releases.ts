@@ -1,22 +1,19 @@
 import { Router, type Request } from 'express';
-import { db } from '$db/db.js';
-import { releases, releaseTracks, tracks, trackMetadata } from '$db/schema.js';
+import { db } from '../../db/db.ts';
+import { releases, releaseTracks, tracks, trackMetadata } from '../../db/schema.ts';
 import { eq, desc, sql, and, ne } from 'drizzle-orm';
-import { logger } from '../utils/logger.js';
-import { isUUID } from '../utils/isUUID.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { logger } from '../utils/logger.ts';
+import { isUUID } from '../utils/isUUID.ts';
+import { authMiddleware } from '../middleware/auth.ts';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'node:fs/promises';
 import { parseFile } from 'music-metadata';
-import { enqueueTranscodeJob } from '../services/transcodeQueue.js';
-import { stripCoverArt } from '../utils/stripCoverArt.js';
-import { $envPath, $rootDir } from '@sonic-atlas/shared';
-import { ImageService } from '../services/ImageService.js';
-import dotenv from 'dotenv';
-
-dotenv.config({ quiet: true, path: $envPath });
+import { enqueueTranscodeJob } from '../services/transcodeQueue.ts';
+import { stripCoverArt } from '../utils/stripCoverArt.ts';
+import { $rootDir } from '@sonic-atlas/shared';
+import { ImageService } from '../services/ImageService.ts';
 
 const router = Router();
 
