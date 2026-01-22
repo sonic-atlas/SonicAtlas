@@ -16,6 +16,7 @@ const REC_R = `Type stripping is still experimental in this version.\nUpgrading 
 
 // This check is for package managers that don't read engines.node
 // e.g. Yarn v2+ (v1 warns, not errors), Bun, Deno
+// For package managers that do read engines.node (npm, pnpm), this log should never appear, rather the package manager error.
 if (cmp(v, MIN) < 0) {
     console.error(`
 Unsupported Node.js version
