@@ -2,8 +2,8 @@
   // aka.ms/tsconfig
   "compilerOptions": {
     "outDir": "./dist",
-    // "allowImportingTsExtensions": true,
-    // "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
 
     // Environment
     "module": "nodenext",
@@ -42,10 +42,7 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-    "paths": {
-        "$db/*": ["./db/*"]
-    }
+    "skipLibCheck": true
   },
   "include": [
     "db",

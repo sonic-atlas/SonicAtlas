@@ -1,6 +1,6 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'node:http';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger.ts';
 
 export class SocketServer {
     io!: SocketIOServer;

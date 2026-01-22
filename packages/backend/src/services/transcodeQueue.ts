@@ -1,8 +1,8 @@
-import { generateHLS } from '../utils/pretranscode.js';
-import { socket } from '../index.js';
-import { logger } from '../utils/logger.js';
+import { generateHLS } from '../utils/pretranscode.ts';
+import { socket } from '../index.ts';
+import { logger } from '../utils/logger.ts';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { tracks } from '$db/schema.js';
+import type { tracks } from '$db/schema.ts';
 import fs from 'node:fs/promises';
 
 type TranscodeJob = {

@@ -4,11 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node check-node-version.js && node --env-file=../../.env --watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/src/index.js",
+    "start": "node --env-file=../../.env dist/src/index.js",
     "test": "vitest",
-    "lint": "eslint src",
     "check": "tsc --noEmit",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -16,12 +15,9 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "bull": "^4.16.5",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "drizzle-orm": "^1.0.0-beta.2-86f844e",
+    "drizzle-orm": "^1.0.0-beta.11-05230d9",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -29,12 +25,10 @@
     "multer": "^2.0.2",
     "music-metadata": "^11.9.0",
     "postgres": "^3.4.7",
-    "redis": "^5.9.0",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
@@ -43,12 +37,14 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.9.2",
     "@types/sharp": "^0.31.1",
-    "drizzle-kit": "^1.0.0-beta.2-86f844e",
-    "tsx": "^4.20.6",
+    "drizzle-kit": "^1.0.0-beta.11-05230d9",
     "typescript": "^5.9.3",
     "vitest": "^4.0.5"
   },
   "engines": {
-    "node": ">=21.2.0"
+    "node": ">=22.18.0"
+  },
+  "imports": {
+    "#db/*": "./db/*"
   }
 }

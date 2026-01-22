@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { pgClient, /* redisClient, redisConnected */ } from '../../db/db.js';
-import { logger } from './logger.js';
+import { pgClient, /* redisClient, redisConnected */ } from '#db/db.ts';
+import { logger } from './logger.ts';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {
     const [pgStatus, /* redisStatus, transcoderStatus */] = await Promise.all([checkPg(), /* checkRedis(), checkTranscoder() */]);

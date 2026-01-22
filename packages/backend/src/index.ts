@@ -1,18 +1,15 @@
 import express from 'express';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
-import { getLocalIp } from './utils/ip.js';
+import { getLocalIp } from './utils/ip.ts';
 import { pathToFileURL } from 'node:url';
-import { healthRoute } from './utils/health.js';
+import { healthRoute } from './utils/health.ts';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { $envPath } from '@sonic-atlas/shared';
-import { logger } from './utils/logger.js';
+import { logger } from './utils/logger.ts';
 import compression from 'compression';
 import http from 'node:http';
-import { SocketServer } from './socket/ws.js';
-import dotenv from 'dotenv';
-dotenv.config({ quiet: true, path: $envPath });
+import { SocketServer } from './socket/ws.ts';
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();

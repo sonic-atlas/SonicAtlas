@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { logger } from './logger.js';
+import { logger } from './logger.ts';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 

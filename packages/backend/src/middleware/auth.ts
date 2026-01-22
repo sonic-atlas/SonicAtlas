@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyJwt } from '../utils/jwt.js';
+import { verifyJwt } from '../utils/jwt.ts';
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers.authorization;
