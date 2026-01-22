@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../../db/db.ts';
-import { trackMetadata, releases, releaseTracks, tracks } from '../../db/schema.ts';
+import { db } from '#db/db.ts';
+import { trackMetadata, releases, releaseTracks, tracks } from '#db/schema.ts';
 import { sql, eq } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.ts';
 import { logger } from '../utils/logger.ts';

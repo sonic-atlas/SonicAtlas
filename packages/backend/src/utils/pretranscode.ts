@@ -4,7 +4,7 @@ import path from 'node:path';
 import { $rootDir, type Quality } from '@sonic-atlas/shared';
 import { logger } from './logger.ts';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { tracks } from '../../db/schema.ts';
+import type { tracks } from '#db/schema.ts';
 import { getSourceQuality, qualityHierarchy } from '../routes/stream.ts';
 import { socket } from '../index.ts';
 

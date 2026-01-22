@@ -42,10 +42,7 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-    "paths": {
-        "$db/*": ["./db/*"]
-    }
+    "skipLibCheck": true
   },
   "include": [
     "db",
