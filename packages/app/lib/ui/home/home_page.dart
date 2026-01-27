@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '/core/models/track.dart';
 import '../../core/services/network/api.dart';
-import '/ui/common/track_list_item.dart';
 import '/ui/home/components/album_grid.dart';
+import '/ui/home/components/grouped_track_list.dart';
 
 import '/ui/library/search_page.dart';
 import '/ui/common/layout.dart';
@@ -82,13 +82,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   RefreshIndicator(
                     onRefresh: _refresh,
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: tracks.length,
-                      itemBuilder: (context, index) {
-                        return TrackListItem(track: tracks[index]);
-                      },
-                    ),
+                    child: GroupedTrackList(tracks: tracks),
                   ),
                   RefreshIndicator(
                     onRefresh: _refresh,

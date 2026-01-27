@@ -14,6 +14,11 @@ class Track {
   final String? transcodeStatus;
   final String? error;
 
+  final String? codec;
+  final int? bitrate;
+  final int? sampleRate;
+  final int? bitDepth;
+
   Track({
     required this.id,
     required this.title,
@@ -29,6 +34,10 @@ class Track {
     this.trackNumber,
     this.transcodeStatus,
     this.error,
+    this.codec,
+    this.bitrate,
+    this.sampleRate,
+    this.bitDepth,
   });
 
   factory Track.fromJson(Map<String, dynamic> json) {
@@ -52,6 +61,10 @@ class Track {
       trackNumber: json['trackNumber'],
       transcodeStatus: json['transcodeStatus'],
       error: json['error'],
+      codec: metadata['codec'],
+      bitrate: metadata['bitrate'],
+      sampleRate: metadata['sampleRate'],
+      bitDepth: metadata['bitDepth'],
     );
   }
   @override

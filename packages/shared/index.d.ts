@@ -36,6 +36,8 @@ declare module '@sonic-atlas/shared' {
         releaseTitle: string;
         releaseArtist: string;
         releaseYear: number;
+        discNumber?: number;
+        trackNumber?: number;
     }
 
     export interface TrackMetadata {

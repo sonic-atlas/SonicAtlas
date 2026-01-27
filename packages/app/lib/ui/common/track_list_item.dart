@@ -13,6 +13,7 @@ class TrackListItem extends StatelessWidget {
   final VoidCallback? onTapOverride;
   final int? trackNumber;
   final bool showCover;
+  final bool showAlbumInfo;
 
   const TrackListItem({
     super.key,
@@ -20,6 +21,7 @@ class TrackListItem extends StatelessWidget {
     this.onTapOverride,
     this.trackNumber,
     this.showCover = true,
+    this.showAlbumInfo = true,
   });
 
   @override
@@ -54,6 +56,14 @@ class TrackListItem extends StatelessWidget {
         ),
       ],
     );
+
+    String subtitleText;
+    if (showAlbumInfo) {
+      subtitleText =
+          '${track.artist} • ${track.releaseTitle ?? track.album}${track.releaseYear != null ? ' • ${track.releaseYear}' : ''}';
+    } else {
+      subtitleText = track.artist;
+    }
 
     return Listener(
       onPointerDown: handlePointerDown,
@@ -96,7 +106,7 @@ class TrackListItem extends StatelessWidget {
         ),
         title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          '${track.artist} • ${track.releaseTitle ?? track.album}${track.releaseYear != null ? ' • ${track.releaseYear}' : ''}',
+          subtitleText,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -141,7 +151,8 @@ class TrackListItem extends StatelessWidget {
                 );
               },
             ),
-          const Divider(),
+          if (track.releaseId != null) const Divider(),
+
           ListTile(
             leading: const Icon(Icons.playlist_play),
             title: const Text('Play next'),

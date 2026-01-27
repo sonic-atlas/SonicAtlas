@@ -41,7 +41,8 @@ router.get('/', async (req, res) => {
             const coverArtPath = track.coverArtPath ?? (hasReleaseCover ? `/api/metadata/${track.id}/cover` : null);
 
             const { releaseTracks, ...rest } = track;
-            const primaryRelease = track.releaseTracks[0]?.release;
+            const releaseTrack = track.releaseTracks[0];
+            const primaryRelease = releaseTrack?.release;
 
             return {
                 ...rest,
@@ -50,7 +51,9 @@ router.get('/', async (req, res) => {
                 releaseTitle: primaryRelease?.title,
                 releaseArtist: primaryRelease?.primaryArtist,
                 releaseYear: primaryRelease?.year,
-                album: primaryRelease?.title
+                album: primaryRelease?.title,
+                discNumber: releaseTrack?.discNumber,
+                trackNumber: releaseTrack?.trackNumber
             };
         });
 
@@ -94,7 +97,8 @@ router.get('/:trackId', async (req, res) => {
         const coverArtPath = track.coverArtPath ?? (hasReleaseCover ? `/api/metadata/${track.id}/cover` : null);
 
         const { releaseTracks, ...rest } = track;
-        const primaryRelease = track.releaseTracks[0]?.release;
+        const releaseTrack = track.releaseTracks[0];
+        const primaryRelease = releaseTrack?.release;
 
         return res.json({
             ...rest,
@@ -103,7 +107,9 @@ router.get('/:trackId', async (req, res) => {
             releaseTitle: primaryRelease?.title,
             releaseArtist: primaryRelease?.primaryArtist,
             releaseYear: primaryRelease?.year,
-            album: primaryRelease?.title
+            album: primaryRelease?.title,
+            discNumber: releaseTrack?.discNumber,
+            trackNumber: releaseTrack?.trackNumber
         });
     } catch (err) {
         logger.error(`(GET /api/track) Unknown Error Occurred:\n${err}`);
