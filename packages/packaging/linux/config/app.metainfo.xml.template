@@ -11,8 +11,7 @@
   <description>
     <p>SonicAtlas is a self-hosted music streaming application that lets you stream your personal music library from anywhere.</p>
   </description>
-  <launchable type="desktop-id">{{APP_EXE}}.desktop</launchable>
-  <icon type="stock">{{APP_ID}}</icon>
+  <launchable type="desktop-id">{{APP_ID}}.desktop</launchable>
   <url type="homepage">https://github.com/sonic-atlas/SonicAtlas</url>
   <releases>
     <release version="{{VERSION}}" date="{{DATE}}"/>

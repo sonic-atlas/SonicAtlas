@@ -56,11 +56,11 @@ cp "$APPDIR/usr/share/applications/$DESKTOP_FILE" "$APPDIR/"
 
 sed -e "s/{{APP_ID}}/$APP_ID/g" \
   -e "s/{{APP_DISPLAY}}/$APP_DISPLAY/g" \
-  -e "s/{{APP_EXE}}.desktop/$DESKTOP_FILE/g" \
+  -e "s/{{APP_EXE}}/$APP_EXE/g" \
   -e "s/{{VERSION}}/$VERSION/g" \
   -e "s/{{DATE}}/$(date +%Y-%m-%d)/g" \
   "$TEMPLATE_DIR/app.metainfo.xml.template" >"$APPDIR/usr/share/metainfo/${APP_ID}.appdata.xml"
-
+  
 # --- AppRun ---
 
 cat >"$APPDIR/AppRun" <<'APPRUN_EOF'
@@ -90,7 +90,7 @@ fi
 if command -v appimagetool &>/dev/null; then
   ARCH=x86_64 appimagetool "$APPDIR" "$RELEASE_DIR/${APP_NAME}-${VERSION}-x64.AppImage"
 else
-  ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$RELEASE_DIR/${APP_NAME}-${VERSION}-x64.AppImage"
+  ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$RELEASE_DIR/${APP_NAME}-${VERSION}.AppImage"
 fi
 
 log_success "AppImage created: $RELEASE_DIR/${APP_NAME}-${VERSION}-x64.AppImage"
