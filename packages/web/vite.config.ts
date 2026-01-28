@@ -4,6 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
     plugins: [sveltekit(), visualizer({ filename: 'stats.html' })],
+    envDir: '../../',
     build: {
         chunkSizeWarningLimit: 500,
         rollupOptions: {
