@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.ts';
-import { db } from '#db/db.ts';
+import { db } from '#db/db';
 import { type InferSelectModel } from 'drizzle-orm';
-import { tracks } from '#db/schema.ts';
+import { tracks } from '#db/schema';
 import path from 'node:path';
 import { isUUID } from '../utils/isUUID.ts';
 import { $rootDir } from '@sonic-atlas/shared';

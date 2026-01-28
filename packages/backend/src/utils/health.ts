@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { pgClient, /* redisClient, redisConnected */ } from '#db/db.ts';
+import { pgClient, /* redisClient, redisConnected */ } from '#db/db';
 import { logger } from './logger.ts';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {

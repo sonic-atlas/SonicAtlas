@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { db } from '#db/db.ts';
+import { db } from '#db/db';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
-import { playlistItems, playlists } from '#db/schema.ts';
+import { playlistItems, playlists } from '#db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { logger } from '../utils/logger.ts';
 import { isUUID } from '../utils/isUUID.ts';

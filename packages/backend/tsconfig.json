@@ -1,6 +1,7 @@
 {
   // aka.ms/tsconfig
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "./dist",
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
@@ -42,7 +43,10 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+        "#db/*": ["./db/*.ts"]
+    }
   },
   "include": [
     "db",

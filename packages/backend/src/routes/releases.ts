@@ -1,6 +1,6 @@
 import { Router, type Request } from 'express';
-import { db } from '#db/db.ts';
-import { releases, releaseTracks, tracks, trackMetadata } from '#db/schema.ts';
+import { db } from '#db/db';
+import { releases, releaseTracks, tracks, trackMetadata } from '#db/schema';
 import { eq, desc, sql, and, ne } from 'drizzle-orm';
 import { logger } from '../utils/logger.ts';
 import { isUUID } from '../utils/isUUID.ts';

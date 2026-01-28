@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { db } from '#db/db.ts';
+import { db } from '#db/db';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
 import { eq, and } from 'drizzle-orm';
-import { trackMetadata, releaseTracks } from '#db/schema.ts';
+import { trackMetadata, releaseTracks } from '#db/schema';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { $rootDir } from '@sonic-atlas/shared';

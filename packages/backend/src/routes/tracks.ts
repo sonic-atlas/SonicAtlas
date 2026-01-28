@@ -1,11 +1,11 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
-import { db } from '#db/db.ts';
+import { db } from '#db/db';
 import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import fs from 'node:fs';
-import { playlistItems, trackMetadata, tracks } from '#db/schema.ts';
+import { playlistItems, trackMetadata, tracks } from '#db/schema';
 import { parseFile } from 'music-metadata';
 import { eq, type InferSelectModel, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger.ts';
