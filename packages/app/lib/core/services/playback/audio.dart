@@ -24,6 +24,9 @@ class AudioService with ChangeNotifier {
 
   models.Track? get currentTrack => _currentTrack;
 
+  final _trackController = StreamController<models.Track?>.broadcast();
+  Stream<models.Track?> get trackStream => _trackController.stream;
+
   List<models.Track> _queue = [];
 
   List<models.Track> get queue => _queue;
@@ -43,6 +46,7 @@ class AudioService with ChangeNotifier {
 
   Stream<Duration> get positionStream =>
       _player.stream.position.map((p) => _optimisticPosition ?? p);
+  Duration get currentPosition => _player.state.position;
 
   Stream<bool> get bufferingStream => _player.stream.buffering;
 
@@ -70,11 +74,20 @@ class AudioService with ChangeNotifier {
   static final _playController = StreamController<AudioService>.broadcast();
   static final _pauseController = StreamController<AudioService>.broadcast();
   static final _seekController = StreamController<Duration>.broadcast();
+  static final _restartController = StreamController<models.Track>.broadcast();
+  static final _trackStartController = StreamController<models.Track>.broadcast();
 
   static Stream<models.Track> get onPlayTrack => _playTrackController.stream;
   static Stream<AudioService> get onPlay => _playController.stream;
   static Stream<AudioService> get onPause => _pauseController.stream;
   static Stream<Duration> get onSeek => _seekController.stream;
+  static Stream<models.Track> get onRestart => _restartController.stream;
+  static Stream<models.Track> get onTrackStart => _trackStartController.stream;
+
+  void setCurrentTrack(models.Track? track) {
+    _currentTrack = track;
+    _trackController.add(track);
+  }
 
   AudioService._internal(
     this._apiService,
@@ -286,7 +299,7 @@ class AudioService with ChangeNotifier {
         print('Quality: ${selectedQuality.value}');
       }
 
-      _currentTrack = track;
+      setCurrentTrack(track);
 
       if (queue != null) {
         _queue = queue;
@@ -320,6 +333,8 @@ class AudioService with ChangeNotifier {
         media_kit.Media(url, httpHeaders: {'Authorization': 'Bearer $token'}),
         play: false,
       );
+
+      _trackStartController.add(track);
 
       if (isRecovery &&
           _optimisticPosition != null &&
@@ -404,7 +419,7 @@ class AudioService with ChangeNotifier {
     _optimisticDuration = null;
     _queue.clear();
     _currentIndex = -1;
-    _currentTrack = null;
+    setCurrentTrack(null);
     _player.stop();
     notifyListeners();
   }
@@ -488,6 +503,9 @@ class AudioService with ChangeNotifier {
         preserveIndex: true,
         isRecovery: isRecovery,
       );
+
+      _restartController.add(_currentTrack!);
+      notifyListeners();
     }
   }
 
@@ -534,6 +552,7 @@ class AudioService with ChangeNotifier {
   void dispose() {
     _settingsService.removeListener(_onSettingsChanged);
     _player.dispose();
+    _trackController.close();
     super.dispose();
   }
 }

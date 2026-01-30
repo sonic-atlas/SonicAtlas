@@ -67,6 +67,15 @@ class Track {
       bitDepth: metadata['bitDepth'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'artist': artist,
+      'duration': duration
+    };
+  }
+
   @override
   String toString() {
     return 'Track(id: $id, title: $title, artist: $artist, album: $album)';

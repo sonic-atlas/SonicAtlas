@@ -19,6 +19,7 @@ import 'core/services/network/socket.dart';
 import 'core/services/platform/wtaskbar.dart';
 import 'core/services/recorder/recorder_service.dart';
 import 'core/services/recorder/processing_service.dart';
+import 'core/services/platform/win_http.dart';
 
 import 'ui/home/home_page.dart';
 import 'ui/auth/login_page.dart';
@@ -53,6 +54,8 @@ void main(List<String> args) async {
     settingsService,
   );
 
+  late final WinHttp winHttp;
+
   if (Platform.isWindows) {
     await WindowsSingleInstance.ensureSingleInstance(
       args,
@@ -61,6 +64,9 @@ void main(List<String> args) async {
         handleCLA(args, audioService: audioService, apiService: apiService);
       },
     );
+
+    winHttp = WinHttp(audioService, apiService);
+    await winHttp.start();
   }
 
   discordService.setAudioService(audioService);
