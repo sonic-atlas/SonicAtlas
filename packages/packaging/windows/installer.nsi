@@ -48,12 +48,22 @@ Function LaunchApp
     Exec '"$INSTDIR\${APP_EXENAME}.exe"'
 FunctionEnd
 
+Function InstallGameBarWidget
+    DetailPrint "Installing Xbox Game Bar widget..."
+
+    SetOutPath "$TEMP\SonicAtlasGameBar"
+    File /r "..\..\gamebar\AppPackages\gamebar_0.1.4.0_x64_Test\*"
+
+    ExecWait 'powershell -ExecutionPolicy Bypass -File "$TEMP\SonicAtlasGameBar\Add-AppDevPackage.ps1" -Silent'
+FunctionEnd
+
 !insertmacro MUI_LANGUAGE "English"
 
 ; Variables for opts
 Var Dialog
 Var CheckboxShortcut
 Var CheckboxSMShortcut
+var CheckboxGameBar
 
 Function OptionsPageCreate
     nsDialogs::Create /NOUNLOAD 1018
@@ -73,6 +83,11 @@ Function OptionsPageCreate
     Pop $CheckboxSMShortcut
     ${NSD_SetState} $CheckboxSMShortcut ${BST_CHECKED}
 
+    ; Xbox Game Bar Widget option
+    ${NSD_CreateCheckBox} 0 70u 100% 30u "Install Xbox Game Bar Widget (Beta)"
+    Pop $CheckboxGameBar
+    ${NSD_SetState} $CheckboxGameBar ${BST_UNCHECKED}
+
     nsDialogs::Show
 FunctionEnd
 
@@ -82,6 +97,9 @@ Function OptionsPageLeave
 
     ${NSD_GetState} $CheckboxSMShortcut $0
     StrCpy $CheckboxSMShortcut $0
+
+    ${NSD_GetState} $CheckboxGameBar $0
+    StrCpy $CheckboxGameBar $0
 FunctionEnd
 
 Section "-Main Program" SEC01
@@ -120,9 +138,20 @@ Section "-Main Program" SEC01
         CreateDirectory "$SMPROGRAMS\${APP_NAME}"
         CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXENAME}.exe"
     ${EndIf}
+
+    ${If} $CheckboxGameBar == ${BST_CHECKED}
+        Call InstallGameBarWidget
+        WriteRegDWORD HKCU "Software\${COMPANY}\${APP_NAME}" "InstalledGameBarWidget" 1
+    ${EndIf}
 SectionEnd
 
 Section "Uninstall"
+    ReadRegDWORD $0 HKCU "Software\${COMPANY}\${APP_PNAME}" "InstalledGameBarWidget"
+    ${If} $0 == 1
+        ExecWait 'powershell -ExecutionPolicy Bypass -Command "Get-AppxPackage dev.sonicatlas.gamebar | Remove-AppxPackage" -Silent'
+        DeleteRegValue HKCU "Software\${COMPANY}\${APP_PNAME}" "InstalledGameBarWidget"
+    ${EndIf}
+
     IfFileExists "$DESKTOP\${APP_EXENAME}.lnk" 0 +2
     Delete "$DESKTOP\${APP_EXENAME}.lnk"
     IfFileExists "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" 0 +2

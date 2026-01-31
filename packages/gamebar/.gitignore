@@ -22,6 +22,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+BundleArtifacts/
+AppPackages/
 
 # .NET Core
 project.lock.json

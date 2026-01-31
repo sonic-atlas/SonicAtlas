@@ -8,9 +8,9 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="d7ff698c-5db1-4620-99fe-010f40b2cb65"
-    Publisher="CN=sonic_atlas"
-    Version="1.0.0.0" />
+    Name="dev.sonicatlas.gamebar"
+    Publisher="CN=Sonic Atlas"
+    Version="0.1.4.0" />
 
   <mp:PhoneIdentity PhoneProductId="d7ff698c-5db1-4620-99fe-010f40b2cb65" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -33,7 +33,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="gamebar.App">
       <uap:VisualElements
-        DisplayName="gamebar"
+        DisplayName="Sonic Atlas"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
         Description="gamebar"
