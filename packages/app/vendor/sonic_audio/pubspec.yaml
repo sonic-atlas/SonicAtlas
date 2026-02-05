@@ -1,0 +1,29 @@
+name: sonic_audio
+description: "Audio backend and tools for sonic atlas"
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.10.7
+  flutter: ^3.38.8
+
+dependencies:
+  ffi: ^2.1.5
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  test: ^1.25.8
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: dev.heggo.sonic_audio
+        pluginClass: SonicAudioPlugin
+        ffiPlugin: true
+      linux:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true

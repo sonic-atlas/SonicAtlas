@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart' as audio_service;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
@@ -35,8 +34,6 @@ LinuxMprisManager? linuxMpris;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  MediaKit.ensureInitialized();
 
   final settingsService = SettingsService();
   await settingsService.init();
@@ -76,8 +73,8 @@ void main(List<String> args) async {
       androidNotificationChannelId: 'dev.heggo.sonic_atlas.channel',
       androidNotificationChannelName: 'Sonic Atlas Playback',
       androidNotificationChannelDescription: 'Media playback',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
+      androidNotificationOngoing: false,
+      androidStopForegroundOnPause: false,
       androidShowNotificationBadge: true,
       notificationColor: Color(0xFF2196f3),
     ),
