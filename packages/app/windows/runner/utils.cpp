@@ -78,6 +78,7 @@ std::wstring GetExeDir() {
 }
 
 void SetupCrtDir() {
+#ifdef SONIC_ATLAS_BUNDLED_CRT
   SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
 
   std::wstring crtDir = GetExeDir() + L"\\crt";
@@ -90,7 +91,7 @@ void SetupCrtDir() {
       L"Please reinstall the application.",
       MB_ICONERROR | MB_OK
     );
-    ExitProcess(1);
+    TerminateProcess(GetCurrentProcess(), 1);
   }
 
   DLL_DIRECTORY_COOKIE cookie = AddDllDirectory(crtDir.c_str());
@@ -101,6 +102,7 @@ void SetupCrtDir() {
       L"Please reinstall the application",
       MB_ICONERROR | MB_OK
     );
-    ExitProcess(1);
+    TerminateProcess(GetCurrentProcess(), 1);
   }
+#endif
 }
