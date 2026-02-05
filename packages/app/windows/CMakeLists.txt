@@ -10,24 +10,36 @@ set(BINARY_NAME "sonic_atlas")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
-# Check if crt/ exists
+# Check for Multi-config
+get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+# Extract CRT DLLs if Release
 set(CRT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/crt")
-if (NOT EXISTS "${CRT_DIR}/vcruntime140.dll")
-  message(STATUS "CRT not found, extracting from MSVC...")
 
-  execute_process(
-    COMMAND powershell -ExecutionPolicy Bypass -File "${CMAKE_CURRENT_SOURCE_DIR}/scripts/copy_crt.ps1"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    RESULT_VARIABLE CRT_RESULT
-  )
+if (IS_MULTICONFIG)
+  set(EXTRACT_CRT Release)
+else()
+  set(EXTRACT_CRT "${CMAKE_BUILD_TYPE}")
+endif()
 
-  if (NOT CRT_RESULT EQUAL 0)
-    message(FATAL_ERROR "Failed to obtain VC runtime DLLs")
+if ("${EXTRACT_CRT}" STREQUAL "Release")
+  if (NOT EXISTS "${CRT_DIR}/vcruntime140.dll")
+    message(STATUS "CRT not found, extracting from MSVC...")
+
+    execute_process(
+      COMMAND powershell -ExecutionPolicy Bypass -File
+              "${CMAKE_CURRENT_SOURCE_DIR}/scripts/copy_crt.ps1"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      RESULT_VARIABLE CRT_RESULT
+    )
+
+    if (NOT CRT_RESULT EQUAL 0)
+      message(FATAL_ERROR "Failed to obtain VC runtime DLLs")
+    endif()
   endif()
 endif()
 
 # Define build configuration option.
-get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)
   set(CMAKE_CONFIGURATION_TYPES "Debug;Profile;Release"
     CACHE STRING "" FORCE)
@@ -126,5 +138,6 @@ install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
 # Copy CRT DLLs
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/crt"
   DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  CONFIGURATIONS Release
   COMPONENT Runtime
 )
