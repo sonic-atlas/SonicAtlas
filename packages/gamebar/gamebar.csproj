@@ -19,7 +19,7 @@
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <PackageCertificateThumbprint>33F7CFF1316015663C1CAE1F5A3F736338193DF5</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>35D958C134F31DF80CC3F218EBFE51A088481676</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
@@ -182,7 +182,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="SonicAtlas_MSIX.pfx" />
+    <None Include="SonicAtlas.pfx" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
