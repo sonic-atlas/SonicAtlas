@@ -238,7 +238,7 @@ int decoder_read_frames(DecoderState* state, ma_pcm_rb* buffer,
           if (new_sec < current_sec - 0.5) {
             LOGI(
                 "SonicAudio Decoder: Backward timestamp detected: %.3f -> %.3f "
-                "(Diff: %.3f). Raw: %ld -> %ld\n",
+                "(Diff: %.3f). Raw: %lld -> %lld\n",
                 current_sec, new_sec, new_sec - current_sec, state->current_pts,
                 frame->pts);
 

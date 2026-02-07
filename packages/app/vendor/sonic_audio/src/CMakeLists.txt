@@ -3,7 +3,6 @@ set(SOURCE_FILES
         internal.h
         common/context.c
         common/discovery.c
-        common/discovery.c
         recorder/capture.c
         player/decoder.h
         player/decoder.c
@@ -43,7 +42,8 @@ endif ()
 message(STATUS "Linking FFmpeg from: ${FFMPEG_ROOT}")
 
 target_include_directories(sonic_audio PRIVATE
-        .
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor
         ${FFMPEG_ROOT}/include
 )
 
@@ -77,3 +77,17 @@ else ()
 endif ()
 
 set_target_properties(sonic_audio PROPERTIES C_VISIBILITY_PRESET hidden)
+
+if (WIN32)
+    file(GLOB FFMPEG_DLLS "${FFMPEG_ROOT}/bin/*.dll")
+
+    foreach (DLL_PATH ${FFMPEG_DLLS})
+        get_filename_component(DLL_NAME ${DLL_PATH} NAME)
+        add_custom_command(
+                TARGET sonic_audio POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${DLL_PATH}"
+                "$<TARGET_FILE_DIR:sonic_audio>/${DLL_NAME}"
+        )
+    endforeach ()
+endif()
