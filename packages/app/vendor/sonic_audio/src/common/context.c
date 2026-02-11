@@ -2,7 +2,7 @@
 
 #include "internal.h"
 #include "sonic_audio.h"
-#include "sonic_thread.h"
+#include "thread/sonic_thread.h"
 
 SonicContext g_sonic = {0};
 

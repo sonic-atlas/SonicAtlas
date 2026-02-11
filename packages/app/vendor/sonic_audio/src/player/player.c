@@ -4,7 +4,7 @@
 #include "decoder.h"
 #include "internal.h"
 #include "sonic_audio.h"
-#include "sonic_thread.h"
+#include "thread/sonic_thread.h"
 
 static void* decoder_thread_func(void* arg);
 static void playback_callback(ma_device* device, void* output,

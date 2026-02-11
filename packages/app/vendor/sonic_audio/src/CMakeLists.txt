@@ -1,14 +1,14 @@
 set(SOURCE_FILES
         sonic_audio.h
         internal.h
-        sonic_thread.h
-        sonic_thread_types.h
         common/context.c
         common/discovery.c
         recorder/capture.c
         player/decoder.h
         player/decoder.c
         player/player.c
+        thread/sonic_thread.h
+        thread/sonic_thread_types.h
         vendor/miniaudio.c
 )
 

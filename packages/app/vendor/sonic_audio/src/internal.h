@@ -67,7 +67,7 @@ static inline int sa_strncpy(char* dest, size_t dest_size, const char* src,
   return 34;
 }
 
-#include "sonic_thread_types.h"
+#include "thread/sonic_thread_types.h"
 
 typedef enum {
   SONIC_STATE_IDLE = 0,
