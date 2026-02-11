@@ -1,8 +1,10 @@
 {
   "dependencies": [
     {
-        "name": "drogon",
-        "features": [ "postgres" ]
+      "name": "drogon",
+      "features": [
+        "postgres"
+      ]
     },
     "jwt-cpp",
     "libpq"
