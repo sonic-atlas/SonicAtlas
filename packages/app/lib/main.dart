@@ -16,8 +16,8 @@ import 'core/services/playback/mpris_service.dart';
 import 'core/services/config/settings.dart';
 import 'core/services/network/socket.dart';
 import 'core/services/platform/wtaskbar.dart';
-import 'core/services/recorder/recorder_service.dart';
-import 'core/services/recorder/processing_service.dart';
+//import 'core/services/recorder/recorder_service.dart';
+//import 'core/services/recorder/processing_service.dart';
 
 import 'ui/home/home_page.dart';
 import 'ui/auth/login_page.dart';
@@ -25,8 +25,8 @@ import 'ui/auth/server_setup_page.dart';
 import 'ui/settings/settings_page.dart';
 import 'ui/splash/splash_page.dart';
 import 'ui/upload/upload_page.dart';
-import 'ui/recorder/recording_page.dart';
-import 'ui/recorder/editor_page.dart';
+//import 'ui/recorder/recording_page.dart';
+//import 'ui/recorder/editor_page.dart';
 import 'ui/theme/app_theme.dart';
 
 late MediaSessionHandler audioHandler;
@@ -93,8 +93,8 @@ void main(List<String> args) async {
         ChangeNotifierProvider.value(value: authService),
         ChangeNotifierProvider.value(value: discordService),
         ChangeNotifierProvider.value(value: audioService),
-        ChangeNotifierProvider(create: (_) => SonicRecorderService()),
-        ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
+        //ChangeNotifierProvider(create: (_) => SonicRecorderService()),
+        //ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
 
         ProxyProvider2<SettingsService, AuthService, ApiService>(
           update: (context, settings, auth, previous) =>
@@ -154,8 +154,8 @@ class SonicAtlasApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/settings': (context) => const SettingsPage(),
         '/upload': (context) => const UploadPage(),
-        '/recorder': (context) => const RecordingPage(),
-        '/editor': (context) => const EditorPage(),
+        //'/recorder': (context) => const RecordingPage(),
+        //'/editor': (context) => const EditorPage(),
       },
     );
   }
