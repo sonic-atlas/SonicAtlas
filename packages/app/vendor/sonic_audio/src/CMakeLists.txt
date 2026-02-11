@@ -1,6 +1,8 @@
 set(SOURCE_FILES
         sonic_audio.h
         internal.h
+        sonic_thread.h
+        sonic_thread_types.h
         common/context.c
         common/discovery.c
         recorder/capture.c
@@ -77,17 +79,3 @@ else ()
 endif ()
 
 set_target_properties(sonic_audio PROPERTIES C_VISIBILITY_PRESET hidden)
-
-if (WIN32)
-    file(GLOB FFMPEG_DLLS "${FFMPEG_ROOT}/bin/*.dll")
-
-    foreach (DLL_PATH ${FFMPEG_DLLS})
-        get_filename_component(DLL_NAME ${DLL_PATH} NAME)
-        add_custom_command(
-                TARGET sonic_audio POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${DLL_PATH}"
-                "$<TARGET_FILE_DIR:sonic_audio>/${DLL_NAME}"
-        )
-    endforeach ()
-endif()

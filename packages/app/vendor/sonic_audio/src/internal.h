@@ -4,7 +4,6 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
-#include <pthread.h>
 
 #include "vendor/miniaudio.h"
 
@@ -17,6 +16,58 @@
 #define LOGI(...) printf(__VA_ARGS__)
 #define LOGE(...) printf(__VA_ARGS__)
 #endif
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+static inline void sa_sleep(int64_t ms) {
+#ifdef _WIN32
+  Sleep((DWORD)ms);
+#else
+  usleep((useconds_t)(ms * 1000));
+#endif
+}
+
+#define SA_TRUNCATE -1
+static inline int sa_strncpy(char* dest, size_t dest_size, const char* src,
+                             size_t count) {
+  // Code courtesy of miniaudio.h line 12561-12-5-90
+  size_t max;
+  size_t i;
+
+  if (dest == 0) {
+    return 22;
+  }
+  if (dest_size == 0) {
+    return 34;
+  }
+  if (src == 0) {
+    dest[0] = '\0';
+    return 22;
+  }
+
+  max = count;
+  if (count == ((size_t)-1) || count >= dest_size) {        /* -1 = _TRUNCATE */
+    max = dest_size - 1;
+  }
+
+  for (i = 0; i < max && src[i] != '\0'; ++i) {
+    dest[i] = src[i];
+  }
+
+  if (src[i] == '\0' || i == count || count == ((size_t)-1)) {
+    dest[i] = '\0';
+    return 0;
+  }
+
+  dest[0] = '\0';
+  return 34;
+}
+
+#include "sonic_thread_types.h"
 
 typedef enum {
   SONIC_STATE_IDLE = 0,
@@ -35,7 +86,7 @@ typedef struct {
   double duration;
   int64_t current_pts;  // pts = presentation timestamp
 
-  pthread_t thread;
+  sa_thread_t thread;
   volatile int should_stop;
   volatile int is_running;
   volatile int is_eof;
@@ -84,7 +135,7 @@ typedef struct {
   int is_initialized;
   PlayerState player;
   RecorderState recorder;
-  pthread_mutex_t lock;
+  sa_thread_mutex_t lock;
 } SonicContext;
 
 extern SonicContext g_sonic;

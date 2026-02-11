@@ -2,6 +2,7 @@
 
 #include "internal.h"
 #include "sonic_audio.h"
+#include "sonic_thread.h"
 
 SonicContext g_sonic = {0};
 
@@ -31,7 +32,7 @@ static int get_backend_id(ma_backend const backend) {
 int sonic_audio_init_context(void) {
   if (g_sonic.is_initialized) return 0;
 
-  if (pthread_mutex_init(&g_sonic.lock, NULL) != 0) {
+  if (sa_thread_mutex_init(&g_sonic.lock) != SA_THREAD_OK) {
     printf("SonicAudio Error: Failed to initialize mutex\n");
     return -1;
   }
@@ -57,7 +58,7 @@ int sonic_audio_init_context(void) {
     result = ma_context_init(NULL, 0, NULL, &g_sonic.ma_ctx);
     if (result != MA_SUCCESS) {
       printf("SonicAudio Error: Failed to initialize context\n");
-      pthread_mutex_destroy(&g_sonic.lock);
+      sa_thread_mutex_destroy(&g_sonic.lock);
       return -1;
     }
   }
@@ -84,7 +85,7 @@ void sonic_audio_dispose_context(void) {
 
   ma_context_uninit(&g_sonic.ma_ctx);
 
-  pthread_mutex_destroy(&g_sonic.lock);
+  sa_thread_mutex_destroy(&g_sonic.lock);
 
   g_sonic.is_initialized = 0;
   printf("SonicAudio: Context disposed\n");

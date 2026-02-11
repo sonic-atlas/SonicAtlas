@@ -6,4 +6,12 @@ set(FFMPEG_ROOT "${ROOT_DIR}/ffmpeg/windows-x64")
 
 add_subdirectory("${ROOT_DIR}/src" sonic_audio_build)
 
-set(PLUGIN_BUNDLED_LIBRARIES $<TARGET_FILE:sonic_audio> PARENT_SCOPE)
+file(GLOB FFMPEG_DLLS
+    "${FFMPEG_ROOT}/bin/*.dll"
+)
+
+set(PLUGIN_BUNDLED_LIBRARIES
+    $<TARGET_FILE:sonic_audio>
+    ${FFMPEG_DLLS}
+    PARENT_SCOPE
+)

@@ -7,15 +7,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-#ifndef _WIN32
-#define _TRUNCATE ((size_t)-1)
-
-static inline int strncpy_s(
-    char *dest, size_t dest_size, const char *src, size_t count) {
-  return ma_strncpy_s(dest, dest_size, src, count);
-}
-#endif
-
 static int get_backend_id(ma_backend const backend) {
   switch (backend) {
     case ma_backend_alsa:
@@ -70,8 +61,8 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_playback_device_info(
   }
 
   if (index >= 0 && index < (int)playbackCount) {
-    strncpy_s(info->name, sizeof(info->name), pPlaybackInfos[index].name,
-              _TRUNCATE);
+    sa_strncpy(info->name, sizeof(info->name), pPlaybackInfos[index].name,
+               SA_TRUNCATE);
 
     memcpy(info->id, &pPlaybackInfos[index].id,
            MIN(sizeof(pPlaybackInfos[index].id), 256));
@@ -114,8 +105,8 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(
   }
 
   if (index >= 0 && index < (int)captureCount) {
-    strncpy_s(info->name, sizeof(info->name), pCaptureInfos[index].name,
-              _TRUNCATE);
+    sa_strncpy(info->name, sizeof(info->name), pCaptureInfos[index].name,
+               SA_TRUNCATE);
 
     memcpy(info->id, &pCaptureInfos[index].id,
            MIN(sizeof(pCaptureInfos[index].id), 256));

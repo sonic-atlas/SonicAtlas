@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "decoder.h"
 #include "internal.h"
 #include "sonic_audio.h"
+#include "sonic_thread.h"
 
 static void* decoder_thread_func(void* arg);
 static void playback_callback(ma_device* device, void* output,
@@ -26,13 +26,13 @@ static void* decoder_thread_func(void* arg) {
       LOGI("SonicAudio Player: Seeking to %.2fs on decoder thread\n", target);
 
       if (decoder_seek(&player->decoder, target) == 0) {
-        pthread_mutex_lock(&g_sonic.lock);
+        sa_thread_mutex_lock(&g_sonic.lock);
         ma_pcm_rb_reset(&player->pcm_buffer);
         player->position = target;
         player->state = SONIC_STATE_BUFFERING;
         g_sonic.player.seek_in_progress = 0;
         player->decoder.is_eof = 0;
-        pthread_mutex_unlock(&g_sonic.lock);
+        sa_thread_mutex_unlock(&g_sonic.lock);
       } else {
         LOGI("SonicAudio Player: Seek failed\n");
         g_sonic.player.seek_in_progress = 0;
@@ -46,7 +46,7 @@ static void* decoder_thread_func(void* arg) {
     ma_uint32 available_write = ma_pcm_rb_available_write(&player->pcm_buffer);
 
     if (player->decoder.is_eof) {
-      usleep(10000);
+      sa_sleep(10);
       continue;
     }
 
@@ -68,20 +68,20 @@ static void* decoder_thread_func(void* arg) {
       } else if (frames_decoded < 0) {
         LOGE("SonicAudio Player: Decoder error: %d. Stopping playback.\n",
              frames_decoded);
-        pthread_mutex_lock(&g_sonic.lock);
+        sa_thread_mutex_lock(&g_sonic.lock);
         player->state = SONIC_STATE_ERROR;
-        pthread_mutex_unlock(&g_sonic.lock);
+        sa_thread_mutex_unlock(&g_sonic.lock);
         player->decoder.should_stop = 1;
       }
 
     } else {
-      usleep(10000);
+      sa_sleep(10);
     }
 
     ma_uint32 available_read = ma_pcm_rb_available_read(&player->pcm_buffer);
 
     if (player->state == SONIC_STATE_BUFFERING &&
-        available_read >= player->start_threshold_frames) {
+        available_read >= (size_t)(player->start_threshold_frames)) {
       LOGI(
           "SonicAudio Player: Buffering complete. Buffered %d frames (%.2fs) "
           ">= Threshold %d frames (%.2fs)\n",
@@ -157,9 +157,9 @@ static void playback_callback(ma_device* device, void* output,
       ma_pcm_rb_commit_read(&player->pcm_buffer, frames_to_read);
 
       if (player->sample_rate > 0 && !player->seek_in_progress) {
-        pthread_mutex_lock(&g_sonic.lock);
+        sa_thread_mutex_lock(&g_sonic.lock);
         player->position += (double)frames_to_read / player->sample_rate;
-        pthread_mutex_unlock(&g_sonic.lock);
+        sa_thread_mutex_unlock(&g_sonic.lock);
       }
 
       total_frames_processed += frames_to_read;
@@ -196,7 +196,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
 
   sonic_audio_player_stop();
 
-  pthread_mutex_lock(&g_sonic.lock);
+  sa_thread_mutex_lock(&g_sonic.lock);
 
   PlayerState* player = &g_sonic.player;
 
@@ -230,7 +230,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   if (ret != 0) {
     LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n",
          url, ret);
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -3;
   }
 
@@ -262,7 +262,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   if (ret != 0) {
     LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n",
          url, ret);
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -3;
   }
 
@@ -290,7 +290,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   if (ret != MA_SUCCESS) {
     LOGE("SonicAudio Player: Failed to initialize ring buffer\n");
     decoder_close(&player->decoder);
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -4;
   }
 
@@ -316,7 +316,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
     LOGE("SonicAudio Player: Failed to initialize playback device\n");
     ma_pcm_rb_uninit(&player->pcm_buffer);
     decoder_close(&player->decoder);
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -5;
   }
 
@@ -342,7 +342,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   player->decoder.is_eof = 0;
 
   player->decoder.should_stop = 0;
-  ret = pthread_create(&player->decoder.thread, NULL, decoder_thread_func,
+  ret = sa_thread_create(&player->decoder.thread, decoder_thread_func,
                        player);
   if (ret != 0) {
     LOGE("SonicAudio Player: Failed to start decoder thread\n");
@@ -350,7 +350,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
     ma_pcm_rb_uninit(&player->pcm_buffer);
     decoder_close(&player->decoder);
     player->is_initialized = 0;
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -6;
   }
 
@@ -358,17 +358,17 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   if (ret != MA_SUCCESS) {
     LOGE("SonicAudio Player: Failed to start playback device\n");
     player->decoder.should_stop = 1;
-    pthread_join(player->decoder.thread, NULL);
+    sa_thread_join(&player->decoder.thread, NULL);
     ma_device_uninit(&player->device);
     ma_pcm_rb_uninit(&player->pcm_buffer);
     decoder_close(&player->decoder);
     player->is_initialized = 0;
-    pthread_mutex_unlock(&g_sonic.lock);
+    sa_thread_mutex_unlock(&g_sonic.lock);
     return -7;
   }
 
   LOGI("SonicAudio Player: Loaded %s\n", url);
-  pthread_mutex_unlock(&g_sonic.lock);
+  sa_thread_mutex_unlock(&g_sonic.lock);
 
   return 0;
 }
@@ -400,7 +400,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void) {
   player->decoder.should_stop = 1;
 
   if (player->decoder.is_running) {
-    pthread_join(player->decoder.thread, NULL);
+    sa_thread_join(&player->decoder.thread, NULL);
     player->decoder.is_running = 0;
   }
 
@@ -411,7 +411,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void) {
   ma_pcm_rb_uninit(&player->pcm_buffer);
   decoder_close(&player->decoder);
 
-  usleep(50000);
+  sa_sleep(50);
 
   player->is_initialized = 0;
   player->state = SONIC_STATE_IDLE;
@@ -423,7 +423,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void) {
 FFI_PLUGIN_EXPORT void sonic_audio_player_seek(double seconds) {
   if (!g_sonic.player.is_initialized) return;
 
-  pthread_mutex_lock(&g_sonic.lock);
+  sa_thread_mutex_lock(&g_sonic.lock);
 
   g_sonic.player.seek_target = seconds;
   g_sonic.player.seek_request = 1;
@@ -432,7 +432,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_seek(double seconds) {
 
   g_sonic.player.position = seconds;
 
-  pthread_mutex_unlock(&g_sonic.lock);
+  sa_thread_mutex_unlock(&g_sonic.lock);
 }
 
 FFI_PLUGIN_EXPORT void sonic_audio_player_set_volume(float volume) {
@@ -518,7 +518,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_set_buffer_duration(float seconds) {
   if (seconds < 0.1f) seconds = 0.1f;
   if (seconds > 30.0f) seconds = 30.0f;
 
-  pthread_mutex_lock(&g_sonic.lock);
+  sa_thread_mutex_lock(&g_sonic.lock);
   g_sonic.player.start_threshold_seconds = seconds;
   if (g_sonic.player.sample_rate > 0) {
     g_sonic.player.start_threshold_frames =
@@ -528,7 +528,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_set_buffer_duration(float seconds) {
     g_sonic.player.start_threshold_frames =
         (int)(g_sonic.player.sample_rate * seconds);
   }
-  pthread_mutex_unlock(&g_sonic.lock);
+  sa_thread_mutex_unlock(&g_sonic.lock);
 }
 
 FFI_PLUGIN_EXPORT void sonic_audio_player_set_native_rate_enabled(int enabled) {
