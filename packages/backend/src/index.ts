@@ -107,9 +107,9 @@ async function loadRoutes(dir: string) {
 
         if (entry.isDirectory()) {
             await loadRoutes(fullPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.startsWith('_')) {
+        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.endsWith('.d.ts') && !entry.name.startsWith('_')) {
             const relativePath = path.relative(apiDir, fullPath);
-            const routePath = relativePath.replace(/\.ts/, '').replace(/\\/g, '/');
+            const routePath = relativePath.replace(/\.(ts|js)$/, '').replace(/\\/g, '/');
 
             try {
                 const importUrl = pathToFileURL(fullPath).href + `?v=${Date.now()}`;
