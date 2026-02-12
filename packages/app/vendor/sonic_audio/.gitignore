@@ -31,6 +31,7 @@ build/
 /coverage/
 
 # Cmake and build related
-/ffmpeg/
+/ffmpeg*/
+/ffmpeg*.tar.xz
 cmake-build-debug/
 .cxx/

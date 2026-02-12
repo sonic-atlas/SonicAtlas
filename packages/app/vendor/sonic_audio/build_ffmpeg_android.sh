@@ -17,11 +17,6 @@ function build_android {
   CC_NAME="${CROSS_PREFIX}${API}-clang"
   CXX_NAME="${CROSS_PREFIX}${API}-clang++"
 
-  if [ "$ARCH" == "armeabi-v7a" ]; then
-    CC_NAME="armv7a-linux-androideabi${API}-clang"
-    CXX_NAME="armv7a-linux-androideabi${API}-clang++"
-  fi
-
   PREFIX="$SCRIPT_DIR/ffmpeg/android/$ARCH"
 
   echo "Building FFmpeg for $ARCH (API $API)..."
