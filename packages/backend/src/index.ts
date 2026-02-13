@@ -16,6 +16,7 @@ const ip = getLocalIp();
 
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
 
 const allowedOrigins = (process.env.CORS_ORIGIN ?? `http://localhost:5173,http://${ip}:5173`)
     .split(',')
