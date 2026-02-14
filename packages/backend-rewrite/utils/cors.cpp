@@ -23,7 +23,7 @@ void setupCors(const std::string &ip) {
         if (!origin.empty() && allowedOrigins.count(origin)) {
             resp->addHeader("Access-Control-Allow-Origin", origin);
             resp->addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PATCH,OPTIONS");
-            resp->addHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,x-server-password");
+            resp->addHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,x-server-password,If-None-Match");
             resp->addHeader("Access-Control-Allow-Credentials", "true");
             resp->setStatusCode(drogon::k204NoContent);
         } else {
