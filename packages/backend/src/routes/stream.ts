@@ -8,7 +8,6 @@ import { isUUID } from '../utils/isUUID.ts';
 import { $rootDir } from '@sonic-atlas/shared';
 import fs from 'node:fs';
 
-
 const router = Router();
 router.use(authMiddleware);
 
@@ -94,7 +93,7 @@ const hlsRoot = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls'
 
 // I don't think there's any need to check if trackId is a UUID here. Don't need to add unnecessary latency.
 // Master playlist, for ABR
-router.get('/:trackId/master.m3u8', (req, res) => {
+router.get('/:trackId/master.m3u8', async (req, res) => {
     const { trackId } = req.params;
     const filepath = path.join(hlsRoot, trackId!, 'master.m3u8');
 
@@ -106,14 +105,20 @@ router.get('/:trackId/master.m3u8', (req, res) => {
         });
     }
 
+    const etag = String((await fs.promises.stat(filepath)).mtimeMs);
+    if (req.headers['if-none-match'] === etag) {
+        return res.status(304);
+    }
+
+    res.setHeader('ETag', etag);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-cache');
 
     fs.createReadStream(filepath).pipe(res);
 });
 
 // Routes for individual qualities
-router.get('/:trackId/:quality/:filename.m3u8', (req, res) => {
+router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
     const { trackId, quality, filename } = req.params;
     const filepath = path.join(hlsRoot, trackId!, quality!, `${filename}.m3u8`);
 
@@ -125,8 +130,14 @@ router.get('/:trackId/:quality/:filename.m3u8', (req, res) => {
         });
     }
 
+    const etag = String((await fs.promises.stat(filepath)).mtimeMs);
+    if (req.headers['if-none-match'] === etag) {
+        return res.status(304);
+    }
+
+    res.setHeader('ETag', etag);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-cache');
 
     fs.createReadStream(filepath).pipe(res);
 });
