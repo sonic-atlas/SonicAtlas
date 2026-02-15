@@ -23,9 +23,7 @@ dependencies:
   flutter:
     sdk: flutter
   ffi: ^2.1.4
-  media_kit: ^1.2.6
-  media_kit_video: ^2.0.1
-  media_kit_libs_video: ^1.0.7
+
   http: ^1.5.0
   path: ^1.9.1
   uuid: ^4.5.2
@@ -36,7 +34,6 @@ dependencies:
   discord_rich_presence:
     path: vendor/discord_rich_presence_fork
   audio_service: ^0.18.18
-  audio_service_win: ^0.0.2
   rxdart: ^0.28.0
   file_picker: ^10.3.8
   socket_io_client: ^3.1.2
@@ -45,8 +42,11 @@ dependencies:
   cached_network_image: ^3.4.1
   sonic_recorder:
     path: vendor/sonic_recorder
+  sonic_audio:
+    path: vendor/sonic_audio
 
   # Windows-specific dependencies
+  audio_service_win: ^0.0.2
   windows_taskbar:
     path: vendor/windows_taskbar_fork
   windows_single_instance: ^1.0.1

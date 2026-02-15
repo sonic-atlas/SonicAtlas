@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/models/quality.dart';
 import '../../core/services/auth/auth.dart';
 import '../../core/services/config/settings.dart';
+import '../../core/services/playback/audio.dart';
 import '/ui/common/layout.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -66,6 +69,96 @@ class SettingsPage extends StatelessWidget {
                   }),
                 ],
               ),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Text(
+                'Playback',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+            if (Platform.isAndroid)
+              SwitchListTile(
+                title: const Text('Exclusive Audio'),
+                // TODO: Add note in docs
+                // This does not work most of the time
+                // You would need a custom usb driver to take control of a usb dac for example
+                subtitle: const Text(
+                  'Tries to take exclusive control of the specific device for playback (requires restart)',
+                ),
+                value: settings.useExclusiveAudio,
+                onChanged: (value) async {
+                  await settings.setUseExclusiveAudio(value);
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Restart Required'),
+                        content: const Text(
+                          'Exclusive audio settings require a full app restart to take effect.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => exit(0),
+                            child: const Text('Restart Now'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+              )
+            else
+              SwitchListTile(
+                title: const Text('Native Sample Rate'),
+                subtitle: const Text(
+                  'Avoid resampling (requires track change)',
+                ),
+                value: settings.useNativeSampleRate,
+                onChanged: (value) => settings.setUseNativeSampleRate(value),
+              ),
+            ListTile(
+              title: const Text('Song Start Buffer Duration'),
+              subtitle: Text(
+                'This changes how much a song buffers when starting (This will probably will removed later on).',
+              ),
+              trailing: DropdownButton<double>(
+                value: settings.audioBufferDuration,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setAudioBufferDuration(value);
+                  }
+                },
+                items: const [
+                  DropdownMenuItem(value: 1.0, child: Text('Low (1s)')),
+                  DropdownMenuItem(value: 2.0, child: Text('Default (2s)')),
+                  DropdownMenuItem(value: 4.0, child: Text('Stable (4s)')),
+                  DropdownMenuItem(value: 7.0, child: Text('Long (7s)')),
+                  DropdownMenuItem(value: 10.0, child: Text('Max (10s)')),
+                ],
+              ),
+            ),
+            ListTile(
+              title: const Text('Default Volume'),
+              subtitle: Text('${(settings.audioVolume * 100).toInt()}%'),
+            ),
+            Slider(
+              value: settings.audioVolume.clamp(0.0, 1.0),
+              min: 0.0,
+              max: 1.0,
+              onChanged: (value) {
+                context.read<AudioService>().setVolume(value);
+              },
             ),
             const Divider(),
             Padding(
