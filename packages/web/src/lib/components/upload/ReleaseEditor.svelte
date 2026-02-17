@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from 'svelte';
     import { apiPatch } from '$lib/api';
     import { socket } from '$lib/stores/socket.svelte';
     import { dndzone, type DndEvent } from 'svelte-dnd-action';
@@ -12,20 +13,16 @@
     import '@material/web/progress/linear-progress.js';
     import '@material/web/progress/circular-progress.js';
 
-    let {
-        release: initialRelease,
-        tracks: initialTracks,
-        isExistingRelease = false
-    } = $props<{
+    let props = $props<{
         release: any;
         tracks: any[];
         isExistingRelease?: boolean;
     }>();
 
-    let release = $state(initialRelease);
+    let release = $state(untrack(() => props.release));
 
-    const processedTracks = initialTracks.map((t: any) => {
-        if (isExistingRelease && !t.transcodeStatus) {
+    const processedTracks = untrack(() => props.tracks).map((t: any) => {
+        if (untrack(() => props.isExistingRelease) && !t.transcodeStatus) {
             return { ...t, transcodeStatus: 'done' };
         }
         return t;

@@ -16,30 +16,29 @@
   },
   "dependencies": {
     "compression": "^1.8.1",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "drizzle-orm": "^1.0.0-beta.11-05230d9",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mime-types": "^3.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mime-types": "^3.0.2",
     "multer": "^2.0.2",
-    "music-metadata": "^11.9.0",
-    "postgres": "^3.4.7",
+    "music-metadata": "^11.12.1",
+    "postgres": "^3.4.8",
     "sharp": "^0.34.5",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
+    "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.9.2",
-    "@types/sharp": "^0.31.1",
+    "@types/node": "^25.2.3",
     "drizzle-kit": "^1.0.0-beta.11-05230d9",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.5"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=22.18.0"
