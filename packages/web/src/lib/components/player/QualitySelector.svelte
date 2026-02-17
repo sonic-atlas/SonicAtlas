@@ -68,9 +68,7 @@
 
 <div class="qualitySelector">
     {#if isFirefox}
-        <div class="firefoxNotice">
-            Hi-Res streaming is not fully supported on Firefox and is disabled.
-        </div>
+        <div class="firefoxNotice">Hi-Res streaming is not fully supported on Firefox and is disabled.</div>
     {/if}
 
     <md-outlined-select

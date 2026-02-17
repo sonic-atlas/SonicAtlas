@@ -32,11 +32,7 @@ export async function apiGet(path: string): Promise<Response> {
     return apiFetch(path);
 }
 
-export async function apiPost(
-    path: string,
-    body?: BodyInit,
-    additionalHeaders?: HeadersInit
-): Promise<Response> {
+export async function apiPost(path: string, body?: BodyInit, additionalHeaders?: HeadersInit): Promise<Response> {
     return apiFetch(path, {
         method: 'POST',
         headers: additionalHeaders,
@@ -54,11 +50,7 @@ export async function apiPostFormData(path: string, formData: FormData): Promise
     });
 }
 
-export async function apiPatch(
-    path: string,
-    body?: BodyInit,
-    additionalHeaders?: HeadersInit
-): Promise<Response> {
+export async function apiPatch(path: string, body?: BodyInit, additionalHeaders?: HeadersInit): Promise<Response> {
     return apiFetch(path, {
         method: 'PATCH',
         headers: additionalHeaders,

@@ -27,12 +27,7 @@
         <h1>Enter server password</h1>
 
         <form onsubmit={handleSubmit}>
-            <input
-                type="password"
-                bind:value={password}
-                placeholder="Server password"
-                disabled={loading}
-            />
+            <input type="password" bind:value={password} placeholder="Server password" disabled={loading} />
 
             <button type="submit" disabled={!password || loading}>
                 {loading ? 'Verifying...' : 'Login'}

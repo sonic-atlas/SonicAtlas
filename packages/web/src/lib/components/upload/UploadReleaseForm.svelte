@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { apiPostFormData } from '$lib/api';
+    import { uploadRelease, type ReleaseUploadProgress, type FileUploadProgress } from '$lib/upload/chunkedUploads';
     import { socket } from '$lib/stores/socket.svelte';
     import '@material/web/textfield/outlined-text-field.js';
     import '@material/web/button/filled-button.js';
@@ -19,6 +19,7 @@
     let extractAllCovers = $state(false);
     let uploading = $state(false);
     let error = $state<string | null>(null);
+    let uploadProgress = $state<ReleaseUploadProgress | null>(null);
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
@@ -29,31 +30,26 @@
 
         uploading = true;
         error = null;
+        uploadProgress = null;
 
-        const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-            formData.append('files[]', files[i]);
-        }
-        if (coverFile) {
-            formData.append('cover', coverFile);
-        }
-        formData.append('releaseTitle', releaseTitle);
-        formData.append('primaryArtist', primaryArtist);
-        formData.append('year', year);
-        formData.append('releaseType', releaseType);
-        formData.append('extractAllCovers', extractAllCovers.toString());
-
-        if (socket.id) {
-            formData.append('socketId', socket.id);
-        }
+        const fileArray = Array.from(files);
 
         try {
-            const res = await apiPostFormData('/api/releases/upload', formData);
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || 'Upload failed');
-            }
-            const data = await res.json();
+            const data = await uploadRelease(
+                {
+                    title: releaseTitle,
+                    primaryArtist,
+                    year,
+                    releaseType,
+                    extractAllCovers,
+                    socketId: socket.id
+                },
+                fileArray,
+                coverFile,
+                (progress) => {
+                    uploadProgress = progress;
+                }
+            );
             onUploadComplete(data);
         } catch (err: any) {
             error = err.message;
@@ -61,6 +57,7 @@
             uploading = false;
         }
     }
+
     let dragging = $state(false);
 
     function handleDragOver(e: DragEvent) {
@@ -79,6 +76,27 @@
         if (e.dataTransfer && e.dataTransfer.files.length > 0) {
             files = e.dataTransfer.files;
         }
+    }
+
+    function getStatusIcon(status: FileUploadProgress['status']): string {
+        switch (status) {
+            case 'pending':
+                return 'hourglass_empty';
+            case 'uploading':
+                return 'cloud_upload';
+            case 'processing':
+                return 'settings';
+            case 'complete':
+                return 'check_circle';
+            case 'error':
+                return 'error';
+        }
+    }
+
+    function formatBytes(bytes: number): string {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 </script>
 
@@ -128,8 +146,7 @@
                 type="button"
                 onclick={() => document.getElementById('cover')?.click()}
                 onkeydown={(e: KeyboardEvent) => {
-                    if (e.key === 'Enter' || e.key === ' ')
-                        document.getElementById('cover')?.click();
+                    if (e.key === 'Enter' || e.key === ' ') document.getElementById('cover')?.click();
                 }}
                 role="button"
                 tabindex="0"
@@ -207,8 +224,55 @@
         <label for="extractAllCovers">Extract individual track covers</label>
     </div>
 
+    {#if uploadProgress && uploading}
+        <div class="progressSection">
+            <div class="overallProgress">
+                <div class="progressLabel">
+                    <span>Overall Progress</span>
+                    <span>{uploadProgress.overallProgress}%</span>
+                </div>
+                <div class="progressBar">
+                    <div class="progressFill" style="width: {uploadProgress.overallProgress}%"></div>
+                </div>
+            </div>
+
+            <div class="fileProgressList">
+                {#each uploadProgress.files as fp}
+                    <div class="fileProgress" class:error={fp.status === 'error'}>
+                        <div class="fileProgressHeader">
+                            <md-icon class="statusIcon {fp.status}">{getStatusIcon(fp.status)}</md-icon>
+                            <span class="fileProgressName" title={fp.fileName}>{fp.fileName}</span>
+                            <span class="fileProgressSize">
+                                {formatBytes(fp.bytesUploaded)} / {formatBytes(fp.bytesTotal)}
+                            </span>
+                        </div>
+                        {#if fp.status === 'uploading'}
+                            <div class="progressBar small">
+                                <div
+                                    class="progressFill"
+                                    style="width: {fp.bytesTotal > 0
+                                        ? Math.round((fp.bytesUploaded / fp.bytesTotal) * 100)
+                                        : 0}%"
+                                ></div>
+                            </div>
+                        {/if}
+                        {#if fp.error}
+                            <span class="fileError">{fp.error}</span>
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+        </div>
+    {/if}
+
     <md-filled-button type="submit" disabled={uploading}>
-        {uploading ? 'Uploading...' : 'Upload'}
+        {#if uploading && uploadProgress}
+            Uploading... {uploadProgress.overallProgress}%
+        {:else if uploading}
+            Preparing...
+        {:else}
+            Upload
+        {/if}
     </md-filled-button>
 </form>
 
@@ -301,5 +365,108 @@
 
     .uploadIcon {
         font-size: 48px;
+    }
+
+    .progressSection {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .overallProgress {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .progressLabel {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--text-secondary-color);
+    }
+
+    .progressBar {
+        height: 8px;
+        background: var(--surface-high, #333);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progressBar.small {
+        height: 4px;
+        margin-top: 0.25rem;
+    }
+
+    .progressFill {
+        height: 100%;
+        background: var(--primary-color);
+        border-radius: 4px;
+        transition: width 0.2s ease;
+    }
+
+    .fileProgressList {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .fileProgress {
+        padding: 0.5rem;
+        background: var(--surface-high, #222);
+        border-radius: 6px;
+    }
+
+    .fileProgress.error {
+        background: #ff000015;
+    }
+
+    .fileProgressHeader {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .statusIcon {
+        font-size: 18px;
+    }
+
+    .statusIcon.complete {
+        color: #4caf50;
+    }
+
+    .statusIcon.error {
+        color: var(--error-color);
+    }
+
+    .statusIcon.uploading {
+        color: var(--primary-color);
+    }
+
+    .statusIcon.processing {
+        color: #ff9800;
+    }
+
+    .fileProgressName {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fileProgressSize {
+        color: var(--text-secondary-color);
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .fileError {
+        color: var(--error-color);
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: block;
     }
 </style>

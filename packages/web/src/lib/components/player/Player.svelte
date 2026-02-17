@@ -15,11 +15,7 @@
         oncloseplayer?: () => void;
     }
 
-    let {
-        track = $bindable(),
-        quality = $bindable(),
-        oncloseplayer = $bindable()
-    }: Props = $props();
+    let { track = $bindable(), quality = $bindable(), oncloseplayer = $bindable() }: Props = $props();
 
     let audio: HTMLAudioElement;
     let hls: Hls | null = null;
@@ -195,9 +191,7 @@
         } else if (hls) {
             console.error('Media element error during hls.js playback.');
         } else {
-            showErrorAndClose(
-                'Playback failed. HLS is not supported or an unknown error occurred.'
-            );
+            showErrorAndClose('Playback failed. HLS is not supported or an unknown error occurred.');
         }
     }
 
@@ -512,16 +506,10 @@
                 {#if loading}
                     <div class="progressBuffering"></div>
                 {/if}
-                <div
-                    class="progressFilled"
-                    style="width: {duration > 0 ? (currentTime / duration) * 100 : 0}%"
-                ></div>
+                <div class="progressFilled" style="width: {duration > 0 ? (currentTime / duration) * 100 : 0}%"></div>
             </div>
             {#if hoverTime !== null}
-                <div
-                    class="progressHover"
-                    style="left: {duration > 0 ? (hoverTime / duration) * 100 : 0}%"
-                >
+                <div class="progressHover" style="left: {duration > 0 ? (hoverTime / duration) * 100 : 0}%">
                     <div class="hoverTimeTooltip">
                         {formatTime(hoverTime)}
                     </div>
@@ -594,13 +582,7 @@
                 role="button"
                 tabindex="0"
             >
-                <md-icon
-                    >{volume === 0 || isMuted
-                        ? 'volume_off'
-                        : volume < 50
-                          ? 'volume_down'
-                          : 'volume_up'}</md-icon
-                >
+                <md-icon>{volume === 0 || isMuted ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}</md-icon>
             </md-icon-button>
             <md-slider min="0" max="100" value={volume} oninput={handleVolumeChange}></md-slider>
             <span class="volumeText">{Math.round(volume)}%</span>

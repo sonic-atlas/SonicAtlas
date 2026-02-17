@@ -73,4 +73,49 @@ declare module '@sonic-atlas/shared' {
         message: string;
     }
 
+    export type UploadFileStatus = 'pending' | 'uploading' | 'processing' | 'complete' | 'error';
+
+    export interface FileManifestEntry {
+        fileName: string;
+        fileSize: number;
+        mimeType: string;
+    }
+
+    export interface ReleaseUploadMetadata {
+        title: string;
+        primaryArtist?: string;
+        year?: string;
+        releaseType?: string;
+        extractAllCovers?: boolean;
+        socketId?: string;
+    }
+
+    export interface UploadFilePlan {
+        fileId: string;
+        fileName: string;
+        needsChunking: boolean;
+        totalChunks: number;
+        chunkSize: number;
+    }
+
+    export interface UploadInitResponse {
+        uploadId: string;
+        files: UploadFilePlan[];
+    }
+
+    export interface FileUploadProgress {
+        fileId: string;
+        fileName: string;
+        bytesUploaded: number;
+        bytesTotal: number;
+        status: UploadFileStatus;
+        error?: string;
+    }
+
+    export interface ReleaseUploadProgress {
+        uploadId: string;
+        files: FileUploadProgress[];
+        overallProgress: number;
+    }
+
 }

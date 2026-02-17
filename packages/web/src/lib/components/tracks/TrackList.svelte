@@ -26,11 +26,7 @@
         | { type: 'disc-header'; title: string; id: string }
         | { type: 'track'; track: Track };
 
-    function getSortedTracks(
-        inputTracks: Track[],
-        group: boolean,
-        sort: typeof sortBy
-    ): GroupedTrack[] {
+    function getSortedTracks(inputTracks: Track[], group: boolean, sort: typeof sortBy): GroupedTrack[] {
         const groups = new Map<string, Track[]>();
         inputTracks.forEach((t) => {
             const key = t.releaseId || 'unknown';
@@ -124,11 +120,7 @@
                     Sort by: {sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
                 </md-text-button>
 
-                <md-menu
-                    anchor="sort-menu-anchor"
-                    open={sortMenuOpen}
-                    onclosed={() => (sortMenuOpen = false)}
-                >
+                <md-menu anchor="sort-menu-anchor" open={sortMenuOpen} onclosed={() => (sortMenuOpen = false)}>
                     <div class="menuContent">
                         <md-menu-item
                             onclick={() => (sortBy = 'year')}

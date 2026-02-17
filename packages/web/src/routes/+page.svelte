@@ -107,21 +107,13 @@
             </div>
 
             <div class="trackListContainer">
-                <TrackList
-                    {tracks}
-                    onTrackSelect={handleTrackSelected}
-                    currentTrackId={currentTrack?.id}
-                />
+                <TrackList {tracks} onTrackSelect={handleTrackSelected} currentTrackId={currentTrack?.id} />
             </div>
         </div>
 
         <div class="playerColumn">
             {#if currentTrack}
-                <Player
-                    bind:track={currentTrack}
-                    bind:quality={selectedQuality}
-                    oncloseplayer={handleClosePlayer}
-                />
+                <Player bind:track={currentTrack} bind:quality={selectedQuality} oncloseplayer={handleClosePlayer} />
             {:else}
                 <div class="playerPlaceholder">
                     <h2>Now Playing</h2>
