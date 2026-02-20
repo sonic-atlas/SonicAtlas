@@ -1,11 +1,15 @@
 #include "decoder.h"
 
+#include <inttypes.h>
 #include <libavutil/time.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
 
 #include "internal.h"
+
+#ifndef _WIN32
+#include <signal.h>
+#endif
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -73,7 +77,19 @@ int decoder_open(DecoderState* state, const char* url, const char* headers,
   av_dict_set(&options, "analyzeduration", "5000000", 0);  // 5s
   av_dict_set(&options, "rw_timeout", "20000000", 0);      // 20s timeout
 
+#ifndef _WIN32
+  // During the tls handshake the dart vm was sending signals and interrupting network I/O
+  sigset_t block_all, old_mask;
+  sigfillset(&block_all);
+  pthread_sigmask(SIG_BLOCK, &block_all, &old_mask);
+#endif
+
   int ret = avformat_open_input(&state->fmt_ctx, url, NULL, &options);
+
+#ifndef _WIN32
+  pthread_sigmask(SIG_SETMASK, &old_mask, NULL);
+#endif
+
   av_dict_free(&options);
 
   if (ret < 0) {

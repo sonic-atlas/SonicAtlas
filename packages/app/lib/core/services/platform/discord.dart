@@ -153,14 +153,9 @@ class DiscordService with ChangeNotifier {
     const defaultAsset = 'sonic_atlas_logo';
     if (_apiService == null) return defaultAsset;
 
-    final serverIp = _settingsService.serverIp ?? '';
-    final isLocal =
-        serverIp.contains('localhost') ||
-        serverIp.contains('127.0.0.1') ||
-        serverIp.contains('192.168.') ||
-        serverIp.contains('10.');
+    final serverType = _settingsService.serverType;
 
-    if (!isLocal) {
+    if (serverType == 'domain') {
       final url = _apiService!.getAlbumArtUrl(track.id);
       if (url.length < 128) {
         return url;

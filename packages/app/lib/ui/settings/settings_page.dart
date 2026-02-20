@@ -23,7 +23,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             ListTile(
               title: const Text('Server Address'),
-              subtitle: Text(settings.serverIp ?? 'Not set'),
+              subtitle: Text(settings.serverUrl ?? 'Not set'),
               onTap: () {
                 Navigator.pushReplacementNamed(context, '/setup');
               },

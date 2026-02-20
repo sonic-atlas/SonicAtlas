@@ -16,20 +16,23 @@ class SocketService extends ChangeNotifier {
   io.Socket? get socket => _socket;
 
   void _connect() {
-    final ip = _settingsService.serverIp;
-    if (ip == null) return;
+    final url = _settingsService.serverUrl;
+    if (url == null) return;
 
     if (_socket != null) {
       _socket!.dispose();
     }
 
-    final url = 'ws://$ip:3000';
+    final uri = Uri.parse(url);
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    final socketUrl = uri.replace(scheme: scheme).toString();
+
     if (kDebugMode) {
-      print('Connecting to socket at: $url');
+      print('Connecting to socket at: $socketUrl');
     }
 
     _socket = io.io(
-      url,
+      socketUrl,
       io.OptionBuilder()
           .setPath('/ws')
           .setTransports(['websocket'])

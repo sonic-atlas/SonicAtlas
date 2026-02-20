@@ -18,9 +18,9 @@ class ApiService {
   ApiService(this._settingsService, this._authService);
 
   String get _baseUrl {
-    final ip = _settingsService.serverIp;
-    if (ip == null) throw Exception('Server IP not set');
-    return 'http://$ip:3000';
+    final url = _settingsService.serverUrl;
+    if (url == null) throw Exception('Server URL not set');
+    return url;
   }
 
   Map<String, String> get _headers {

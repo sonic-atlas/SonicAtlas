@@ -37,28 +37,28 @@ else ()
     endif ()
 endif ()
 
-if (NOT DEFINED FFMPEG_ROOT)
-    message(FATAL_ERROR "FFMPEG_ROOT must be defined before including src/CMakeLists.txt")
+if (NOT DEFINED DEPENDENCIES_ROOT)
+    message(FATAL_ERROR "DEPENDENCIES_ROOT must be defined before including src/CMakeLists.txt")
 endif ()
 
-message(STATUS "Linking FFmpeg from: ${FFMPEG_ROOT}")
+message(STATUS "Linking FFmpeg from: ${DEPENDENCIES_ROOT}")
 
 target_include_directories(sonic_audio PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor
-        ${FFMPEG_ROOT}/include
+        ${DEPENDENCIES_ROOT}/include
 )
 
 if (ANDROID)
-    set(AVFORMAT_LIB "${FFMPEG_ROOT}/lib/libavformat.a")
-    set(AVCODEC_LIB "${FFMPEG_ROOT}/lib/libavcodec.a")
-    set(AVUTIL_LIB "${FFMPEG_ROOT}/lib/libavutil.a")
-    set(SWRESAMPLE_LIB "${FFMPEG_ROOT}/lib/libswresample.a")
+    set(AVFORMAT_LIB "${DEPENDENCIES_ROOT}/lib/libavformat.a")
+    set(AVCODEC_LIB "${DEPENDENCIES_ROOT}/lib/libavcodec.a")
+    set(AVUTIL_LIB "${DEPENDENCIES_ROOT}/lib/libavutil.a")
+    set(SWRESAMPLE_LIB "${DEPENDENCIES_ROOT}/lib/libswresample.a")
 else ()
-    find_library(AVFORMAT_LIB NAMES avformat libavformat PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
-    find_library(AVCODEC_LIB NAMES avcodec libavcodec PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
-    find_library(AVUTIL_LIB NAMES avutil libavutil PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
-    find_library(SWRESAMPLE_LIB NAMES swresample libswresample PATHS ${FFMPEG_ROOT}/lib NO_DEFAULT_PATH)
+    find_library(AVFORMAT_LIB NAMES avformat libavformat PATHS ${DEPENDENCIES_ROOT}/lib NO_DEFAULT_PATH)
+    find_library(AVCODEC_LIB NAMES avcodec libavcodec PATHS ${DEPENDENCIES_ROOT}/lib NO_DEFAULT_PATH)
+    find_library(AVUTIL_LIB NAMES avutil libavutil PATHS ${DEPENDENCIES_ROOT}/lib NO_DEFAULT_PATH)
+    find_library(SWRESAMPLE_LIB NAMES swresample libswresample PATHS ${DEPENDENCIES_ROOT}/lib NO_DEFAULT_PATH)
 endif ()
 
 target_link_libraries(sonic_audio PRIVATE
@@ -71,10 +71,14 @@ target_link_libraries(sonic_audio PRIVATE
 if (WIN32)
     target_link_libraries(sonic_audio PRIVATE User32 Ole32 Bcrypt)
 elseif (ANDROID)
-    target_link_libraries(sonic_audio PRIVATE log android OpenSLES aaudio z)
+    set(SSL_LIB "${DEPENDENCIES_ROOT}/lib/libssl.a")
+    set(CRYPTO_LIB "${DEPENDENCIES_ROOT}/lib/libcrypto.a")
+    target_link_libraries(sonic_audio PRIVATE log android OpenSLES aaudio z ${SSL_LIB} ${CRYPTO_LIB})
     target_link_options(sonic_audio PRIVATE -Wl,-z,max-page-size=16384)
 else ()
-    target_link_libraries(sonic_audio PRIVATE m pthread dl)
+    set(SSL_LIB "${DEPENDENCIES_ROOT}/lib/libssl.a")
+    set(CRYPTO_LIB "${DEPENDENCIES_ROOT}/lib/libcrypto.a")
+    target_link_libraries(sonic_audio PRIVATE m pthread dl ${SSL_LIB} ${CRYPTO_LIB})
     target_link_options(sonic_audio PRIVATE -Wl,-z,notext)
 endif ()
 

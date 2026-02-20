@@ -5,7 +5,8 @@ import '/core/models/quality.dart';
 
 class SettingsService with ChangeNotifier {
   late SharedPreferences _prefs;
-  static const _serverIpKey = 'server_ip';
+  static const _serverUrlKey = 'server_url';
+  static const _serverTypeKey = 'server_type';
   static const _audioQualityKey = 'audio_quality';
   static const _discordRPCEnabledKey = 'discord_rpc_enabled';
   static const _relativeDurationKey = 'relative_duration';
@@ -15,8 +16,11 @@ class SettingsService with ChangeNotifier {
   static const _useExclusiveAudioKey = 'use_exclusive_audio';
   static const _audioVolumeKey = 'audio_volume';
 
-  String? _serverIp;
-  String? get serverIp => _serverIp;
+  String? _serverUrl;
+  String? get serverUrl => _serverUrl;
+
+  String _serverType = 'ip'; // 'ip' or 'domain'
+  String get serverType => _serverType;
 
   Quality _audioQuality = Quality.auto;
   Quality get audioQuality => _audioQuality;
@@ -44,7 +48,8 @@ class SettingsService with ChangeNotifier {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    _serverIp = _prefs.getString(_serverIpKey);
+    _serverUrl = _prefs.getString(_serverUrlKey);
+    _serverType = _prefs.getString(_serverTypeKey) ?? 'ip';
     _discordRPCEnabled = _prefs.getBool(_discordRPCEnabledKey) ?? true;
     _relativeDuration = _prefs.getBool(_relativeDurationKey) ?? false;
     _audioBufferDuration = _prefs.getDouble(_audioBufferDurationKey) ?? 4.0;
@@ -66,9 +71,11 @@ class SettingsService with ChangeNotifier {
     }
   }
 
-  Future<void> setServerIp(String ip) async {
-    _serverIp = ip;
-    await _prefs.setString(_serverIpKey, ip);
+  Future<void> setServerUrl(String url, String type) async {
+    _serverUrl = url;
+    _serverType = type;
+    await _prefs.setString(_serverUrlKey, url);
+    await _prefs.setString(_serverTypeKey, type);
     notifyListeners();
   }
 

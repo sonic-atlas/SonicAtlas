@@ -23,7 +23,7 @@ class _SplashPageState extends State<SplashPage> {
     final settings = context.read<SettingsService>();
     final auth = context.read<AuthService>();
 
-    if (settings.serverIp == null) {
+    if (settings.serverUrl == null) {
       Navigator.pushReplacementNamed(context, '/setup');
     } else if (!auth.isLoggedIn) {
       Navigator.pushReplacementNamed(context, '/login');

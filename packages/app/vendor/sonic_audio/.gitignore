@@ -31,7 +31,8 @@ build/
 /coverage/
 
 # Cmake and build related
+/dependencies/
 /ffmpeg*/
-/ffmpeg*.tar.xz
+/openssl*/
 cmake-build-debug/
 .cxx/

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(sonic_audio LANGUAGES C)
 
 get_filename_component(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
-set(FFMPEG_ROOT "${ROOT_DIR}/ffmpeg/linux-x64")
+set(DEPENDENCIES_ROOT "${ROOT_DIR}/dependencies/linux-x64")
 
 add_subdirectory("${ROOT_DIR}/src" sonic_audio_build)
 

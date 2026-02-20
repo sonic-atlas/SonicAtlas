@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $FfmpegUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl-shared.zip"
-$OutputDir = Join-Path $PSScriptRoot "ffmpeg\windows-x64"
+$OutputDir = Join-Path $PSScriptRoot "dependencies\windows-x64"
 $ZipFile = Join-Path $PSScriptRoot "ffmpeg.zip"
 
 Write-Host "Downloading FFmpeg LGPL (Shared) for Windows..."
