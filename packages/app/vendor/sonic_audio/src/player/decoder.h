@@ -3,8 +3,7 @@
 
 #include "../internal.h"
 
-int decoder_open(DecoderState* state, const char* url, const char* headers,
-                 int target_sample_rate, int target_channels,
+int decoder_open(DecoderState* state, const char* url, const char* headers, int target_sample_rate, int target_channels,
                  int target_format);
 
 int decoder_change_format(DecoderState* state, int target_format);

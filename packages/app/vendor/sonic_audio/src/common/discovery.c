@@ -38,16 +38,15 @@ FFI_PLUGIN_EXPORT int sonic_audio_get_playback_device_count(void) {
   ma_device_info* pCaptureInfos;
   ma_uint32 captureCount;
 
-  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                             &pCaptureInfos, &captureCount) != MA_SUCCESS) {
+  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) !=
+      MA_SUCCESS) {
     return -1;
   }
 
   return (int)playbackCount;
 }
 
-FFI_PLUGIN_EXPORT void sonic_audio_get_playback_device_info(
-    const int index, SonicDeviceInfo* info) {
+FFI_PLUGIN_EXPORT void sonic_audio_get_playback_device_info(const int index, SonicDeviceInfo* info) {
   if (!g_sonic.is_initialized || !info) return;
 
   ma_device_info* pPlaybackInfos;
@@ -55,17 +54,15 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_playback_device_info(
   ma_device_info* pCaptureInfos;
   ma_uint32 captureCount;
 
-  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                             &pCaptureInfos, &captureCount) != MA_SUCCESS) {
+  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) !=
+      MA_SUCCESS) {
     return;
   }
 
   if (index >= 0 && index < (int)playbackCount) {
-    sa_strncpy(info->name, sizeof(info->name), pPlaybackInfos[index].name,
-               SA_TRUNCATE);
+    sa_strncpy(info->name, sizeof(info->name), pPlaybackInfos[index].name, SA_TRUNCATE);
 
-    memcpy(info->id, &pPlaybackInfos[index].id,
-           MIN(sizeof(pPlaybackInfos[index].id), 256));
+    memcpy(info->id, &pPlaybackInfos[index].id, MIN(sizeof(pPlaybackInfos[index].id), 256));
 
     info->is_default = pPlaybackInfos[index].isDefault ? 1 : 0;
     info->backend = get_backend_id(g_sonic.ma_ctx.backend);
@@ -82,16 +79,15 @@ FFI_PLUGIN_EXPORT int sonic_audio_get_capture_device_count(void) {
   ma_device_info* pCaptureInfos;
   ma_uint32 captureCount;
 
-  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                             &pCaptureInfos, &captureCount) != MA_SUCCESS) {
+  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) !=
+      MA_SUCCESS) {
     return -1;
   }
 
   return (int)captureCount;
 }
 
-FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(
-    const int index, SonicDeviceInfo* info) {
+FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(const int index, SonicDeviceInfo* info) {
   if (!g_sonic.is_initialized || !info) return;
 
   ma_device_info* pPlaybackInfos;
@@ -99,17 +95,15 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(
   ma_device_info* pCaptureInfos;
   ma_uint32 captureCount;
 
-  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                             &pCaptureInfos, &captureCount) != MA_SUCCESS) {
+  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) !=
+      MA_SUCCESS) {
     return;
   }
 
   if (index >= 0 && index < (int)captureCount) {
-    sa_strncpy(info->name, sizeof(info->name), pCaptureInfos[index].name,
-               SA_TRUNCATE);
+    sa_strncpy(info->name, sizeof(info->name), pCaptureInfos[index].name, SA_TRUNCATE);
 
-    memcpy(info->id, &pCaptureInfos[index].id,
-           MIN(sizeof(pCaptureInfos[index].id), 256));
+    memcpy(info->id, &pCaptureInfos[index].id, MIN(sizeof(pCaptureInfos[index].id), 256));
 
     info->is_default = pCaptureInfos[index].isDefault ? 1 : 0;
     info->backend = get_backend_id(g_sonic.ma_ctx.backend);

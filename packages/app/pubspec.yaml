@@ -40,8 +40,6 @@ dependencies:
   mime: ^2.0.0
   http_parser: ^4.1.2
   cached_network_image: ^3.4.1
-  sonic_recorder:
-    path: vendor/sonic_recorder
   sonic_audio:
     path: vendor/sonic_audio
 

@@ -19,7 +19,12 @@ static void* encoder_thread_func(void* arg) {
   av_channel_layout_default(&frame->ch_layout, recorder->channels);
   frame->format = recorder->out_codec_ctx->sample_fmt;
   frame->sample_rate = recorder->sample_rate;
-  av_frame_get_buffer(frame, 0);
+
+  if (av_frame_get_buffer(frame, 0) < 0) {
+    LOGE("Failed to allocate frame buffers\n");
+    av_frame_free(&frame);
+    return NULL;
+  }
 
   AVPacket* pkt = av_packet_alloc();
 
@@ -28,14 +33,14 @@ static void* encoder_thread_func(void* arg) {
 
   while (!recorder->should_stop_encoder) {
     frames_to_read = 4800;
-    if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_to_read,
-                               &read_ptr) == MA_SUCCESS) {
+    if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_to_read, &read_ptr) == MA_SUCCESS) {
       if (frames_to_read > 0) {
+        // make sure frame is writable after removing `av_fast_malloc`
+        av_frame_make_writable(frame);
         frame->nb_samples = frames_to_read;
-        av_fast_malloc(&frame->data[0], (unsigned int*)&frame->linesize[0],
-                       frames_to_read * recorder->channels * sample_size);
-        memcpy(frame->data[0], read_ptr,
-               frames_to_read * recorder->channels * sample_size);
+        // calling `av_fast_malloc` is unnecessary and creates orphaned memory
+        // instead just keep the memcpy
+        memcpy(frame->data[0], read_ptr, frames_to_read * recorder->channels * sample_size);
 
         frame->pts = pts;
         pts += frames_to_read;
@@ -45,8 +50,7 @@ static void* encoder_thread_func(void* arg) {
           ret = avcodec_receive_packet(recorder->out_codec_ctx, pkt);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
 
-          av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base,
-                               recorder->out_stream->time_base);
+          av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base, recorder->out_stream->time_base);
           pkt->stream_index = recorder->out_stream->index;
           av_interleaved_write_frame(recorder->out_fmt_ctx, pkt);
           av_packet_unref(pkt);
@@ -66,12 +70,10 @@ static void* encoder_thread_func(void* arg) {
     ma_uint32 chunk = frames_to_read;
     if (chunk > 4800) chunk = 4800;
 
-    if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &chunk, &read_ptr) ==
-        MA_SUCCESS) {
+    if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &chunk, &read_ptr) == MA_SUCCESS) {
       if (chunk > 0) {
         frame->nb_samples = chunk;
-        memcpy(frame->data[0], read_ptr,
-               chunk * recorder->channels * sample_size);
+        memcpy(frame->data[0], read_ptr, chunk * recorder->channels * sample_size);
         frame->pts = pts;
         pts += chunk;
 
@@ -80,8 +82,7 @@ static void* encoder_thread_func(void* arg) {
           ret = avcodec_receive_packet(recorder->out_codec_ctx, pkt);
           if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
 
-          av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base,
-                               recorder->out_stream->time_base);
+          av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base, recorder->out_stream->time_base);
           pkt->stream_index = recorder->out_stream->index;
           av_interleaved_write_frame(recorder->out_fmt_ctx, pkt);
           av_packet_unref(pkt);
@@ -101,8 +102,7 @@ static void* encoder_thread_func(void* arg) {
   while (1) {
     ret = avcodec_receive_packet(recorder->out_codec_ctx, pkt);
     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
-    av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base,
-                         recorder->out_stream->time_base);
+    av_packet_rescale_ts(pkt, recorder->out_codec_ctx->time_base, recorder->out_stream->time_base);
     pkt->stream_index = recorder->out_stream->index;
     av_interleaved_write_frame(recorder->out_fmt_ctx, pkt);
     av_packet_unref(pkt);
@@ -126,12 +126,10 @@ static void* encoder_thread_func(void* arg) {
   return NULL;
 }
 
-static void monitor_callback(ma_device* device, void* output, const void* input,
-                             ma_uint32 frame_count) {
+static void monitor_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
   (void)input;
   RecorderState* recorder = (RecorderState*)device->pUserData;
-  if (!recorder || !recorder->is_monitoring ||
-      !recorder->is_monitor_initialized) {
+  if (!recorder || !recorder->is_monitoring || !recorder->is_monitor_initialized) {
     size_t sample_size = (device->playback.format == ma_format_s32) ? 4 : 2;
     memset(output, 0, frame_count * device->playback.channels * sample_size);
     return;
@@ -143,8 +141,7 @@ static void monitor_callback(ma_device* device, void* output, const void* input,
 
   while (frames_to_read > 0) {
     ma_uint32 chunk = frames_to_read;
-    if (ma_pcm_rb_acquire_read(&recorder->monitor_buffer, &chunk, &read_ptr) ==
-        MA_SUCCESS) {
+    if (ma_pcm_rb_acquire_read(&recorder->monitor_buffer, &chunk, &read_ptr) == MA_SUCCESS) {
       if (chunk > 0) {
         memcpy(output, read_ptr, chunk * recorder->channels * sample_size);
         ma_pcm_rb_commit_read(&recorder->monitor_buffer, chunk);
@@ -163,8 +160,7 @@ static void monitor_callback(ma_device* device, void* output, const void* input,
   }
 }
 
-static void capture_callback(ma_device* device, void* output, const void* input,
-                             ma_uint32 frame_count) {
+static void capture_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
   (void)output;
   RecorderState* recorder = (RecorderState*)device->pUserData;
   if (!recorder || !recorder->is_initialized) return;
@@ -197,8 +193,7 @@ static void capture_callback(ma_device* device, void* output, const void* input,
   ma_uint32 frames_to_write = frame_count;
   while (frames_to_write > 0) {
     ma_uint32 chunk_frames = frames_to_write;
-    if (ma_pcm_rb_acquire_write(&recorder->capture_buffer, &chunk_frames,
-                                &write_ptr) != MA_SUCCESS) {
+    if (ma_pcm_rb_acquire_write(&recorder->capture_buffer, &chunk_frames, &write_ptr) != MA_SUCCESS) {
       break;
     }
     if (chunk_frames == 0) break;
@@ -207,8 +202,7 @@ static void capture_callback(ma_device* device, void* output, const void* input,
     memcpy(write_ptr, input, chunk_frames * recorder->channels * sample_size);
     ma_pcm_rb_commit_write(&recorder->capture_buffer, chunk_frames);
     frames_to_write -= chunk_frames;
-    input =
-        (const char*)input + (chunk_frames * recorder->channels * sample_size);
+    input = (const char*)input + (chunk_frames * recorder->channels * sample_size);
   }
 
   if (recorder->is_monitoring && recorder->is_monitor_initialized) {
@@ -216,8 +210,7 @@ static void capture_callback(ma_device* device, void* output, const void* input,
     input = original_input;
     while (frames_to_write > 0) {
       ma_uint32 chunk_frames = frames_to_write;
-      if (ma_pcm_rb_acquire_write(&recorder->monitor_buffer, &chunk_frames,
-                                  &write_ptr) != MA_SUCCESS) {
+      if (ma_pcm_rb_acquire_write(&recorder->monitor_buffer, &chunk_frames, &write_ptr) != MA_SUCCESS) {
         break;
       }
       if (chunk_frames == 0) break;
@@ -226,8 +219,7 @@ static void capture_callback(ma_device* device, void* output, const void* input,
       memcpy(write_ptr, input, chunk_frames * recorder->channels * sample_size);
       ma_pcm_rb_commit_write(&recorder->monitor_buffer, chunk_frames);
       frames_to_write -= chunk_frames;
-      input = (const char*)input +
-              (chunk_frames * recorder->channels * sample_size);
+      input = (const char*)input + (chunk_frames * recorder->channels * sample_size);
     }
   }
 }
@@ -239,8 +231,8 @@ FFI_PLUGIN_EXPORT void sonic_audio_recorder_set_monitor(int enable) {
 
   if (enable && !recorder->is_monitor_initialized && recorder->is_initialized) {
     ma_uint32 buffer_frames = CAPTURE_BUFFER_SIZE(recorder->sample_rate);
-    if (ma_pcm_rb_init(recorder->format, recorder->channels, buffer_frames,
-                       NULL, NULL, &recorder->monitor_buffer) == MA_SUCCESS) {
+    if (ma_pcm_rb_init(recorder->format, recorder->channels, buffer_frames, NULL, NULL, &recorder->monitor_buffer) ==
+        MA_SUCCESS) {
       ma_device_config config = ma_device_config_init(ma_device_type_playback);
       config.playback.format = recorder->format;
       config.playback.channels = recorder->channels;
@@ -248,8 +240,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_recorder_set_monitor(int enable) {
       config.dataCallback = monitor_callback;
       config.pUserData = recorder;
 
-      if (ma_device_init(&g_sonic.ma_ctx, &config, &recorder->monitor_device) ==
-          MA_SUCCESS) {
+      if (ma_device_init(&g_sonic.ma_ctx, &config, &recorder->monitor_device) == MA_SUCCESS) {
         recorder->is_monitor_initialized = 1;
         ma_device_start(&recorder->monitor_device);
       } else {
@@ -266,14 +257,9 @@ FFI_PLUGIN_EXPORT void sonic_audio_recorder_set_monitor(int enable) {
   sa_thread_mutex_unlock(&g_sonic.lock);
 }
 
-FFI_PLUGIN_EXPORT float sonic_audio_recorder_get_rms(void) {
-  return g_sonic.recorder.current_rms;
-}
+FFI_PLUGIN_EXPORT float sonic_audio_recorder_get_rms(void) { return g_sonic.recorder.current_rms; }
 
-FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
-                                                      int sample_rate,
-                                                      int channels,
-                                                      int bit_depth,
+FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index, int sample_rate, int channels, int bit_depth,
                                                       const char* file_path) {
   if (!g_sonic.is_initialized) {
     if (sonic_audio_init_context() != 0) return -1;
@@ -292,8 +278,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
   recorder->channels = channels;
 
   ma_uint32 buffer_frames = CAPTURE_BUFFER_SIZE(sample_rate);
-  if (ma_pcm_rb_init(recorder->format, channels, buffer_frames, NULL, NULL,
-                     &recorder->capture_buffer) != MA_SUCCESS) {
+  if (ma_pcm_rb_init(recorder->format, channels, buffer_frames, NULL, NULL, &recorder->capture_buffer) != MA_SUCCESS) {
     LOGE("SonicAudio Recorder: Failed to init ring buffer\n");
     return -2;
   }
@@ -310,15 +295,14 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
   ma_device_info* pCaptureInfos;
   ma_uint32 captureCount;
 
-  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                             &pCaptureInfos, &captureCount) == MA_SUCCESS) {
+  if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) ==
+      MA_SUCCESS) {
     if (device_index >= 0 && device_index < (int)captureCount) {
       config.capture.pDeviceID = &pCaptureInfos[device_index].id;
     }
   }
 
-  if (ma_device_init(&g_sonic.ma_ctx, &config, &recorder->device) !=
-      MA_SUCCESS) {
+  if (ma_device_init(&g_sonic.ma_ctx, &config, &recorder->device) != MA_SUCCESS) {
     LOGE("SonicAudio Recorder: Failed to init capture device\n");
     ma_pcm_rb_uninit(&recorder->capture_buffer);
     return -3;
@@ -371,8 +355,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
     }
     codec_ctx->time_base = (AVRational){1, sample_rate};
 
-    if (avformat_query_codec(fmt_ctx->oformat, codec->id,
-                             FF_COMPLIANCE_STRICT) != 1) {
+    if (avformat_query_codec(fmt_ctx->oformat, codec->id, FF_COMPLIANCE_STRICT) != 1) {
       LOGI(
           "SonicAudio Recorder: Codec id %d not officially supported by "
           "format, but trying anyway.\n",
@@ -420,8 +403,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
     recorder->is_recording_to_file = 1;
     recorder->should_stop_encoder = 0;
 
-    if (sa_thread_create(&recorder->encoder_thread, encoder_thread_func,
-                         recorder) != 0) {
+    if (sa_thread_create(&recorder->encoder_thread, encoder_thread_func, recorder) != 0) {
       if (!(fmt_ctx->oformat->flags & AVFMT_NOFILE)) avio_closep(&fmt_ctx->pb);
       avcodec_free_context(&codec_ctx);
       avformat_free_context(fmt_ctx);
@@ -447,8 +429,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
   }
 
   recorder->is_initialized = 1;
-  LOGI("SonicAudio Recorder: Started (device %d, %dHz, %dch, %s)\n",
-       device_index, sample_rate, channels,
+  LOGI("SonicAudio Recorder: Started (device %d, %dHz, %dch, %s)\n", device_index, sample_rate, channels,
        recorder->format == ma_format_s32 ? "S32" : "S16");
 
   if (recorder->is_monitoring) {
@@ -458,11 +439,8 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
   return 0;
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_recorder_start(int device_index,
-                                                 int sample_rate, int channels,
-                                                 int bit_depth) {
-  return sonic_audio_recorder_start_file(device_index, sample_rate, channels,
-                                         bit_depth, NULL);
+FFI_PLUGIN_EXPORT int sonic_audio_recorder_start(int device_index, int sample_rate, int channels, int bit_depth) {
+  return sonic_audio_recorder_start_file(device_index, sample_rate, channels, bit_depth, NULL);
 }
 
 FFI_PLUGIN_EXPORT int sonic_audio_recorder_stop(void) {
@@ -474,9 +452,9 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_stop(void) {
     recorder->should_stop_encoder = 1;
     sa_thread_join(&recorder->encoder_thread, NULL);
     recorder->is_recording_to_file = 0;
-    ma_device_uninit(&recorder->device);
-    ma_pcm_rb_uninit(&recorder->capture_buffer);
   }
+  ma_device_uninit(&recorder->device);
+  ma_pcm_rb_uninit(&recorder->capture_buffer);
 
   if (recorder->is_monitor_initialized) {
     ma_device_uninit(&recorder->monitor_device);
@@ -491,23 +469,19 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_stop(void) {
   return 0;
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s16(int16_t* output,
-                                                    int frame_count) {
+FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s16(int16_t* output, int frame_count) {
   RecorderState* recorder = &g_sonic.recorder;
 
-  if (!recorder->is_initialized || recorder->format != ma_format_s16 ||
-      !output) {
+  if (!recorder->is_initialized || recorder->format != ma_format_s16 || !output) {
     return 0;
   }
 
   void* read_ptr;
   ma_uint32 frames_read = frame_count;
 
-  if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_read,
-                             &read_ptr) == MA_SUCCESS) {
+  if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_read, &read_ptr) == MA_SUCCESS) {
     if (frames_read > 0) {
-      memcpy(output, read_ptr,
-             frames_read * recorder->channels * sizeof(int16_t));
+      memcpy(output, read_ptr, frames_read * recorder->channels * sizeof(int16_t));
       ma_pcm_rb_commit_read(&recorder->capture_buffer, frames_read);
     }
     return (int)frames_read;
@@ -516,23 +490,19 @@ FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s16(int16_t* output,
   return 0;
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s32(int32_t* output,
-                                                    int frame_count) {
+FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s32(int32_t* output, int frame_count) {
   RecorderState* recorder = &g_sonic.recorder;
 
-  if (!recorder->is_initialized || recorder->format != ma_format_s32 ||
-      !output) {
+  if (!recorder->is_initialized || recorder->format != ma_format_s32 || !output) {
     return 0;
   }
 
   void* read_ptr;
   ma_uint32 frames_read = frame_count;
 
-  if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_read,
-                             &read_ptr) == MA_SUCCESS) {
+  if (ma_pcm_rb_acquire_read(&recorder->capture_buffer, &frames_read, &read_ptr) == MA_SUCCESS) {
     if (frames_read > 0) {
-      memcpy(output, read_ptr,
-             frames_read * recorder->channels * sizeof(int32_t));
+      memcpy(output, read_ptr, frames_read * recorder->channels * sizeof(int32_t));
       ma_pcm_rb_commit_read(&recorder->capture_buffer, frames_read);
     }
     return (int)frames_read;

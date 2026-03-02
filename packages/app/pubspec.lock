@@ -587,13 +587,6 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
-  sonic_recorder:
-    dependency: "direct main"
-    description:
-      path: "vendor/sonic_recorder"
-      relative: true
-    source: path
-    version: "0.1.0"
   source_span:
     dependency: transitive
     description:

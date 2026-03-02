@@ -31,8 +31,7 @@ static unsigned __stdcall sa_thread_trampoline(void* arg) {
 
 #endif
 
-static sa_thread_result_t sa_thread_create(sa_thread_t* t, sa_thread_fn fn,
-                                           void* arg) {
+static sa_thread_result_t sa_thread_create(sa_thread_t* t, sa_thread_fn fn, void* arg) {
   if (!t || !fn) return SA_THREAD_ERR_INVALID;
 
 #ifdef _WIN32

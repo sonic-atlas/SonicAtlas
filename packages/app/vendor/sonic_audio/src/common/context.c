@@ -51,9 +51,7 @@ int sonic_audio_init_context(void) {
   ma_context_config config = ma_context_config_init();
   config.threadPriority = ma_thread_priority_realtime;
 
-  ma_result result =
-      ma_context_init(backends, sizeof(backends) / sizeof(backends[0]), &config,
-                      &g_sonic.ma_ctx);
+  ma_result result = ma_context_init(backends, sizeof(backends) / sizeof(backends[0]), &config, &g_sonic.ma_ctx);
   if (result != MA_SUCCESS) {
     result = ma_context_init(NULL, 0, NULL, &g_sonic.ma_ctx);
     if (result != MA_SUCCESS) {
@@ -63,8 +61,7 @@ int sonic_audio_init_context(void) {
     }
   }
 
-  printf("SonicAudio: Context initialized. Backend: %d\n",
-         get_backend_id(g_sonic.ma_ctx.backend));
+  printf("SonicAudio: Context initialized. Backend: %d\n", get_backend_id(g_sonic.ma_ctx.backend));
 
   g_sonic.player.state = SONIC_STATE_IDLE;
   g_sonic.player.volume = 1.0f;
@@ -91,10 +88,6 @@ void sonic_audio_dispose_context(void) {
   printf("SonicAudio: Context disposed\n");
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_init(void) {
-  return sonic_audio_init_context();
-}
+FFI_PLUGIN_EXPORT int sonic_audio_init(void) { return sonic_audio_init_context(); }
 
-FFI_PLUGIN_EXPORT void sonic_audio_dispose(void) {
-  sonic_audio_dispose_context();
-}
+FFI_PLUGIN_EXPORT void sonic_audio_dispose(void) { sonic_audio_dispose_context(); }

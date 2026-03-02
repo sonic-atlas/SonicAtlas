@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart' as audio_service;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
@@ -95,7 +95,6 @@ void main(List<String> args) async {
         ChangeNotifierProvider.value(value: audioService),
         ChangeNotifierProvider(create: (_) => SonicRecorderService()),
         ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
-
         ProxyProvider2<SettingsService, AuthService, ApiService>(
           update: (context, settings, auth, previous) =>
               ApiService(settings, auth),
@@ -123,8 +122,37 @@ void main(List<String> args) async {
   });
 }
 
-class SonicAtlasApp extends StatelessWidget {
+class SonicAtlasApp extends StatefulWidget {
   const SonicAtlasApp({super.key});
+
+  @override
+  State<SonicAtlasApp> createState() => _SonicAtlasAppState();
+}
+
+class _SonicAtlasAppState extends State<SonicAtlasApp> {
+  late final AppLifecycleListener _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = AppLifecycleListener(
+      onExitRequested: () async {
+        if (mounted) {
+          final audioService = context.read<AudioService>();
+          audioService.clearQueue();
+          audioService.player.dispose();
+        }
+
+        return AppExitResponse.exit;
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

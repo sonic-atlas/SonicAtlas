@@ -32,8 +32,7 @@ static inline void sa_sleep(int64_t ms) {
 }
 
 #define SA_TRUNCATE -1
-static inline int sa_strncpy(char* dest, size_t dest_size, const char* src,
-                             size_t count) {
+static inline int sa_strncpy(char* dest, size_t dest_size, const char* src, size_t count) {
   // Code courtesy of miniaudio.h line 12561-12-5-90
   size_t max;
   size_t i;
@@ -81,6 +80,8 @@ typedef enum {
 typedef struct {
   AVFormatContext* fmt_ctx;
   AVCodecContext* codec_ctx;
+  AVFrame* frame;
+  AVPacket* packet;
   SwrContext* swr_ctx;
   int audio_stream_idx;
   double duration;

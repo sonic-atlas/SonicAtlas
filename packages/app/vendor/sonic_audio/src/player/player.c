@@ -7,8 +7,7 @@
 #include "thread/sonic_thread.h"
 
 static void* decoder_thread_func(void* arg);
-static void playback_callback(ma_device* device, void* output,
-                              const void* input, ma_uint32 frame_count);
+static void playback_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count);
 
 static void* decoder_thread_func(void* arg) {
   PlayerState* player = (PlayerState*)arg;
@@ -54,8 +53,7 @@ static void* decoder_thread_func(void* arg) {
       ma_uint32 to_read = available_write;
       if (to_read > 48000) to_read = 48000;
 
-      int frames_decoded =
-          decoder_read_frames(&player->decoder, &player->pcm_buffer, to_read);
+      int frames_decoded = decoder_read_frames(&player->decoder, &player->pcm_buffer, to_read);
 
       if (frames_decoded == -2) {
         LOGI("SonicAudio Player: End of stream\n");
@@ -66,8 +64,7 @@ static void* decoder_thread_func(void* arg) {
             "to prevent loop.\n");
         player->decoder.is_eof = 1;
       } else if (frames_decoded < 0) {
-        LOGE("SonicAudio Player: Decoder error: %d. Stopping playback.\n",
-             frames_decoded);
+        LOGE("SonicAudio Player: Decoder error: %d. Stopping playback.\n", frames_decoded);
         sa_thread_mutex_lock(&g_sonic.lock);
         player->state = SONIC_STATE_ERROR;
         sa_thread_mutex_unlock(&g_sonic.lock);
@@ -80,13 +77,12 @@ static void* decoder_thread_func(void* arg) {
 
     ma_uint32 available_read = ma_pcm_rb_available_read(&player->pcm_buffer);
 
-    if (player->state == SONIC_STATE_BUFFERING &&
-        available_read >= (size_t)(player->start_threshold_frames)) {
+    if (player->state == SONIC_STATE_BUFFERING && available_read >= (size_t)(player->start_threshold_frames)) {
       LOGI(
           "SonicAudio Player: Buffering complete. Buffered %d frames (%.2fs) "
           ">= Threshold %d frames (%.2fs)\n",
-          available_read, (float)available_read / player->sample_rate,
-          player->start_threshold_frames, player->start_threshold_seconds);
+          available_read, (float)available_read / player->sample_rate, player->start_threshold_frames,
+          player->start_threshold_seconds);
       player->state = SONIC_STATE_PLAYING;
     }
   }
@@ -97,8 +93,7 @@ static void* decoder_thread_func(void* arg) {
   return NULL;
 }
 
-static void playback_callback(ma_device* device, void* output,
-                              const void* input, ma_uint32 frame_count) {
+static void playback_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
   (void)input;
 
   PlayerState* player = (PlayerState*)device->pUserData;
@@ -116,42 +111,35 @@ static void playback_callback(ma_device* device, void* output,
     ma_uint32 frames_to_read = frame_count - total_frames_processed;
     void* read_buffer;
 
-    ma_result result = ma_pcm_rb_acquire_read(&player->pcm_buffer,
-                                              &frames_to_read, &read_buffer);
+    ma_result result = ma_pcm_rb_acquire_read(&player->pcm_buffer, &frames_to_read, &read_buffer);
 
     if (result == MA_SUCCESS && frames_to_read > 0) {
       if (device->playback.format == ma_format_f32) {
         float* out_ptr = (float*)output;
         float* in = (float*)read_buffer;
         float volume = player->volume;
-        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels;
-             i++) {
+        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels; i++) {
           out_ptr[i] = in[i] * volume;
         }
-        output = (char*)output +
-                 (frames_to_read * device->playback.channels * sizeof(float));
+        output = (char*)output + (frames_to_read * device->playback.channels * sizeof(float));
 
       } else if (device->playback.format == ma_format_s16) {
         int16_t* out_ptr = (int16_t*)output;
         int16_t* in = (int16_t*)read_buffer;
         float volume = player->volume;
-        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels;
-             i++) {
+        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels; i++) {
           out_ptr[i] = (int16_t)(in[i] * volume);
         }
-        output = (char*)output +
-                 (frames_to_read * device->playback.channels * sizeof(int16_t));
+        output = (char*)output + (frames_to_read * device->playback.channels * sizeof(int16_t));
 
       } else if (device->playback.format == ma_format_s32) {
         int32_t* out_ptr = (int32_t*)output;
         int32_t* in = (int32_t*)read_buffer;
         float volume = player->volume;
-        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels;
-             i++) {
+        for (ma_uint32 i = 0; i < frames_to_read * device->playback.channels; i++) {
           out_ptr[i] = (int32_t)(in[i] * volume);
         }
-        output = (char*)output +
-                 (frames_to_read * device->playback.channels * sizeof(int32_t));
+        output = (char*)output + (frames_to_read * device->playback.channels * sizeof(int32_t));
       }
 
       ma_pcm_rb_commit_read(&player->pcm_buffer, frames_to_read);
@@ -173,8 +161,7 @@ static void playback_callback(ma_device* device, void* output,
     size_t sample_size = (device->playback.format == ma_format_s32)   ? 4
                          : (device->playback.format == ma_format_s16) ? 2
                                                                       : 4;
-    memset(output, 0,
-           frames_remaining * device->playback.channels * sample_size);
+    memset(output, 0, frames_remaining * device->playback.channels * sample_size);
 
     if (player->state == SONIC_STATE_PLAYING) {
       if (player->decoder.is_eof) {
@@ -186,8 +173,7 @@ static void playback_callback(ma_device* device, void* output,
   }
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
-                                              const char* headers) {
+FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* headers) {
   if (!url) return -1;
 
   if (!g_sonic.is_initialized) {
@@ -215,27 +201,21 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
     player->format = ma_format_f32;
   }
 
-  int target_rate =
-      (player->use_native_sample_rate || player->use_exclusive_audio) ? -1
-                                                                      : 48000;
-  if (!player->use_native_sample_rate && !player->use_exclusive_audio &&
-      player->sample_rate <= 0) {
+  int target_rate = (player->use_native_sample_rate || player->use_exclusive_audio) ? -1 : 48000;
+  if (!player->use_native_sample_rate && !player->use_exclusive_audio && player->sample_rate <= 0) {
     player->sample_rate = 48000;
   }
 
   int initial_format_req = player->format;
 
-  int ret = decoder_open(&player->decoder, url, headers, target_rate,
-                         player->channels, initial_format_req);
+  int ret = decoder_open(&player->decoder, url, headers, target_rate, player->channels, initial_format_req);
   if (ret != 0) {
-    LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n",
-         url, ret);
+    LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n", url, ret);
     sa_thread_mutex_unlock(&g_sonic.lock);
     return ret;
   }
 
-  int use_native_format =
-      player->use_exclusive_audio || player->use_native_sample_rate;
+  int use_native_format = player->use_exclusive_audio || player->use_native_sample_rate;
 
   if (use_native_format) {
     enum AVSampleFormat native_fmt = player->decoder.codec_ctx->sample_fmt;
@@ -260,32 +240,27 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
     }
   }
   if (ret != 0) {
-    LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n",
-         url, ret);
+    LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n", url, ret);
     sa_thread_mutex_unlock(&g_sonic.lock);
     return -3;
   }
 
-  if ((player->use_native_sample_rate || player->use_exclusive_audio) &&
-      player->decoder.codec_ctx) {
+  if ((player->use_native_sample_rate || player->use_exclusive_audio) && player->decoder.codec_ctx) {
     player->sample_rate = player->decoder.codec_ctx->sample_rate;
   } else {
     player->sample_rate = 48000;
   }
 
-  player->ring_buffer_size_frames =
-      (int)(player->sample_rate * player->total_buffer_seconds);
-  player->start_threshold_frames =
-      (int)(player->sample_rate * player->start_threshold_seconds);
+  player->ring_buffer_size_frames = (int)(player->sample_rate * player->total_buffer_seconds);
+  player->start_threshold_frames = (int)(player->sample_rate * player->start_threshold_seconds);
 
   LOGI(
       "SonicAudio Player: Buffer Config -> Capacity: %.1fs (%d frames), Start "
       "Threshold: %.1fs (%d frames)\n",
-      player->total_buffer_seconds, player->ring_buffer_size_frames,
-      player->start_threshold_seconds, player->start_threshold_frames);
+      player->total_buffer_seconds, player->ring_buffer_size_frames, player->start_threshold_seconds,
+      player->start_threshold_frames);
 
-  ret = ma_pcm_rb_init(player->format, player->channels,
-                       player->ring_buffer_size_frames, NULL, NULL,
+  ret = ma_pcm_rb_init(player->format, player->channels, player->ring_buffer_size_frames, NULL, NULL,
                        &player->pcm_buffer);
   if (ret != MA_SUCCESS) {
     LOGE("SonicAudio Player: Failed to initialize ring buffer\n");
@@ -323,10 +298,8 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   LOGI(
       "SonicAudio Player: Device Initialized. Rate: %d (Requested: %d), "
       "Channels: %d, Format: %d, Shared: %s\n",
-      player->device.sampleRate, player->sample_rate,
-      player->device.playback.channels, player->device.playback.format,
-      player->device.playback.shareMode == ma_share_mode_exclusive ? "EXCLUSIVE"
-                                                                   : "SHARED");
+      player->device.sampleRate, player->sample_rate, player->device.playback.channels, player->device.playback.format,
+      player->device.playback.shareMode == ma_share_mode_exclusive ? "EXCLUSIVE" : "SHARED");
 
   if (player->device.sampleRate != player->sample_rate) {
     LOGI(
@@ -386,8 +359,7 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_play(void) {
 FFI_PLUGIN_EXPORT void sonic_audio_player_pause(void) {
   if (!g_sonic.player.is_initialized) return;
 
-  if (g_sonic.player.state == SONIC_STATE_PLAYING ||
-      g_sonic.player.state == SONIC_STATE_BUFFERING) {
+  if (g_sonic.player.state == SONIC_STATE_PLAYING || g_sonic.player.state == SONIC_STATE_BUFFERING) {
     g_sonic.player.state = SONIC_STATE_PAUSED;
     ma_device_stop(&g_sonic.player.device);
   }
@@ -454,8 +426,8 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
     ma_device_info* pCaptureInfos;
     ma_uint32 captureCount;
 
-    if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount,
-                               &pCaptureInfos, &captureCount) == MA_SUCCESS) {
+    if (ma_context_get_devices(&g_sonic.ma_ctx, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) ==
+        MA_SUCCESS) {
       if (index < (int)playbackCount) {
         deviceID = pPlaybackInfos[index].id;
         pDeviceID = &deviceID;
@@ -477,12 +449,10 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
     config.pUserData = &g_sonic.player;
     config.playback.pDeviceID = pDeviceID;
 
-    if (ma_device_init(&g_sonic.ma_ctx, &config, &g_sonic.player.device) !=
-        MA_SUCCESS) {
+    if (ma_device_init(&g_sonic.ma_ctx, &config, &g_sonic.player.device) != MA_SUCCESS) {
       LOGE("SonicAudio Player: Failed to re-initialize playback device\n");
       config.playback.pDeviceID = NULL;
-      if (ma_device_init(&g_sonic.ma_ctx, &config, &g_sonic.player.device) !=
-          MA_SUCCESS) {
+      if (ma_device_init(&g_sonic.ma_ctx, &config, &g_sonic.player.device) != MA_SUCCESS) {
         g_sonic.player.is_initialized = 0;
         return -2;
       }
@@ -503,17 +473,11 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
   return 0;
 }
 
-FFI_PLUGIN_EXPORT int sonic_audio_player_get_state(void) {
-  return (int)g_sonic.player.state;
-}
+FFI_PLUGIN_EXPORT int sonic_audio_player_get_state(void) { return (int)g_sonic.player.state; }
 
-FFI_PLUGIN_EXPORT double sonic_audio_player_get_position(void) {
-  return g_sonic.player.position;
-}
+FFI_PLUGIN_EXPORT double sonic_audio_player_get_position(void) { return g_sonic.player.position; }
 
-FFI_PLUGIN_EXPORT double sonic_audio_player_get_duration(void) {
-  return decoder_get_duration(&g_sonic.player.decoder);
-}
+FFI_PLUGIN_EXPORT double sonic_audio_player_get_duration(void) { return decoder_get_duration(&g_sonic.player.decoder); }
 
 FFI_PLUGIN_EXPORT void sonic_audio_player_set_buffer_duration(float seconds) {
   if (seconds < 0.1f) seconds = 0.1f;
@@ -522,12 +486,10 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_set_buffer_duration(float seconds) {
   sa_thread_mutex_lock(&g_sonic.lock);
   g_sonic.player.start_threshold_seconds = seconds;
   if (g_sonic.player.sample_rate > 0) {
-    g_sonic.player.start_threshold_frames =
-        (int)(g_sonic.player.sample_rate * seconds);
+    g_sonic.player.start_threshold_frames = (int)(g_sonic.player.sample_rate * seconds);
   }
   if (g_sonic.player.sample_rate > 0) {
-    g_sonic.player.start_threshold_frames =
-        (int)(g_sonic.player.sample_rate * seconds);
+    g_sonic.player.start_threshold_frames = (int)(g_sonic.player.sample_rate * seconds);
   }
   sa_thread_mutex_unlock(&g_sonic.lock);
 }
@@ -536,7 +498,6 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_set_native_rate_enabled(int enabled) {
   g_sonic.player.use_native_sample_rate = enabled;
 }
 
-FFI_PLUGIN_EXPORT void sonic_audio_player_set_exclusive_audio_enabled(
-    int enabled) {
+FFI_PLUGIN_EXPORT void sonic_audio_player_set_exclusive_audio_enabled(int enabled) {
   g_sonic.player.use_exclusive_audio = enabled;
 }
