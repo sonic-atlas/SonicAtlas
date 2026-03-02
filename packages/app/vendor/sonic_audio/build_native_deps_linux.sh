@@ -49,7 +49,9 @@ cd "ffmpeg-${FFMPEG_VERSION}"
   --enable-openssl \
   --enable-protocol=file,tcp,udp,http,https,hls,tls,pipe \
   --enable-demuxer=hls,mpegts,mov,flac,mp3,ogg,wav,matroska \
-  --enable-decoder=opus,flac,mp3,pcm_s16le,vorbis,aac \
+  --enable-muxer=wav \
+  --enable-decoder=opus,flac,mp3,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,vorbis,aac \
+  --enable-encoder=pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le \
   --enable-parser=opus,flac,mpegaudio,vorbis,aac \
   --enable-small \
   --extra-cflags="-fPIC -O2 -I${PREFIX}/include" \

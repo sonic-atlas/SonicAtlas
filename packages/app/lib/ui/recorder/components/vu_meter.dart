@@ -1,4 +1,4 @@
-/*import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class VUMeter extends StatelessWidget {
@@ -128,4 +128,3 @@ class _VUPainter extends CustomPainter {
       oldDelegate.currentDb != currentDb ||
       oldDelegate.context != context;
 }
-*/

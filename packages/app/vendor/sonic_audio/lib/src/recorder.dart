@@ -71,6 +71,33 @@ class SonicRecorder {
     return result;
   }
 
+  int startFile({
+    required String filePath,
+    int deviceIndex = -1,
+    int sampleRate = 48000,
+    int channels = 2,
+    int bitDepth = 16,
+  }) {
+    if (_isRecording) stop();
+
+    _isS32 = bitDepth == 24 || bitDepth == 32;
+
+    final pathPtr = filePath.toNativeUtf8();
+    final result = _bindings.recorderStartFile(
+      deviceIndex,
+      sampleRate,
+      channels,
+      bitDepth,
+      pathPtr,
+    );
+    calloc.free(pathPtr);
+
+    if (result == 0) {
+      _isRecording = true;
+    }
+    return result;
+  }
+
   int stop() {
     if (!_isRecording) return 0;
 
@@ -87,6 +114,14 @@ class SonicRecorder {
   int readS32(Pointer<Int32> buffer, int frameCount) {
     if (!_isRecording || !_isS32) return 0;
     return _bindings.recorderReadS32(buffer, frameCount);
+  }
+
+  void setMonitor(bool enable) {
+    _bindings.recorderSetMonitor(enable ? 1 : 0);
+  }
+
+  double getRms() {
+    return _bindings.recorderGetRms();
   }
 
   String _backendName(int id) {

@@ -48,10 +48,17 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(
 FFI_PLUGIN_EXPORT int sonic_audio_recorder_start(int device_index,
                                                  int sample_rate, int channels,
                                                  int bit_depth);
+FFI_PLUGIN_EXPORT int sonic_audio_recorder_start_file(int device_index,
+                                                      int sample_rate,
+                                                      int channels,
+                                                      int bit_depth,
+                                                      const char* file_path);
 FFI_PLUGIN_EXPORT int sonic_audio_recorder_stop(void);
 FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s16(int16_t* output,
                                                     int frame_count);
 FFI_PLUGIN_EXPORT int sonic_audio_recorder_read_s32(int32_t* output,
                                                     int frame_count);
+FFI_PLUGIN_EXPORT void sonic_audio_recorder_set_monitor(int enable);
+FFI_PLUGIN_EXPORT float sonic_audio_recorder_get_rms(void);
 
 #endif

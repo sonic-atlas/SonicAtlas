@@ -231,7 +231,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
     LOGE("SonicAudio Player: Failed to open decoder for %s (Error code: %d)\n",
          url, ret);
     sa_thread_mutex_unlock(&g_sonic.lock);
-    return -3;
+    return ret;
   }
 
   int use_native_format =
@@ -342,10 +342,11 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url,
   player->decoder.is_eof = 0;
 
   player->decoder.should_stop = 0;
-  ret = sa_thread_create(&player->decoder.thread, decoder_thread_func,
-                       player);
+  player->decoder.is_running = 1;
+  ret = sa_thread_create(&player->decoder.thread, decoder_thread_func, player);
   if (ret != 0) {
     LOGE("SonicAudio Player: Failed to start decoder thread\n");
+    player->decoder.is_running = 0;
     ma_device_uninit(&player->device);
     ma_pcm_rb_uninit(&player->pcm_buffer);
     decoder_close(&player->decoder);

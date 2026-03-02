@@ -15,7 +15,7 @@ class ServerSetupPage extends StatefulWidget {
 class _ServerSetupPageState extends State<ServerSetupPage> {
   final _hostController = TextEditingController();
   final _portController = TextEditingController(text: '3000');
-  
+
   String _protocol = 'http';
   String _serverType = 'ip';
   String? _errorMessage;
@@ -59,9 +59,9 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
         });
         return;
       }
-      
+
       if (port.isEmpty || int.tryParse(port) == null) {
-         setState(() {
+        setState(() {
           _errorMessage = 'Invalid port';
         });
         return;
@@ -133,11 +133,17 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'ip', child: Text('IP Address')),
-                        DropdownMenuItem(value: 'domain', child: Text('Domain')),
+                        DropdownMenuItem(
+                          value: 'ip',
+                          child: Text('IP Address'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'domain',
+                          child: Text('Domain'),
+                        ),
                       ],
                       onChanged: (value) {
-                         if (value != null) {
+                        if (value != null) {
                           setState(() => _serverType = value);
                         }
                       },
@@ -151,11 +157,13 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
                 decoration: InputDecoration(
                   labelText: _serverType == 'ip' ? 'Host / IP' : 'Domain',
                   border: const OutlineInputBorder(),
-                  hintText: _serverType == 'ip' ? '192.168.1.100' : 'sonic.example.com',
+                  hintText: _serverType == 'ip'
+                      ? '192.168.1.100'
+                      : 'sonic.example.com',
                   errorText: _errorMessage,
                 ),
-                keyboardType: _serverType == 'ip' 
-                    ? TextInputType.numberWithOptions(decimal: true) 
+                keyboardType: _serverType == 'ip'
+                    ? TextInputType.numberWithOptions(decimal: true)
                     : TextInputType.url,
                 textInputAction: TextInputAction.next,
               ),

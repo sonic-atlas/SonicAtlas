@@ -12,5 +12,17 @@ class AudioDevice {
   });
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AudioDevice &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          backend == other.backend &&
+          index == other.index;
+
+  @override
+  int get hashCode => name.hashCode ^ backend.hashCode ^ index.hashCode;
+
+  @override
   String toString() => '$name [$backend]${isDefault ? ' (Default)' : ''}';
 }

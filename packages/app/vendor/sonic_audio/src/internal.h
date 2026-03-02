@@ -50,7 +50,7 @@ static inline int sa_strncpy(char* dest, size_t dest_size, const char* src,
   }
 
   max = count;
-  if (count == ((size_t)-1) || count >= dest_size) {        /* -1 = _TRUNCATE */
+  if (count == ((size_t)-1) || count >= dest_size) { /* -1 = _TRUNCATE */
     max = dest_size - 1;
   }
 
@@ -125,9 +125,25 @@ typedef struct {
   ma_device device;
   int is_initialized;
   ma_pcm_rb capture_buffer;
+
+  ma_device monitor_device;
+  int is_monitor_initialized;
+  ma_pcm_rb monitor_buffer;
+
   ma_format format;
   int sample_rate;
   int channels;
+
+  AVFormatContext* out_fmt_ctx;
+  AVCodecContext* out_codec_ctx;
+  AVStream* out_stream;
+
+  int is_recording_to_file;
+  sa_thread_t encoder_thread;
+  volatile int should_stop_encoder;
+
+  volatile int is_monitoring;
+  volatile float current_rms;
 } RecorderState;
 
 typedef struct {

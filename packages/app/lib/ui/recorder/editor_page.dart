@@ -1,8 +1,8 @@
-/*import 'dart:io';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 import '../../../../core/services/recorder/processing_service.dart';
 import '../../../../core/models/release.dart';
@@ -18,7 +18,7 @@ class EditorPage extends StatefulWidget {
 
 class _EditorPageState extends State<EditorPage>
     with SingleTickerProviderStateMixin {
-  late final Player _player;
+  late final SonicPlayer _player;
   late final TabController _tabController;
 
   final Map<String, List<TrackSplit>> _fileSplits = {};
@@ -33,13 +33,13 @@ class _EditorPageState extends State<EditorPage>
   @override
   void initState() {
     super.initState();
-    _player = Player();
+    _player = SonicPlayer();
 
-    _player.stream.position.listen((pos) {
+    _player.positionStream.listen((pos) {
       if (mounted) setState(() => _currentPosition = pos);
     });
 
-    _player.stream.duration.listen((dur) {
+    _player.durationStream.listen((dur) {
       if (mounted) setState(() => _totalDuration = dur);
     });
 
@@ -105,7 +105,7 @@ class _EditorPageState extends State<EditorPage>
   }
 
   Future<void> _loadFile(String path) async {
-    await _player.open(Media(path));
+    await _player.load(path);
     setState(() {});
   }
 
@@ -548,13 +548,19 @@ class _EditorPageState extends State<EditorPage>
                         _currentPosition - const Duration(seconds: 5),
                       ),
                     ),
-                    StreamBuilder<bool>(
-                      stream: _player.stream.playing,
+                    StreamBuilder<PlayerState>(
+                      stream: _player.stateStream,
                       builder: (context, snapshot) {
-                        final playing = snapshot.data ?? false;
+                        final playing = snapshot.data == PlayerState.playing;
                         return IconButton.filled(
                           icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                          onPressed: () => _player.playOrPause(),
+                          onPressed: () {
+                            if (playing) {
+                              _player.pause();
+                            } else {
+                              _player.play();
+                            }
+                          },
                         );
                       },
                     ),
@@ -569,8 +575,103 @@ class _EditorPageState extends State<EditorPage>
               ],
             ),
           ),
-          if (processor.isProcessing)
+          if (processor.isProcessing && processor.uploadProgress == null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'Processing audio...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
             LinearProgressIndicator(value: processor.progress),
+          ] else if (processor.uploadProgress != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Uploading Release...',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Text('${processor.uploadProgress!.overallProgress}%'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: processor.uploadProgress!.overallProgress / 100,
+                    backgroundColor: Colors.grey.shade800,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      itemCount: processor.uploadProgress!.files.length,
+                      itemBuilder: (context, index) {
+                        final fp = processor.uploadProgress!.files[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: fp.status == 'error'
+                                ? Colors.red.withValues(alpha: 0.1)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                fp.status == 'complete'
+                                    ? Icons.check_circle
+                                    : (fp.status == 'error'
+                                          ? Icons.error
+                                          : Icons.cloud_upload),
+                                color: fp.status == 'complete'
+                                    ? Colors.green
+                                    : (fp.status == 'error'
+                                          ? Colors.red
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary),
+                                size: 14,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  fp.fileName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              if (fp.status == 'uploading' && fp.bytesTotal > 0)
+                                SizedBox(
+                                  width: 40,
+                                  child: LinearProgressIndicator(
+                                    value: fp.bytesUploaded / fp.bytesTotal,
+                                    minHeight: 2,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           Expanded(
             child: splits != null
                 ? ListView.builder(
@@ -721,4 +822,3 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
     return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
   }
 }
-*/
