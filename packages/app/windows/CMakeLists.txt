@@ -141,23 +141,3 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/crt"
   CONFIGURATIONS Release
   COMPONENT Runtime
 )
-
-# Copy Flutter plugin DLLs to build because it's broken for some reason
-set(PLUGIN_BUILD_DIR "${PROJECT_BUILD_DIR}/plugins")
-
-set(PLUGIN_NAMES
-  audio_service_win
-  windows_single_instance
-  windows_taskbar
-)
-
-foreach(PLUGIN ${PLUGIN_NAMES})
-  add_custom_command(
-    TARGET ${BINARY_NAME}
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${PLUGIN_BUILD_DIR}/${PLUGIN}/$<CONFIG>/${PLUGIN}.dll"
-            "$<TARGET_FILE_DIR:${BINARY_NAME}>/${PLUGIN}.dll"
-    COMMENT "Copying ${PLUGIN}.dll ($<CONFIG>) to output directory"
-  )
-endforeach()
