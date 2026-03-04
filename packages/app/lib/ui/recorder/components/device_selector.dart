@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sonic_recorder/sonic_recorder.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 
 class DeviceSelector extends StatelessWidget {
@@ -48,18 +48,22 @@ class DeviceSelector extends StatelessWidget {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<AudioDevice>(
                     isExpanded: true,
-                    items: recorderService.devices.map((d) {
-                      return DropdownMenuItem(
-                        value: d,
-                        child: Text(
-                          d.toString(),
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    items: recorderService.devices
+                        .map<DropdownMenuItem<AudioDevice>>((AudioDevice d) {
+                          return DropdownMenuItem<AudioDevice>(
+                            value: d,
+                            child: Text(
+                              d.toString(),
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          );
+                        })
+                        .toList(),
                     onChanged: recorderService.isRecording
                         ? null
                         : onDeviceChanged,
@@ -122,7 +126,7 @@ class DeviceSelector extends StatelessWidget {
                       child: DropdownButton<int>(
                         isExpanded: true,
                         items: sampleRates.map((sr) {
-                          return DropdownMenuItem(
+                          return DropdownMenuItem<int>(
                             value: sr,
                             child: Text('${sr}Hz'),
                           );

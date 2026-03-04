@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import '../../models/recorder.dart';
 import '../../models/release.dart';
+import '../../models/upload.dart';
 import '../network/api.dart';
 
 export '../../models/recorder.dart';
@@ -18,6 +19,9 @@ class ProcessingService extends ChangeNotifier {
   double? _progress = 0.0;
   double? get progress => _progress;
 
+  ReleaseUploadProgress? _uploadProgress;
+  ReleaseUploadProgress? get uploadProgress => _uploadProgress;
+
   String? _error;
   String? get error => _error;
 
@@ -30,6 +34,7 @@ class ProcessingService extends ChangeNotifier {
   }) async {
     _isProcessing = true;
     _progress = 0.0;
+    _uploadProgress = null;
     _error = null;
     notifyListeners();
 
@@ -134,6 +139,10 @@ class ProcessingService extends ChangeNotifier {
       metadata.releaseType ?? 'album',
       false,
       null,
+      onProgress: (progress) {
+        _uploadProgress = progress;
+        notifyListeners();
+      },
     );
   }
 

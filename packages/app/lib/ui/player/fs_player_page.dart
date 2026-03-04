@@ -10,6 +10,7 @@ import '../../core/services/network/api.dart';
 import '../../core/services/playback/audio.dart';
 import '../../core/services/config/settings.dart';
 import 'queue_page.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '../theme/app_theme.dart';
 
 class FullScreenPlayerPage extends StatefulWidget {
@@ -278,6 +279,102 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
     );
   }
 
+  void _showAudioSettings() {
+    final audioService = context.read<AudioService>();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return FutureBuilder<List<AudioDevice>>(
+              future: audioService.getPlaybackDevices(),
+              builder: (context, snapshot) {
+                final devices = snapshot.data ?? [];
+
+                return SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Audio Settings',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 24),
+
+                        Text(
+                          'Volume',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Consumer<AudioService>(
+                          builder: (context, audio, child) {
+                            return Row(
+                              children: [
+                                const Icon(Icons.volume_down, size: 20),
+                                Expanded(
+                                  child: Slider(
+                                    value: audio.volume.clamp(0.0, 1.0),
+                                    onChanged: (value) {
+                                      audio.setVolume(value);
+                                    },
+                                  ),
+                                ),
+                                const Icon(Icons.volume_up, size: 20),
+                              ],
+                            );
+                          },
+                        ),
+
+                        const Divider(height: 32),
+
+                        Text(
+                          'Output Device',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        if (snapshot.connectionState == ConnectionState.waiting)
+                          const Center(child: CircularProgressIndicator())
+                        else if (devices.isEmpty)
+                          const Text('No devices found')
+                        else
+                          RadioGroup<int>(
+                            groupValue:
+                                -1, // Current device not tracked so -1 for null
+                            onChanged: (value) {
+                              if (value != null) {
+                                final device = devices.firstWhere(
+                                  (d) => d.index == value,
+                                );
+                                audioService.setOutputDevice(device);
+                                Navigator.pop(context);
+                              }
+                            },
+                            child: Column(
+                              children: devices.map((device) {
+                                return RadioListTile<int>(
+                                  title: Text(device.name),
+                                  subtitle: Text(device.backend),
+                                  value: device.index,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final audioService = context.watch<AudioService>();
@@ -383,6 +480,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                       },
                       tooltip: 'Queue',
                     ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.volume_up, color: Colors.white),
+                      onPressed: _showAudioSettings,
+                      tooltip: 'Audio Settings',
+                    ),
                   ],
                 );
 
@@ -461,6 +564,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
 
                 final progressBarWidget = StreamBuilder<Duration>(
                   stream: audioService.positionStream,
+                  initialData: audioService.position,
                   builder: (context, snapshot) {
                     final position = snapshot.data ?? Duration.zero;
                     final duration = audioService.duration;

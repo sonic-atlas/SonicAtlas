@@ -13,7 +13,11 @@ class ServerSetupPage extends StatefulWidget {
 }
 
 class _ServerSetupPageState extends State<ServerSetupPage> {
-  final _ipController = TextEditingController();
+  final _hostController = TextEditingController();
+  final _portController = TextEditingController(text: '3000');
+
+  String _protocol = 'http';
+  String _serverType = 'ip';
   String? _errorMessage;
 
   bool _isValidIpAddress(String ip) {
@@ -33,30 +37,45 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
     return hostnamePattern.hasMatch(hostname) && hostname.length <= 253;
   }
 
-  void _saveServerIp() {
-    final trimmedInput = _ipController.text.trim();
+  void _saveServerUrl() {
+    final host = _hostController.text.trim();
+    final port = _portController.text.trim();
 
     setState(() {
       _errorMessage = null;
     });
 
-    if (trimmedInput.isEmpty) {
+    if (host.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a server IP or hostname';
+        _errorMessage = 'Please enter a host';
       });
       return;
     }
 
-    if (!_isValidIpAddress(trimmedInput) && !_isValidHostname(trimmedInput)) {
-      setState(() {
-        _errorMessage = 'Invalid IP address or hostname';
-      });
-      return;
+    if (_serverType == 'ip') {
+      if (!_isValidIpAddress(host) && !_isValidHostname(host)) {
+        setState(() {
+          _errorMessage = 'Invalid IP address or hostname';
+        });
+        return;
+      }
+
+      if (port.isEmpty || int.tryParse(port) == null) {
+        setState(() {
+          _errorMessage = 'Invalid port';
+        });
+        return;
+      }
     }
 
-    _ipController.text = trimmedInput;
+    String serverUrl;
+    if (_serverType == 'ip') {
+      serverUrl = '$_protocol://$host:$port';
+    } else {
+      serverUrl = '$_protocol://$host';
+    }
 
-    context.read<SettingsService>().setServerIp(trimmedInput);
+    context.read<SettingsService>().setServerUrl(serverUrl, _serverType);
     Navigator.pushReplacementNamed(
       context,
       '/login',
@@ -72,38 +91,99 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
           constraints: const BoxConstraints(maxWidth: 300),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Welcome to Sonic Atlas',
                 style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Please enter your server IP address or hostname to begin.',
+                'Configure your server connection.',
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              TextField(
-                controller: _ipController,
-                decoration: InputDecoration(
-                  labelText: 'Server IP or Hostname',
-                  border: const OutlineInputBorder(),
-                  hintText: 'e.g., 192.168.1.100',
-                  errorText: _errorMessage,
-                ),
-                keyboardType: TextInputType.url,
-                textInputAction: TextInputAction.go,
-                onSubmitted: (_) => _saveServerIp(),
-                onChanged: (_) {
-                  if (_errorMessage != null) {
-                    setState(() {
-                      _errorMessage = null;
-                    });
-                  }
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _protocol,
+                      decoration: const InputDecoration(
+                        labelText: 'Protocol',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'http', child: Text('HTTP')),
+                        DropdownMenuItem(value: 'https', child: Text('HTTPS')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _protocol = value);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _serverType,
+                      decoration: const InputDecoration(
+                        labelText: 'Type',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'ip',
+                          child: Text('IP Address'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'domain',
+                          child: Text('Domain'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _serverType = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
+              TextField(
+                controller: _hostController,
+                decoration: InputDecoration(
+                  labelText: _serverType == 'ip' ? 'Host / IP' : 'Domain',
+                  border: const OutlineInputBorder(),
+                  hintText: _serverType == 'ip'
+                      ? '192.168.1.100'
+                      : 'sonic.example.com',
+                  errorText: _errorMessage,
+                ),
+                keyboardType: _serverType == 'ip'
+                    ? TextInputType.numberWithOptions(decimal: true)
+                    : TextInputType.url,
+                textInputAction: TextInputAction.next,
+              ),
+              if (_serverType == 'ip') ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _portController,
+                  decoration: const InputDecoration(
+                    labelText: 'Port',
+                    border: OutlineInputBorder(),
+                    hintText: '3000',
+                  ),
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _saveServerUrl(),
+                ),
+              ],
+              const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _saveServerIp,
+                onPressed: _saveServerUrl,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),

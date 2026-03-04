@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:media_kit/media_kit.dart' as media_kit;
+import 'package:sonic_audio/sonic_audio.dart';
 import 'package:sonic_atlas/core/services/playback/media_handler.dart';
 
 import '../../models/quality.dart';
@@ -11,9 +11,9 @@ import '../auth/auth.dart';
 import '../config/settings.dart';
 
 class AudioService with ChangeNotifier {
-  final media_kit.Player _player;
+  final SonicPlayer _player;
 
-  media_kit.Player get player => _player;
+  SonicPlayer get player => _player;
 
   final ApiService _apiService;
   final AuthService _authService;
@@ -37,18 +37,24 @@ class AudioService with ChangeNotifier {
 
   Quality? get currentTrackQuality => _currentTrackQuality;
 
-  bool get isPlaying => _player.state.playing;
+  double get volume => _settingsService.audioVolume;
 
-  Stream<bool> get playingStream => _player.stream.playing;
+  bool get isPlaying => _player.state == PlayerState.playing;
+
+  Duration get position => _optimisticPosition ?? _player.position;
+
+  Stream<bool> get playingStream =>
+      _player.stateStream.map((s) => s == PlayerState.playing);
 
   Stream<Duration> get positionStream =>
-      _player.stream.position.map((p) => _optimisticPosition ?? p);
+      _player.positionStream.map((p) => _optimisticPosition ?? p);
 
-  Stream<bool> get bufferingStream => _player.stream.buffering;
+  Stream<bool> get bufferingStream =>
+      _player.stateStream.map((s) => s == PlayerState.buffering);
 
-  bool get isBuffering => _player.state.buffering;
+  bool get isBuffering => _player.isBuffering;
 
-  Duration get duration => _optimisticDuration ?? _player.state.duration;
+  Duration get duration => _optimisticDuration ?? _player.duration;
 
   Duration? _optimisticPosition;
   Duration? _optimisticDuration;
@@ -80,11 +86,7 @@ class AudioService with ChangeNotifier {
     this._apiService,
     this._authService,
     this._settingsService,
-  ) : _player = media_kit.Player(
-        configuration: const media_kit.PlayerConfiguration(
-          bufferSize: 32 * 1024 * 1024,
-        ),
-      ) {
+  ) : _player = SonicPlayer() {
     _init();
     _settingsService.addListener(_onSettingsChanged);
   }
@@ -99,80 +101,85 @@ class AudioService with ChangeNotifier {
 
   void setAudioHandler(MediaSessionHandler handler) {
     _audioHandler = handler;
+    _audioHandler.onPlay = () async => play();
+    _audioHandler.onPause = () async => pause();
+    _audioHandler.onSeek = (position) async => seek(position);
   }
 
   Future<void> _init() async {
     try {
-      _player.stream.error.listen((error) {
-        _lastError = error;
-
-        final errorStr = error.toString().toLowerCase();
-        final isRecoverableError =
-            errorStr.contains('connection') ||
-            errorStr.contains('refused') ||
-            errorStr.contains('failed to open') ||
-            errorStr.contains('tcp') ||
-            errorStr.contains('network') ||
-            errorStr.contains('timeout');
-
-        if (isRecoverableError) {
-          if (kDebugMode) {
-            print('Player error (recoverable): $error');
-          }
-          _attemptRecovery();
-        }
-      });
-
-      _player.stream.playing.listen((isPlaying) {
-        if (isPlaying) {
+      _player.stateStream.listen((state) {
+        if (state == PlayerState.playing) {
           _playController.add(this);
-        } else {
+        } else if (state == PlayerState.paused) {
           _pauseController.add(this);
-
-          if (_currentTrack != null && !_isRecovering && !_userPaused) {
-            final position = _lastKnownPosition;
-            final duration = _lastKnownDuration;
-            final notNearEnd =
-                duration.inSeconds > 0 && (duration - position).inSeconds > 10;
-
-            if (notNearEnd && position.inSeconds > 5) {
-              if (kDebugMode) {
-                print(
-                  'Unexpected stop detected at ${position.inSeconds}s/${duration.inSeconds}s. Attempting recovery.',
-                );
+        } else if (state == PlayerState.ended) {
+          _handleTrackEnd();
+        } else if (state == PlayerState.error) {
+          if (kDebugMode) {
+            print('Player error state detected. Attempting recovery...');
+          }
+          if (_currentTrack != null && !_isRecovering) {
+            Future.delayed(const Duration(seconds: 2), () {
+              if (_currentTrack != null && !_userPaused) {
+                _attemptRecovery();
               }
-              Future.delayed(const Duration(seconds: 1), () {
-                if (!_player.state.playing && _currentTrack != null) {
-                  _attemptRecovery();
-                }
-              });
-            }
+            });
           }
         }
-        notifyListeners();
-      });
 
-      _player.stream.buffering.listen((isBuffering) {
+        if (state != PlayerState.playing &&
+            _currentTrack != null &&
+            !_isRecovering &&
+            !_userPaused &&
+            state != PlayerState.ended &&
+            state != PlayerState.buffering &&
+            state != PlayerState.error) {
+          final position = _lastKnownPosition;
+          final duration = _lastKnownDuration;
+          final notNearEnd =
+              duration.inSeconds > 0 && (duration - position).inSeconds > 5;
+
+          if (notNearEnd && position.inSeconds > 2) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (_player.state != PlayerState.playing &&
+                  !_userPaused &&
+                  !_isRecovering &&
+                  _currentTrack != null) {
+                if (kDebugMode) {
+                  print('Unexpected stop confirmed. Attempting recovery.');
+                }
+                _attemptRecovery();
+              }
+            });
+          }
+        }
+
         notifyListeners();
       });
 
       if (kDebugMode) {
-        print('AudioService initialized (media_kit)');
+        print('AudioService initialized');
       }
+
+      _player.setBufferDuration(_settingsService.audioBufferDuration);
+      _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
+      _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
+      _player.setVolume(_settingsService.audioVolume);
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        print('Error initializing AudioService: $e');
-        print('Stack trace: $stackTrace');
+        debugPrint('Error initializing AudioService: $e');
+        debugPrint('Stack trace: $stackTrace');
       }
     }
 
-    _player.stream.position.listen((p) {
+    _player.positionStream.listen((p) {
       if (_isRecovering && _optimisticPosition != null) {
-        if (_player.state.playing &&
-            !_player.state.buffering &&
+        if (_player.isPlaying &&
+            !_player.isBuffering &&
             p.inSeconds >= (_optimisticPosition!.inSeconds - 2)) {
           if (kDebugMode) {
-            print(
+            debugPrint(
               'Recovery complete. Player at ${p.inSeconds}s, target was ${_optimisticPosition!.inSeconds}s',
             );
           }
@@ -183,26 +190,12 @@ class AudioService with ChangeNotifier {
         return;
       }
 
-      if (_player.state.playing &&
-          !_player.state.buffering &&
-          p != Duration.zero) {
+      if (_player.isPlaying && !_player.isBuffering && p != Duration.zero) {
         _lastKnownPosition = p;
-
-        final duration = _player.state.duration;
-        final durationIsStable =
-            _lastKnownDuration.inSeconds > 0 &&
-            (duration.inSeconds - _lastKnownDuration.inSeconds).abs() < 3;
-
-        if (durationIsStable && duration.inSeconds > 0 && p.inSeconds > 0) {
-          final remaining = duration.inSeconds - p.inSeconds;
-          if (remaining <= 1 && remaining >= 0) {
-            _handleTrackEnd();
-          }
-        }
       }
     });
 
-    _player.stream.duration.listen((d) {
+    _player.durationStream.listen((d) {
       if (!_isRecovering && d != Duration.zero) {
         _lastKnownDuration = d;
       }
@@ -210,12 +203,11 @@ class AudioService with ChangeNotifier {
   }
 
   void _onSettingsChanged() async {
-    final newQuality = _settingsService.audioQuality;
-    if (newQuality != _currentTrackQuality && _currentTrack != null) {
-      if (kDebugMode) {
-        print('Quality setting changed to: ${newQuality.value}');
-      }
-    }
+    _player.setBufferDuration(_settingsService.audioBufferDuration);
+    _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
+    _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
+    _player.setVolume(_settingsService.audioVolume);
+
     notifyListeners();
   }
 
@@ -277,8 +269,8 @@ class AudioService with ChangeNotifier {
 
       _currentTrackQuality = selectedQuality;
 
-      final url = _apiService.getStreamUrl(track.id, selectedQuality);
       final token = _authService.token;
+      final url = _apiService.getStreamUrl(track.id, selectedQuality);
 
       if (kDebugMode) {
         print('Playing: ${track.title}');
@@ -316,9 +308,9 @@ class AudioService with ChangeNotifier {
 
       _lastError = null;
 
-      await _player.open(
-        media_kit.Media(url, httpHeaders: {'Authorization': 'Bearer $token'}),
-        play: false,
+      await _player.load(
+        url,
+        headers: 'Authorization: Bearer $token\r\n',
       );
 
       if (isRecovery &&
@@ -339,7 +331,7 @@ class AudioService with ChangeNotifier {
             }
             throw Exception('Stream failed to load: $_lastError');
           }
-          if (_player.state.duration.inSeconds > 0) {
+          if (_player.duration.inSeconds > 0) {
             streamReady = true;
             break;
           }
@@ -351,16 +343,16 @@ class AudioService with ChangeNotifier {
               'Stream loaded. Seeking to ${_optimisticPosition!.inSeconds}s...',
             );
           }
-          await _player.seek(_optimisticPosition!);
+          _player.seek(_optimisticPosition!);
         } else {
           if (kDebugMode) {
             print('Warning: Timeout waiting for stream, seeking anyway...');
           }
-          await _player.seek(_optimisticPosition!);
+          _player.seek(_optimisticPosition!);
         }
       }
 
-      await _player.play();
+      _player.play();
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print('Error playing track: $e');
@@ -433,13 +425,13 @@ class AudioService with ChangeNotifier {
 
   void play() {
     _userPaused = false;
-    _audioHandler.play();
+    _player.play();
     notifyListeners();
   }
 
   void pause() {
     _userPaused = true;
-    _audioHandler.pause();
+    _player.pause();
     notifyListeners();
   }
 
@@ -462,8 +454,7 @@ class AudioService with ChangeNotifier {
   }
 
   void seek(Duration position) {
-    _player.setPlaylistMode(media_kit.PlaylistMode.single);
-    _audioHandler.seek(position);
+    _player.seek(position);
     _seekController.add(position);
     notifyListeners();
   }
@@ -528,6 +519,22 @@ class AudioService with ChangeNotifier {
       _recoveryInProgress = false;
       _attemptRecovery();
     }
+  }
+
+  void setVolume(double volume) {
+    _player.setVolume(volume);
+    _settingsService.setAudioVolume(volume);
+  }
+
+  void setOutputDevice(AudioDevice device) {
+    if (kDebugMode) {
+      print('Setting output device to: ${device.name}');
+    }
+    _player.setOutputDevice(device.index);
+  }
+
+  Future<List<AudioDevice>> getPlaybackDevices() async {
+    return SonicPlayer.getAvailableDevices();
   }
 
   @override

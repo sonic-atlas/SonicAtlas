@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sonic_recorder/sonic_recorder.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '/core/services/recorder/recorder_service.dart';
 import 'components/device_selector.dart';
 import 'components/vu_meter.dart';
@@ -112,7 +112,7 @@ class _AnalogTabState extends State<_AnalogTab> {
 
                       if (!recorderService.isRecording)
                         Padding(
-                          padding: EdgeInsets.only(bottom: 24.0),
+                          padding: const EdgeInsets.only(bottom: 24.0),
                           child: Text(
                             'Record the entire side or album as one continuous track.\nYou can stop recording when switching sides; multiple recordings will be grouped into a session.\nYou can split tracks and remove silence in the editor after recording.',
                             textAlign: TextAlign.center,
@@ -121,6 +121,21 @@ class _AnalogTabState extends State<_AnalogTab> {
                                 context,
                               ).colorScheme.onSurfaceVariant,
                               fontSize: 14,
+                            ),
+                          ),
+                        ),
+
+                      if (!recorderService.isRecording &&
+                          recorderService.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Text(
+                            'Error: ${recorderService.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
                         ),
