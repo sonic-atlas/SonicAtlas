@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '#db/db';
-import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
+import { authMiddleware } from '../middleware/auth.ts';
 import { playlistItems, playlists } from '#db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { logger } from '../utils/logger.ts';
@@ -9,7 +9,7 @@ import { isUUID } from '../utils/isUUID.ts';
 const router = Router();
 router.use(authMiddleware);
 
-router.post('/', uploaderPerms, async (req, res) => {
+router.post('/', async (req, res) => {
     const { name, description } = req.body;
 
     if (!name || !description) {
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
+router.post('/:playlistId/tracks', async (req, res) => {
     const { playlistId } = req.params;
     const { trackId, position } = req.body;
 
@@ -99,7 +99,7 @@ router.post('/:playlistId/tracks', uploaderPerms, async (req, res) => {
     }
 });
 
-router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) => {
+router.delete('/:playlistId/tracks/:trackId', async (req, res) => {
     const { playlistId, trackId } = req.params;
 
     if (!isUUID(playlistId!) || !isUUID(trackId!)) {
@@ -128,7 +128,7 @@ router.delete('/:playlistId/tracks/:trackId', uploaderPerms, async (req, res) =>
     }
 });
 
-router.delete('/:playlistId', uploaderPerms, async (req, res) => {
+router.delete('/:playlistId', async (req, res) => {
     const { playlistId } = req.params;
 
     if (!isUUID(playlistId!)) {

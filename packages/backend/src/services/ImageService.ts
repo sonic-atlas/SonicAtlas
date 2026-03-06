@@ -1,4 +1,3 @@
-
 import sharp from 'sharp';
 import path from 'path';
 import fsp from 'node:fs/promises';
@@ -21,7 +20,6 @@ export class ImageService {
                 .toFile(thumbPath);
 
             logger.info(`Processed cover art: ${baseFilename} (Main & Small)`);
-
         } catch (error) {
             logger.error(`Failed to process cover art for ${baseFilename}: ${error}`);
             throw error;
