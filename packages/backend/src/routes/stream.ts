@@ -7,6 +7,8 @@ import path from 'node:path';
 import { isUUID } from '../utils/isUUID.ts';
 import { $rootDir } from '@sonic-atlas/shared';
 import fs from 'node:fs';
+import { streamBytesTotal, tracksStreamedTotal } from '../services/metrics/playbackMetrics.ts';
+import { registerPlaybackActivity } from '../services/playbackActivity.ts';
 
 const router = Router();
 router.use(authMiddleware);
@@ -95,6 +97,7 @@ const hlsRoot = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls'
 // Master playlist, for ABR
 router.get('/:trackId/master.m3u8', async (req, res) => {
     const { trackId } = req.params;
+    const sessionId = req.query.session as string | undefined;
     const filepath = path.join(hlsRoot, trackId!, 'master.m3u8');
 
     if (!fs.existsSync(filepath)) {
@@ -110,18 +113,27 @@ router.get('/:trackId/master.m3u8', async (req, res) => {
         return res.status(304);
     }
 
+    if (sessionId) {
+        registerPlaybackActivity(sessionId);
+    }
+
     res.setHeader('ETag', etag);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
     res.setHeader('Cache-Control', 'no-cache');
 
     fs.createReadStream(filepath).pipe(res);
+
+    tracksStreamedTotal.inc({
+        quality: 'master'
+    });
 });
 
 // Routes for individual qualities
 router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
     const { trackId, quality, filename } = req.params;
+    const sessionId = req.query.session as string | undefined;
     const filepath = path.join(hlsRoot, trackId!, quality!, `${filename}.m3u8`);
-
+    
     if (!fs.existsSync(filepath)) {
         return res.status(404).json({
             error: 'NOT_FOUND',
@@ -129,21 +141,30 @@ router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
             message: `Playlist '${quality}/${filename}' not found`
         });
     }
-
+    
     const etag = String((await fs.promises.stat(filepath)).mtimeMs);
     if (req.headers['if-none-match'] === etag) {
         return res.status(304);
+    }
+    
+    if (sessionId) {
+        registerPlaybackActivity(sessionId);
     }
 
     res.setHeader('ETag', etag);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
     res.setHeader('Cache-Control', 'no-cache');
-
+    
     fs.createReadStream(filepath).pipe(res);
+
+    tracksStreamedTotal.inc({
+        quality
+    });
 });
 
 router.get('/:trackId/:quality/:segment', async (req, res) => {
     const { trackId, quality, segment } = req.params;
+    const sessionId = req.query.session as string | undefined;
     const filepath = path.join(hlsRoot, trackId!, quality!, `${segment}`!);
 
     if (!fs.existsSync(filepath)) {
@@ -154,10 +175,16 @@ router.get('/:trackId/:quality/:segment', async (req, res) => {
         });
     }
 
+    const stats = await fs.promises.stat(filepath);
+
     const headers = {
         'Content-Type': segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4',
         'Cache-Control': 'public, max-age=31536000, immutable'
     };
+
+    if (sessionId) {
+        registerPlaybackActivity(sessionId);
+    }
 
     res.sendFile(filepath, { headers }, (err) => {
         if (err) {
@@ -165,6 +192,10 @@ router.get('/:trackId/:quality/:segment', async (req, res) => {
             if (!res.headersSent) {
                 res.status(500).send('Stream error');
             }
+        } else {
+            streamBytesTotal.inc({
+                quality
+            }, stats.size);
         }
     });
 });

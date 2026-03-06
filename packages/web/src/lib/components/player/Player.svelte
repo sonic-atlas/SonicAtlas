@@ -8,6 +8,8 @@
     import { apiGet, getStreamUrl, API_BASE_URL } from '$lib/api';
     import { auth } from '$lib/stores/auth.svelte';
     import Hls from 'hls.js';
+    import { onMount } from 'svelte';
+    import { generateUUID } from '$lib';
 
     interface Props {
         track: Track;
@@ -33,6 +35,12 @@
 
     let nativeHlsErrorCount = $state<number>(0);
     const MAX_NATIVE_HLS_ERRORS = 2;
+
+    let playbackSession: string;
+
+    onMount(() => {
+        playbackSession = generateUUID();
+    });
 
     $effect(() => {
         console.log('Loading state changed:', loading);
@@ -342,7 +350,7 @@
         nativeHlsErrorCount = 0;
 
         isAdaptive = quality === 'auto';
-        streamUrl = getStreamUrl(track.id, quality);
+        streamUrl = `${getStreamUrl(track.id, quality)}?session=${playbackSession}`;
 
         if (track.coverArtPath) {
             preloadImage(`${API_BASE_URL}${track.coverArtPath}`);

@@ -10,6 +10,8 @@ import { logger } from './utils/logger.ts';
 import compression from 'compression';
 import http from 'node:http';
 import { SocketServer } from './socket/ws.ts';
+import { register } from 'prom-client';
+import { metricsMiddleware } from './middleware/metrics.ts';
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();
@@ -53,6 +55,8 @@ app.use(express.json({
         }
     },
 }));
+
+app.use(metricsMiddleware);
 
 app.use('/api',
     //* IP rate limit
@@ -98,6 +102,11 @@ app.head('/api/stream/:trackId{/*path}', (req, res) => res.sendStatus(200));
 app.get('/health', healthRoute);
 logger.info('Loaded route: /health');
 
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+});
+
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');
 async function loadRoutes(dir: string) {
@@ -136,7 +145,7 @@ async function main() {
     await loadRoutes(apiDir);
     socket.setupSocket();
 
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    app.use((err: any, req: express.Request, res: express.Response, _: express.NextFunction) => {
         logger.error(`Error: ${err.message}`);
         res.status(err.status || 500).json({ error: err.message });
     });

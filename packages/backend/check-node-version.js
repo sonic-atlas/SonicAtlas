@@ -12,7 +12,7 @@ const v = [major, minor, patch];
 const MIN = [22, 18, 0];
 const MIN_R = 'This is because we make use of Node\'s built in TypeScript support.';
 const REC = [25, 2,  0];
-const REC_R = `Type stripping is still experimental in this version.\nUpgrading to ${REC.join('.')} will provide stable behaviour`;
+const REC_R = `Type stripping is still experimental in this version.\nUpgrading to ${REC.join('.')} will provide more stable behaviour`;
 
 // This check is for package managers that don't read engines.node
 // e.g. Yarn v2+ (v1 warns, not errors), Bun, Deno
