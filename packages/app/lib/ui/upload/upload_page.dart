@@ -39,12 +39,10 @@ class _UploadPageState extends State<UploadPage> {
         'mp3',
         'flac',
         'wav',
-        'm4a',
         'ogg',
         'opus',
         'aac',
         'wma',
-        'alac',
       ],
       allowMultiple: true,
     );

@@ -1,5 +1,5 @@
 import { db } from '#db/db';
-import { releases, releaseTracks, tracks, trackMetadata } from '#db/schema';
+import { releases, releaseTracks, tracks, trackMetadata, trackFormatEnum } from '#db/schema';
 import { eq } from 'drizzle-orm';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -59,7 +59,13 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             const metadata = await parseFile(filePath);
-            const ext = path.extname(originalFilename).slice(1).toLowerCase() as any;
+            const rawExt = path.extname(originalFilename).slice(1).toLowerCase();
+            
+            if (!(trackFormatEnum.enumValues as readonly string[]).includes(rawExt)) {
+                throw new Error(`Unsupported audio format: ${rawExt}`);
+            }
+            
+            const ext = rawExt as import('@sonic-atlas/shared').UploadAudioFormat;
 
             const meta = {
                 duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,

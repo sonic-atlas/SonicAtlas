@@ -1,5 +1,8 @@
 // Types for index.js
 declare module '@sonic-atlas/shared' {
+    // Change schema enum when changing this as well
+    export type UploadAudioFormat = 'mp3' | 'flac' | 'wav' | 'ogg' | 'opus' | 'aac' | 'wma';
+
     const $rootDir: string;
 
     // Logger

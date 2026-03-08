@@ -131,7 +131,8 @@
                 type="file"
                 id="files"
                 multiple
-                accept="audio/*"
+                // Make sure this is the same as the UploadAudioFormat type in shared package
+                accept=".mp3,.flac,.wav,.ogg,.opus,.aac,.wma"
                 onchange={(e) => (files = (e.target as HTMLInputElement).files)}
                 required={!files || files.length === 0}
                 class="fileInput"
