@@ -7,6 +7,7 @@ import type { InferSelectModel } from 'drizzle-orm';
 import type { tracks } from '#db/schema';
 import { getSourceQuality, qualityHierarchy } from '../routes/stream.ts';
 import { socket } from '../index.ts';
+import { getFolderSize, storageBytes } from '../services/metrics/storageMetrics.ts';
 
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
@@ -92,6 +93,9 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
         }
 
         variantPlaylists.push(playlistFile);
+
+        const size = await getFolderSize(qualityDir);
+        storageBytes.labels('hls', quality).inc(size);
 
         if (socketRoom) {
             socket.io.to(socketRoom).emit('finishTranscode', {

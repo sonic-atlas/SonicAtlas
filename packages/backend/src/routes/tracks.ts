@@ -327,7 +327,7 @@ router.use((err: any, req: Request, res: Response, next: NextFunction) => {
 router.delete('/:trackId', async (req, res) => {
     const { trackId } = req.params;
 
-    if (!isUUID(trackId!)) {
+    if (!isUUID(trackId)) {
         return res.status(422).json({
             error: 'UNPROCESSABLE_ENTITY',
             code: 'TRACK_002'

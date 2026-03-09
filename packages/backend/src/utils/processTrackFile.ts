@@ -10,6 +10,7 @@ import { stripCoverArt } from './stripCoverArt.ts';
 import { $rootDir } from '@sonic-atlas/shared';
 import { ImageService } from '../services/ImageService.ts';
 import { logger } from './logger.ts';
+import { storageBytes } from '../services/metrics/storageMetrics.ts';
 
 const uploadFolder = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals');
 const metadataFolder = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'metadata');
@@ -82,6 +83,7 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
             };
 
             const fileSize = (await fsp.stat(filePath)).size;
+            storageBytes.labels('original').inc(fileSize);
 
             let releaseCoverUrl: string | undefined;
 

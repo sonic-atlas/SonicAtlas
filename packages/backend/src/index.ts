@@ -12,6 +12,7 @@ import http from 'node:http';
 import { SocketServer } from './socket/ws.ts';
 import { register } from 'prom-client';
 import { metricsMiddleware } from './middleware/metrics.ts';
+import { rebuildStorageMetrics } from './services/metrics/storageMetrics.ts';
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();
@@ -154,6 +155,10 @@ async function main() {
         logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
 Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
+
+        setImmediate(() => {
+            rebuildStorageMetrics().catch(err => logger.error(err));
+        });
     });
 }
 
