@@ -95,7 +95,7 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
         variantPlaylists.push(playlistFile);
 
         const size = await getFolderSize(qualityDir);
-        storageBytes.labels('hls', quality).inc(size);
+        storageBytes.labels({ type: 'hls', quality }).inc(size);
 
         if (socketRoom) {
             socket.io.to(socketRoom).emit('finishTranscode', {

@@ -10,7 +10,7 @@ file(GLOB DEPENDENCY_DLLS
     "${DEPENDENCIES_ROOT}/bin/*.dll"
 )
 
-set(PLUGIN_BUNDLED_LIBRARIES
+set(sonic_audio_bundled_libraries
     $<TARGET_FILE:sonic_audio>
     ${DEPENDENCY_DLLS}
     PARENT_SCOPE

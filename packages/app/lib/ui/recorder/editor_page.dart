@@ -16,8 +16,7 @@ class EditorPage extends StatefulWidget {
   State<EditorPage> createState() => _EditorPageState();
 }
 
-class _EditorPageState extends State<EditorPage>
-    with SingleTickerProviderStateMixin {
+class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateMixin {
   late final SonicPlayer _player;
   late final TabController _tabController;
 
@@ -245,9 +244,7 @@ class _EditorPageState extends State<EditorPage>
                   children: [
                     Expanded(
                       child: Text(
-                        coverPath != null
-                            ? path.basename(coverPath!)
-                            : 'No Cover Selected',
+                        coverPath != null ? path.basename(coverPath!) : 'No Cover Selected',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -274,8 +271,7 @@ class _EditorPageState extends State<EditorPage>
             ),
             FilledButton(
               onPressed: () {
-                if (artistController.text.isEmpty ||
-                    albumController.text.isEmpty) {
+                if (artistController.text.isEmpty || albumController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Artist and Album are required'),
@@ -288,9 +284,7 @@ class _EditorPageState extends State<EditorPage>
                   title: albumController.text,
                   primaryArtist: artistController.text,
                   year: int.tryParse(yearController.text),
-                  genre: genreController.text.isEmpty
-                      ? null
-                      : genreController.text,
+                  genre: genreController.text.isEmpty ? null : genreController.text,
                   releaseType: releaseType,
                   coverArtPath: coverPath,
                   createdAt: DateTime.now(),
@@ -430,8 +424,7 @@ class _EditorPageState extends State<EditorPage>
                     .asMap()
                     .entries
                     .map(
-                      (e) =>
-                          Tab(text: 'Side ${String.fromCharCode(65 + e.key)}'),
+                      (e) => Tab(text: 'Side ${String.fromCharCode(65 + e.key)}'),
                     )
                     .toList(),
               )
@@ -480,14 +473,9 @@ class _EditorPageState extends State<EditorPage>
                           ),
                         if (splits != null && _totalDuration.inMilliseconds > 0)
                           ...splits.map((track) {
-                            final startPct =
-                                track.start.inMilliseconds /
-                                _totalDuration.inMilliseconds;
-                            final endMs =
-                                track.end?.inMilliseconds ??
-                                _totalDuration.inMilliseconds;
-                            final endPct =
-                                endMs / _totalDuration.inMilliseconds;
+                            final startPct = track.start.inMilliseconds / _totalDuration.inMilliseconds;
+                            final endMs = track.end?.inMilliseconds ?? _totalDuration.inMilliseconds;
+                            final endPct = endMs / _totalDuration.inMilliseconds;
 
                             return Positioned(
                               left: constraints.maxWidth * startPct,
@@ -523,12 +511,10 @@ class _EditorPageState extends State<EditorPage>
                             thumbColor: Colors.white,
                           ),
                           child: Slider(
-                            value: _currentPosition.inMilliseconds
-                                .toDouble()
-                                .clamp(
-                                  0,
-                                  _totalDuration.inMilliseconds.toDouble(),
-                                ),
+                            value: _currentPosition.inMilliseconds.toDouble().clamp(
+                              0,
+                              _totalDuration.inMilliseconds.toDouble(),
+                            ),
                             max: _totalDuration.inMilliseconds.toDouble(),
                             onChanged: (val) {
                               _player.seek(Duration(milliseconds: val.toInt()));
@@ -634,9 +620,7 @@ class _EditorPageState extends State<EditorPage>
                               Icon(
                                 fp.status == 'complete'
                                     ? Icons.check_circle
-                                    : (fp.status == 'error'
-                                          ? Icons.error
-                                          : Icons.cloud_upload),
+                                    : (fp.status == 'error' ? Icons.error : Icons.cloud_upload),
                                 color: fp.status == 'complete'
                                     ? Colors.green
                                     : (fp.status == 'error'
@@ -679,13 +663,10 @@ class _EditorPageState extends State<EditorPage>
                     itemBuilder: (context, index) {
                       final track = splits[index];
                       final isSelected =
-                          (_currentPosition >= track.start) &&
-                          (track.end == null || _currentPosition < track.end!);
+                          (_currentPosition >= track.start) && (track.end == null || _currentPosition < track.end!);
 
                       return Card(
-                        color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.1)
-                            : null,
+                        color: isSelected ? colorScheme.primary.withValues(alpha: 0.1) : null,
                         margin: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
@@ -700,9 +681,7 @@ class _EditorPageState extends State<EditorPage>
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: TextFormField(
-                                      initialValue: track.title.isNotEmpty
-                                          ? track.title
-                                          : 'Track ${track.number}',
+                                      initialValue: track.title.isNotEmpty ? track.title : 'Track ${track.number}',
                                       decoration: const InputDecoration(
                                         isDense: true,
                                         border: InputBorder.none,
@@ -711,8 +690,7 @@ class _EditorPageState extends State<EditorPage>
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      onChanged: (val) =>
-                                          _updateTrackTitle(index, val),
+                                      onChanged: (val) => _updateTrackTitle(index, val),
                                     ),
                                   ),
                                   IconButton(
@@ -742,9 +720,7 @@ class _EditorPageState extends State<EditorPage>
                                     child: OutlinedButton(
                                       onPressed: () => _setEnd(index),
                                       child: Text(
-                                        track.end == null
-                                            ? 'End: (File End)'
-                                            : 'End: ${_formatDuration(track.end!)}',
+                                        track.end == null ? 'End: (File End)' : 'End: ${_formatDuration(track.end!)}',
                                       ),
                                     ),
                                   ),
@@ -788,9 +764,7 @@ class _EditorPageState extends State<EditorPage>
                       )
                     : const Icon(Icons.save_as),
                 label: Text(
-                  processor.isProcessing
-                      ? 'Processing (Splitting WAV to FLAC)...'
-                      : 'Confirm Regions & Process',
+                  processor.isProcessing ? 'Processing (Splitting WAV to FLAC)...' : 'Confirm Regions & Process',
                 ),
                 onPressed: processor.isProcessing ? null : _showMetadataDialog,
                 style: FilledButton.styleFrom(
@@ -816,8 +790,7 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
   }) {
     final double trackHeight = sliderTheme.trackHeight!;
     final double trackLeft = offset.dx;
-    final double trackTop =
-        offset.dy + (parentBox.size.height - trackHeight) / 2;
+    final double trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
     final double trackWidth = parentBox.size.width;
     return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
   }

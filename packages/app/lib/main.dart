@@ -23,6 +23,7 @@ import 'ui/home/home_page.dart';
 import 'ui/auth/login_page.dart';
 import 'ui/auth/server_setup_page.dart';
 import 'ui/settings/settings_page.dart';
+import 'ui/settings/licenses_page.dart';
 import 'ui/splash/splash_page.dart';
 import 'ui/upload/upload_page.dart';
 import 'ui/recorder/recording_page.dart';
@@ -96,8 +97,7 @@ void main(List<String> args) async {
         ChangeNotifierProvider(create: (_) => SonicRecorderService()),
         ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
         ProxyProvider2<SettingsService, AuthService, ApiService>(
-          update: (context, settings, auth, previous) =>
-              ApiService(settings, auth),
+          update: (context, settings, auth, previous) => ApiService(settings, auth),
         ),
         ChangeNotifierProvider<SocketService>(
           create: (context) => SocketService(
@@ -181,6 +181,7 @@ class _SonicAtlasAppState extends State<SonicAtlasApp> {
         '/login': (context) => const LoginPage(),
         '/': (context) => const HomePage(),
         '/settings': (context) => const SettingsPage(),
+        '/licenses': (context) => const LicensesPage(),
         '/upload': (context) => const UploadPage(),
         '/recorder': (context) => const RecordingPage(),
         '/editor': (context) => const EditorPage(),

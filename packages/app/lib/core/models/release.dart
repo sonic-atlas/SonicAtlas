@@ -28,9 +28,7 @@ class Release {
       releaseType: json['releaseType'],
       coverArtPath: json['coverArtPath'],
       genre: json['genre'],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : null,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
   }
 

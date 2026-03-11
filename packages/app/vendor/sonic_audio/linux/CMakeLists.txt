@@ -6,4 +6,4 @@ set(DEPENDENCIES_ROOT "${ROOT_DIR}/dependencies/linux-x64")
 
 add_subdirectory("${ROOT_DIR}/src" sonic_audio_build)
 
-set(PLUGIN_BUNDLED_LIBRARIES $<TARGET_FILE:sonic_audio> PARENT_SCOPE)
+set(sonic_audio_bundled_libraries $<TARGET_FILE:sonic_audio> PARENT_SCOPE)

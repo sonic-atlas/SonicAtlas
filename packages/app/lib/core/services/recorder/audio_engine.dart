@@ -34,8 +34,7 @@ class AudioEngine {
     if (_isRecording) return;
 
     int formatId = 16;
-    if (bitDepth == RecordingBitDepth.int24 ||
-        bitDepth == RecordingBitDepth.int32) {
+    if (bitDepth == RecordingBitDepth.int24 || bitDepth == RecordingBitDepth.int32) {
       formatId = 32;
     }
 

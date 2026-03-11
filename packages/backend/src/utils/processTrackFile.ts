@@ -83,7 +83,7 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
             };
 
             const fileSize = (await fsp.stat(filePath)).size;
-            storageBytes.labels('original').inc(fileSize);
+            storageBytes.labels({ type: 'original', quality: 'none' }).inc(fileSize);
 
             let releaseCoverUrl: string | undefined;
 

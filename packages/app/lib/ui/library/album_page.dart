@@ -75,9 +75,7 @@ class _AlbumPageState extends State<AlbumPage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: CachedNetworkImage(
-                            imageUrl: context
-                                .read<ApiService>()
-                                .getReleaseCoverUrl(widget.releaseId),
+                            imageUrl: context.read<ApiService>().getReleaseCoverUrl(widget.releaseId),
                             memCacheWidth: 320,
                             memCacheHeight: 320,
                             width: 160,
@@ -98,35 +96,30 @@ class _AlbumPageState extends State<AlbumPage> {
                             children: [
                               Text(
                                 widget.releaseTitle,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 widget.releaseArtist ?? 'Unknown Artist',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                ),
                               ),
                               if (widget.releaseYear != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
                                   widget.releaseYear.toString(),
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 16),
@@ -146,9 +139,7 @@ class _AlbumPageState extends State<AlbumPage> {
                                   ),
                                   OutlinedButton.icon(
                                     onPressed: () {
-                                      context
-                                          .read<AudioService>()
-                                          .addAllToQueue(tracks);
+                                      context.read<AudioService>().addAllToQueue(tracks);
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(

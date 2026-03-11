@@ -27,9 +27,7 @@ class MediaSessionHandler extends BaseAudioHandler with SeekHandler {
     player.stateStream.listen((state) {
       _idleDebouncer?.cancel();
 
-      if (state == PlayerState.idle ||
-          state == PlayerState.buffering ||
-          state == PlayerState.error) {
+      if (state == PlayerState.idle || state == PlayerState.buffering || state == PlayerState.error) {
         playbackState.add(
           playbackState.value.copyWith(
             processingState: AudioProcessingState.buffering,

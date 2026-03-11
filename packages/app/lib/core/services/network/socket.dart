@@ -33,11 +33,7 @@ class SocketService extends ChangeNotifier {
 
     _socket = io.io(
       socketUrl,
-      io.OptionBuilder()
-          .setPath('/ws')
-          .setTransports(['websocket'])
-          .disableAutoConnect()
-          .build(),
+      io.OptionBuilder().setPath('/ws').setTransports(['websocket']).disableAutoConnect().build(),
     );
 
     _socket!.onConnect((_) {

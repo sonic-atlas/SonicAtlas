@@ -121,11 +121,7 @@ class SonicRecorderService extends ChangeNotifier {
         await recordingsDir.create(recursive: true);
       }
 
-      final timestamp = DateTime.now()
-          .toIso8601String()
-          .replaceAll(':', '-')
-          .split('.')
-          .first;
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
       final wavPath = path.join(recordingsDir.path, 'recording_$timestamp.wav');
 
       _engine.start(index, sampleRate, _bitDepth, filePath: wavPath);

@@ -114,10 +114,8 @@ class ApiService {
         final body = jsonDecode(response.body);
         final List<dynamic> results = body['results'] ?? [];
         return results.map((json) {
-          json['album'] =
-              json['album'] ?? json['releaseTitle'] ?? 'Unknown Album';
-          json['artist'] =
-              json['artist'] ?? json['releaseArtist'] ?? 'Unknown Artist';
+          json['album'] = json['album'] ?? json['releaseTitle'] ?? 'Unknown Album';
+          json['artist'] = json['artist'] ?? json['releaseArtist'] ?? 'Unknown Artist';
           return Track.fromJson(json);
         }).toList();
       }
@@ -407,9 +405,7 @@ class ApiService {
           0,
           (s, f) => s + f.bytesUploaded,
         );
-        final overallProgress = totalBytes > 0
-            ? ((uploadedBytes / totalBytes) * 100).round()
-            : 0;
+        final overallProgress = totalBytes > 0 ? ((uploadedBytes / totalBytes) * 100).round() : 0;
 
         onProgress(
           ReleaseUploadProgress(
@@ -442,8 +438,7 @@ class ApiService {
 
           try {
             if (!filePlan.needsChunking) {
-              String mimeType =
-                  lookupMimeType(file.path) ?? 'application/octet-stream';
+              String mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
               if (mimeType == 'audio/x-flac') {
                 mimeType = 'audio/flac';
               }
@@ -463,9 +458,7 @@ class ApiService {
 
               for (int i = 0; i < totalChunks; i++) {
                 final start = i * chunkSize;
-                final end = (start + chunkSize < file.lengthSync())
-                    ? start + chunkSize
-                    : file.lengthSync();
+                final end = (start + chunkSize < file.lengthSync()) ? start + chunkSize : file.lengthSync();
 
                 raf.setPositionSync(start);
                 final chunkData = raf.readSync(end - start);
@@ -500,9 +493,7 @@ class ApiService {
       }
 
       final workers = List.generate(
-        maxConcurrentUploads < initRes.files.length
-            ? maxConcurrentUploads
-            : initRes.files.length,
+        maxConcurrentUploads < initRes.files.length ? maxConcurrentUploads : initRes.files.length,
         (_) => processNext(),
       );
       await Future.wait(workers);

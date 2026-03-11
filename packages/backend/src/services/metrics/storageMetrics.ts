@@ -12,9 +12,9 @@ export async function rebuildStorageMetrics() {
         getFolderSize(`${base}/metadata`)
     ]);
 
-    storageBytes.labels('original').set(originals);
-    storageBytes.labels('hls').set(hls);
-    storageBytes.labels('metadata').set(metadata);
+    storageBytes.labels({ type: 'original', quality: 'none' }).set(originals);
+    storageBytes.labels({ type: 'hls', quality: 'all' }).set(hls);
+    storageBytes.labels({ type: 'metadata', quality: 'none' }).set(metadata);
 }
 
 export async function getFolderSize(root: string, concurrency = 64): Promise<number> {

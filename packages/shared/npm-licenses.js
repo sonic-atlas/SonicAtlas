@@ -1,4 +1,3 @@
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -40,6 +39,12 @@ function getLicenseText(pkgName) {
         `node_modules/${pkgName}/LICENSE`,
         `node_modules/${pkgName}/LICENSE.md`,
         `node_modules/${pkgName}/LICENSE.txt`,
+        `node_modules/${pkgName}/license`,
+        `node_modules/${pkgName}/license.md`,
+        `node_modules/${pkgName}/license.txt`,
+        `node_modules/${pkgName}/License`,
+        `node_modules/${pkgName}/License.md`,
+        `node_modules/${pkgName}/License.txt`,
     ];
 
     for (const rel of candidates) {
@@ -77,6 +82,27 @@ function scanWorkspace(workspace, lock) {
     return results.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+function getExtraPackages() {
+    const jsonPath = path.join(root, 'packages', 'shared', 'licenses', 'extra-packages.json');
+    if (!fs.existsSync(jsonPath)) return [];
+
+    const extraPackages = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+
+    for (const pkg of extraPackages) {
+        if (pkg.licenseFile) {
+            const txtPath = path.join(root, 'packages', 'shared', 'licenses', pkg.licenseFile);
+            if (fs.existsSync(txtPath)) {
+                pkg.text = fs.readFileSync(txtPath, 'utf8').trim();
+            } else {
+                pkg.text = 'License file not found';
+            }
+            pkg.license = pkg.spdxIdentifier || 'Custom';
+        }
+    }
+
+    return extraPackages;
+}
+
 function main() {
     const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json')));
 
@@ -93,6 +119,14 @@ function main() {
             seen.add(key);
             packages.push(pkg);
         }
+    }
+
+    const extra = getExtraPackages();
+    for (const pkg of extra) {
+        const key = `${pkg.name}@${pkg.version}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        packages.push(pkg);
     }
 
     packages.sort((a, b) => a.name.localeCompare(b.name));

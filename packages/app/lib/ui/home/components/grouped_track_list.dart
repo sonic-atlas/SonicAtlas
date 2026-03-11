@@ -71,8 +71,7 @@ class _GroupedTrackListState extends State<GroupedTrackList> {
         result.add(
           _HeaderItem(
             title: rep.releaseTitle ?? 'Unknown Album',
-            subtitle:
-                '${rep.releaseArtist} • ${rep.releaseYear ?? "Unknown Year"}',
+            subtitle: '${rep.releaseArtist} • ${rep.releaseYear ?? "Unknown Year"}',
           ),
         );
       }
@@ -126,9 +125,7 @@ class _GroupedTrackListState extends State<GroupedTrackList> {
                     track: item,
                     trackNumber: item.trackNumber,
                     showAlbumInfo: false,
-                    onTapOverride: widget.onTrackTap != null
-                        ? () => widget.onTrackTap!(item)
-                        : null,
+                    onTapOverride: widget.onTrackTap != null ? () => widget.onTrackTap!(item) : null,
                   );
                 }
                 return const SizedBox.shrink();

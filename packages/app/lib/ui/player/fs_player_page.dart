@@ -97,8 +97,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
             final selectedQuality = settingsService.audioQuality;
             final playingQuality = audioService.currentTrackQuality;
 
-            final qualityChanged =
-                playingQuality != null && playingQuality != selectedQuality;
+            final qualityChanged = playingQuality != null && playingQuality != selectedQuality;
 
             return SingleChildScrollView(
               child: Container(
@@ -135,9 +134,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         children: [
                           ...Quality.values.map((quality) {
                             final isAvailable = _isQualityAvailable(quality);
-                            final isSource =
-                                quality == _sourceQuality &&
-                                quality != Quality.auto;
+                            final isSource = quality == _sourceQuality && quality != Quality.auto;
                             final isSelected = quality == selectedQuality;
                             final info = quality.info;
 
@@ -149,9 +146,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                   Text(
                                     info.label,
                                     style: TextStyle(
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : null,
+                                      fontWeight: isSelected ? FontWeight.bold : null,
                                       color: isAvailable
                                           ? (isSelected
                                                 ? Theme.of(
@@ -342,8 +337,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           const Text('No devices found')
                         else
                           RadioGroup<int>(
-                            groupValue:
-                                -1, // Current device not tracked so -1 for null
+                            groupValue: -1, // Current device not tracked so -1 for null
                             onChanged: (value) {
                               if (value != null) {
                                 final device = devices.firstWhere(
@@ -402,8 +396,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
             httpHeaders: apiService.headers,
             fit: BoxFit.cover,
             fadeInDuration: Duration.zero,
-            errorWidget: (context, url, error) =>
-                Container(color: Colors.black),
+            errorWidget: (context, url, error) => Container(color: Colors.black),
             placeholder: (context, url) => Container(color: Colors.black),
           ),
           BackdropFilter(
@@ -414,9 +407,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final useSideBySide =
-                    constraints.maxWidth > constraints.maxHeight &&
-                    constraints.maxHeight < 710;
+                final useSideBySide = constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 710;
 
                 final maxSize = constraints.maxHeight * 0.45;
                 final albumArtSize = useSideBySide
@@ -445,8 +436,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               currentQuality.label,
                               style: const TextStyle(fontSize: 12),
                             ),
-                            if (playingQuality != null &&
-                                playingQuality != currentQuality)
+                            if (playingQuality != null && playingQuality != currentQuality)
                               const Padding(
                                 padding: EdgeInsets.only(left: 4),
                                 child: Icon(
@@ -530,11 +520,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                   children: [
                     Text(
                       track.title,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -593,9 +582,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               activeColor: AppTheme.primaryColor,
                               inactiveColor: Colors.white24,
                               thumbColor: AppTheme.primaryColor,
-                              value: position.inMilliseconds
-                                  .clamp(0, duration.inMilliseconds)
-                                  .toDouble(),
+                              value: position.inMilliseconds.clamp(0, duration.inMilliseconds).toDouble(),
                               min: 0,
                               max: duration.inMilliseconds.toDouble(),
                               onChanged: (value) {
@@ -642,40 +629,28 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     IconButton(
                       icon: Icon(
                         Icons.skip_previous,
-                        color: audioService.hasPrevious
-                            ? Colors.white
-                            : Colors.white38,
+                        color: audioService.hasPrevious ? Colors.white : Colors.white38,
                       ),
                       iconSize: 40,
-                      onPressed: audioService.hasPrevious
-                          ? () => audioService.skipPrevious()
-                          : null,
+                      onPressed: audioService.hasPrevious ? () => audioService.skipPrevious() : null,
                     ),
                     const SizedBox(width: 24),
                     IconButton(
                       icon: Icon(
-                        audioService.isPlaying
-                            ? Icons.pause_circle
-                            : Icons.play_circle,
+                        audioService.isPlaying ? Icons.pause_circle : Icons.play_circle,
                         color: Colors.white,
                       ),
                       iconSize: 64,
-                      onPressed: audioService.isPlaying
-                          ? audioService.pause
-                          : audioService.play,
+                      onPressed: audioService.isPlaying ? audioService.pause : audioService.play,
                     ),
                     const SizedBox(width: 24),
                     IconButton(
                       icon: Icon(
                         Icons.skip_next,
-                        color: audioService.hasNext
-                            ? Colors.white
-                            : Colors.white38,
+                        color: audioService.hasNext ? Colors.white : Colors.white38,
                       ),
                       iconSize: 40,
-                      onPressed: audioService.hasNext
-                          ? () => audioService.skipNext()
-                          : null,
+                      onPressed: audioService.hasNext ? () => audioService.skipNext() : null,
                     ),
                   ],
                 );
@@ -706,8 +681,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 child: Center(
                                   child: SingleChildScrollView(
                                     child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         trackInfoWidget,
                                         const SizedBox(height: 24),

@@ -46,11 +46,7 @@ class Track {
       id: json['id'],
       title: metadata['title'] ?? json['title'] ?? 'Unknown Title',
       artist: metadata['artist'] ?? json['artist'] ?? 'Unknown Artist',
-      album:
-          json['releaseTitle'] ??
-          json['album'] ??
-          metadata['album'] ??
-          'Unknown Album',
+      album: json['releaseTitle'] ?? json['album'] ?? metadata['album'] ?? 'Unknown Album',
       duration: (json['duration'] ?? 0.0).round(),
       releaseId: json['releaseId'],
       releaseTitle: json['releaseTitle'],
