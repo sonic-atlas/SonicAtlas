@@ -42,8 +42,7 @@ class ProcessingService extends ChangeNotifier {
 
     try {
       final dir = path.dirname(wavPath);
-      final folderName = '${metadata.primaryArtist} - ${metadata.title}'
-          .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+      final folderName = '${metadata.primaryArtist} - ${metadata.title}'.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
       final outputDir = Directory(path.join(dir, folderName));
 
       if (!await outputDir.exists()) {
@@ -57,8 +56,7 @@ class ProcessingService extends ChangeNotifier {
         notifyListeners();
 
         final safeTitle = track.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-        final outName =
-            '${discNumber.toString()}-${track.number.toString().padLeft(2, '0')} - $safeTitle.flac';
+        final outName = '${discNumber.toString()}-${track.number.toString().padLeft(2, '0')} - $safeTitle.flac';
         final outPath = path.join(outputDir.path, outName);
         generatedFiles.add(outPath);
 

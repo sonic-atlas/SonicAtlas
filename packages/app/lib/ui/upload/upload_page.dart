@@ -112,8 +112,7 @@ class _UploadPageState extends State<UploadPage> {
       if (mounted && result != null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) =>
-                ReleaseEditorPage(releaseId: result['release']['id']),
+            builder: (_) => ReleaseEditorPage(releaseId: result['release']['id']),
           ),
         );
       }
@@ -133,9 +132,7 @@ class _UploadPageState extends State<UploadPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 480;
-        final maxWidth = constraints.maxWidth > 700
-            ? 700.0
-            : constraints.maxWidth;
+        final maxWidth = constraints.maxWidth > 700 ? 700.0 : constraints.maxWidth;
 
         final fileButton = Container(
           decoration: BoxDecoration(
@@ -149,9 +146,7 @@ class _UploadPageState extends State<UploadPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             label: Text(
-              _files.isEmpty
-                  ? 'Select Audio Files'
-                  : '${_files.length} files selected',
+              _files.isEmpty ? 'Select Audio Files' : '${_files.length} files selected',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
@@ -184,9 +179,7 @@ class _UploadPageState extends State<UploadPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             label: Text(
-              _coverFile == null
-                  ? 'Select Cover Art (Optional)'
-                  : 'Cover: ${_coverFile!.name}',
+              _coverFile == null ? 'Select Cover Art (Optional)' : 'Cover: ${_coverFile!.name}',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
@@ -403,8 +396,7 @@ class _UploadPageState extends State<UploadPage> {
                                     ),
                                   ],
                                 ),
-                                if (fp.status == 'uploading' &&
-                                    fp.bytesTotal > 0) ...[
+                                if (fp.status == 'uploading' && fp.bytesTotal > 0) ...[
                                   const SizedBox(height: 6),
                                   LinearProgressIndicator(
                                     value: fp.bytesUploaded / fp.bytesTotal,

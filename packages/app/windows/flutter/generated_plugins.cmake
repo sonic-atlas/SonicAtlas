@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audio_service_win
+  url_launcher_windows
   windows_single_instance
   windows_taskbar
 )

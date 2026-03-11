@@ -15,7 +15,7 @@ export class ImageService {
                 .toFile(mainPath);
 
             const stat = await fsp.stat(mainPath);
-            storageBytes.labels('metadata').inc(stat.size);
+            storageBytes.labels({ type: 'metadata', quality: 'none' }).inc(stat.size);
             
             const thumbPath = path.join(outputDir, `${baseFilename}-small.webp`);
             await sharp(buffer)
@@ -24,7 +24,7 @@ export class ImageService {
             .toFile(thumbPath);
             
             const thumbStat = await fsp.stat(thumbPath);
-            storageBytes.labels('metadata').inc(thumbStat.size);
+            storageBytes.labels({ type: 'metadata', quality: 'none' }).inc(thumbStat.size);
 
             logger.info(`Processed cover art: ${baseFilename} (Main & Small)`);
         } catch (error) {

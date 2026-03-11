@@ -215,6 +215,14 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ListTile(
+              title: const Text('Open Source Licenses'),
+              subtitle: const Text('View third-party software licenses'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pushNamed(context, '/licenses');
+              },
+            ),
+            ListTile(
               title: const Text('Upload Music'),
               subtitle: const Text('Upload releases to the server'),
               leading: const Icon(Icons.upload),

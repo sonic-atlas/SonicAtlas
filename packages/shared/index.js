@@ -29,7 +29,10 @@ export class Logger {
             : '';
         const color = this.options.color ? colors[level] : '';
         const reset = this.options.color ? colors.reset : '';
-        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}:${reset} ${message.replace(/\n(?!$)/g, '\n    ')}`;
+
+        const msgStr = message instanceof Error ? (message.stack || message.message) : String(message);
+
+        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}:${reset} ${msgStr.replace(/\n(?!$)/g, '\n    ')}`;
     }
 
     info(msg) {

@@ -35,9 +35,7 @@ class UploadInitResponse {
 
   factory UploadInitResponse.fromJson(Map<String, dynamic> json) {
     var list = json['files'] as List? ?? [];
-    List<UploadFilePlan> fileList = list
-        .map((i) => UploadFilePlan.fromJson(i))
-        .toList();
+    List<UploadFilePlan> fileList = list.map((i) => UploadFilePlan.fromJson(i)).toList();
 
     return UploadInitResponse(
       uploadId: json['uploadId'] ?? '',

@@ -31,12 +31,10 @@ class TrackListItem extends StatelessWidget {
     final bool isPlaying = audioService.currentTrack?.id == track.id;
 
     final duration = Duration(seconds: track.duration);
-    final durationText =
-        '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+    final durationText = '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
 
     void handlePointerDown(PointerDownEvent event) {
-      if (event.kind == PointerDeviceKind.mouse &&
-          event.buttons == kSecondaryMouseButton) {
+      if (event.kind == PointerDeviceKind.mouse && event.buttons == kSecondaryMouseButton) {
         _showTrackMenu(context, track);
       }
     }
@@ -99,8 +97,7 @@ class TrackListItem extends StatelessWidget {
                 fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 0),
                 errorWidget: (context, url, error) => const Icon(Icons.album),
-                placeholder: (context, url) =>
-                    Container(width: 40, height: 40, color: Colors.grey[900]),
+                placeholder: (context, url) => Container(width: 40, height: 40, color: Colors.grey[900]),
               ),
           ],
         ),

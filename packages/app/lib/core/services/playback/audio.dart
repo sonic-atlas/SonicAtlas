@@ -43,14 +43,11 @@ class AudioService with ChangeNotifier {
 
   Duration get position => _optimisticPosition ?? _player.position;
 
-  Stream<bool> get playingStream =>
-      _player.stateStream.map((s) => s == PlayerState.playing);
+  Stream<bool> get playingStream => _player.stateStream.map((s) => s == PlayerState.playing);
 
-  Stream<Duration> get positionStream =>
-      _player.positionStream.map((p) => _optimisticPosition ?? p);
+  Stream<Duration> get positionStream => _player.positionStream.map((p) => _optimisticPosition ?? p);
 
-  Stream<bool> get bufferingStream =>
-      _player.stateStream.map((s) => s == PlayerState.buffering);
+  Stream<bool> get bufferingStream => _player.stateStream.map((s) => s == PlayerState.buffering);
 
   bool get isBuffering => _player.isBuffering;
 
@@ -71,8 +68,7 @@ class AudioService with ChangeNotifier {
 
   bool get hasPrevious => _currentIndex > 0;
 
-  static final _playTrackController =
-      StreamController<models.Track>.broadcast();
+  static final _playTrackController = StreamController<models.Track>.broadcast();
   static final _playController = StreamController<AudioService>.broadcast();
   static final _pauseController = StreamController<AudioService>.broadcast();
   static final _seekController = StreamController<Duration>.broadcast();
@@ -137,15 +133,11 @@ class AudioService with ChangeNotifier {
             state != PlayerState.error) {
           final position = _lastKnownPosition;
           final duration = _lastKnownDuration;
-          final notNearEnd =
-              duration.inSeconds > 0 && (duration - position).inSeconds > 5;
+          final notNearEnd = duration.inSeconds > 0 && (duration - position).inSeconds > 5;
 
           if (notNearEnd && position.inSeconds > 2) {
             Future.delayed(const Duration(milliseconds: 500), () {
-              if (_player.state != PlayerState.playing &&
-                  !_userPaused &&
-                  !_isRecovering &&
-                  _currentTrack != null) {
+              if (_player.state != PlayerState.playing && !_userPaused && !_isRecovering && _currentTrack != null) {
                 if (kDebugMode) {
                   print('Unexpected stop confirmed. Attempting recovery.');
                 }
@@ -175,9 +167,7 @@ class AudioService with ChangeNotifier {
 
     _player.positionStream.listen((p) {
       if (_isRecovering && _optimisticPosition != null) {
-        if (_player.isPlaying &&
-            !_player.isBuffering &&
-            p.inSeconds >= (_optimisticPosition!.inSeconds - 2)) {
+        if (_player.isPlaying && !_player.isBuffering && p.inSeconds >= (_optimisticPosition!.inSeconds - 2)) {
           if (kDebugMode) {
             debugPrint(
               'Recovery complete. Player at ${p.inSeconds}s, target was ${_optimisticPosition!.inSeconds}s',
@@ -224,8 +214,7 @@ class AudioService with ChangeNotifier {
         );
       }
       final qualityInfo = await _apiService.getTrackQuality(track.id);
-      final List<Quality> availableQualities =
-          qualityInfo['availableQualities'];
+      final List<Quality> availableQualities = qualityInfo['availableQualities'];
 
       Quality desiredQuality = _settingsService.audioQuality;
       Quality? selectedQuality;
@@ -313,9 +302,7 @@ class AudioService with ChangeNotifier {
         headers: 'Authorization: Bearer $token\r\n',
       );
 
-      if (isRecovery &&
-          _optimisticPosition != null &&
-          _optimisticPosition!.inSeconds > 0) {
+      if (isRecovery && _optimisticPosition != null && _optimisticPosition!.inSeconds > 0) {
         if (kDebugMode) {
           print(
             'Waiting for stream to load before seeking to ${_optimisticPosition!.inSeconds}s...',

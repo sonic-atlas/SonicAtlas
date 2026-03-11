@@ -41,9 +41,7 @@ class QueuePage extends StatelessWidget {
 
                 return Dismissible(
                   key: Key('${track.id}_$index'),
-                  direction: isCurrentTrack
-                      ? DismissDirection.none
-                      : DismissDirection.endToStart,
+                  direction: isCurrentTrack ? DismissDirection.none : DismissDirection.endToStart,
                   background: Container(
                     color: Colors.red,
                     alignment: Alignment.centerRight,
@@ -82,12 +80,8 @@ class QueuePage extends StatelessWidget {
                     title: Text(
                       track.title,
                       style: TextStyle(
-                        fontWeight: isCurrentTrack
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isCurrentTrack
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
+                        fontWeight: isCurrentTrack ? FontWeight.bold : FontWeight.normal,
+                        color: isCurrentTrack ? Theme.of(context).colorScheme.primary : null,
                       ),
                     ),
                     subtitle: Text(track.artist),

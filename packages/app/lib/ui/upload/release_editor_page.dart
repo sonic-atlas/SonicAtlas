@@ -184,8 +184,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (_tracks.isNotEmpty &&
-                _tracks.any((t) => t.transcodeStatus != 'done'))
+            if (_tracks.isNotEmpty && _tracks.any((t) => t.transcodeStatus != 'done'))
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
@@ -197,11 +196,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                     ),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
-                      value:
-                          _tracks
-                              .where((t) => t.transcodeStatus == 'done')
-                              .length /
-                          _tracks.length,
+                      value: _tracks.where((t) => t.transcodeStatus == 'done').length / _tracks.length,
                       backgroundColor: Theme.of(context).cardColor,
                     ),
                   ],
@@ -381,9 +376,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                                   _saveTrack(updated);
                                 },
                                 itemBuilder: (context) {
-                                  final maxDisc = sortedDiscs.isEmpty
-                                      ? 1
-                                      : sortedDiscs.last;
+                                  final maxDisc = sortedDiscs.isEmpty ? 1 : sortedDiscs.last;
                                   return [
                                     ...sortedDiscs.map(
                                       (d) => PopupMenuItem(

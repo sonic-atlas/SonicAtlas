@@ -157,14 +157,10 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
                 decoration: InputDecoration(
                   labelText: _serverType == 'ip' ? 'Host / IP' : 'Domain',
                   border: const OutlineInputBorder(),
-                  hintText: _serverType == 'ip'
-                      ? '192.168.1.100'
-                      : 'sonic.example.com',
+                  hintText: _serverType == 'ip' ? '192.168.1.100' : 'sonic.example.com',
                   errorText: _errorMessage,
                 ),
-                keyboardType: _serverType == 'ip'
-                    ? TextInputType.numberWithOptions(decimal: true)
-                    : TextInputType.url,
+                keyboardType: _serverType == 'ip' ? TextInputType.numberWithOptions(decimal: true) : TextInputType.url,
                 textInputAction: TextInputAction.next,
               ),
               if (_serverType == 'ip') ...[
