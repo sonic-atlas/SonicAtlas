@@ -59,7 +59,7 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            const metadata = await parseFile(filePath);
+            const metadata = await parseFile(filePath, { duration: true });
             const rawExt = path.extname(originalFilename).slice(1).toLowerCase();
             
             if (!(trackFormatEnum.enumValues as readonly string[]).includes(rawExt)) {
@@ -69,7 +69,7 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
             const ext = rawExt as import('@sonic-atlas/shared').UploadAudioFormat;
 
             const meta = {
-                duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
+                duration: metadata.format.duration ? Math.max(1, Math.round(metadata.format.duration)) : null,
                 sampleRate: metadata.format.sampleRate ?? null,
                 bitDepth: metadata.format.bitsPerSample ?? null,
                 format: ext,
@@ -111,7 +111,8 @@ export async function processTrackFile(opts: ProcessTrackOptions): Promise<{
                 }
 
                 await stripCoverArt(newPath);
-                await tx.update(tracks).set({ filename }).where(eq(tracks.id, track.id));
+                const finalFileSize = (await fsp.stat(newPath)).size;
+                await tx.update(tracks).set({ filename, fileSize: finalFileSize }).where(eq(tracks.id, track.id));
 
                 let trackNumber = meta.trackNo;
                 if (!trackNumber) {
