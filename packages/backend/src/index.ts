@@ -1,3 +1,6 @@
+// Import logger first to init crash reporting
+import { logger } from './utils/logger.ts';
+
 import express from 'express';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
@@ -6,7 +9,6 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.ts';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { logger } from './utils/logger.ts';
 import compression from 'compression';
 import http from 'node:http';
 import { SocketServer } from './socket/ws.ts';

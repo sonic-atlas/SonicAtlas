@@ -10,6 +10,7 @@ declare module '@sonic-atlas/shared' {
         timestamp?: boolean;
         color?: boolean;
     }
+
     class Logger {
         private prefix;
         private options;
@@ -20,6 +21,9 @@ declare module '@sonic-atlas/shared' {
         error(msg: string): void;
         debug(msg: string): void;
     }
+
+    // Crash logs
+    function writeCrashReport(type: string, error: unknown): void;
 
     // API Types
     export interface Track {
