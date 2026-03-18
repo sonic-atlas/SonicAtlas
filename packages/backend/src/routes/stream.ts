@@ -133,7 +133,7 @@ router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
     const { trackId, quality, filename } = req.params;
     const sessionId = req.query.session as string | undefined;
     const filepath = path.join(hlsRoot, trackId!, quality!, `${filename}.m3u8`);
-    
+
     if (!fs.existsSync(filepath)) {
         return res.status(404).json({
             error: 'NOT_FOUND',
@@ -141,12 +141,12 @@ router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
             message: `Playlist '${quality}/${filename}' not found`
         });
     }
-    
+
     const etag = String((await fs.promises.stat(filepath)).mtimeMs);
     if (req.headers['if-none-match'] === etag) {
         return res.status(304);
     }
-    
+
     if (sessionId) {
         registerPlaybackActivity(sessionId);
     }
@@ -154,7 +154,7 @@ router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
     res.setHeader('ETag', etag);
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
     res.setHeader('Cache-Control', 'no-cache');
-    
+
     fs.createReadStream(filepath).pipe(res);
 
     tracksStreamedTotal.inc({
