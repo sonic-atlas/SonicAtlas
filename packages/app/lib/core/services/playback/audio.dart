@@ -158,6 +158,11 @@ class AudioService with ChangeNotifier {
       _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
       _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
       _player.setVolume(_settingsService.audioVolume);
+
+      final savedDevice = _settingsService.selectedAudioDeviceIndex;
+      if (savedDevice >= 0) {
+        _player.setOutputDevice(savedDevice);
+      }
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('Error initializing AudioService: $e');
@@ -197,6 +202,11 @@ class AudioService with ChangeNotifier {
     _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
     _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
     _player.setVolume(_settingsService.audioVolume);
+
+    final savedDevice = _settingsService.selectedAudioDeviceIndex;
+    if (savedDevice >= 0) {
+      _player.setOutputDevice(savedDevice);
+    }
 
     notifyListeners();
   }
@@ -518,6 +528,7 @@ class AudioService with ChangeNotifier {
       print('Setting output device to: ${device.name}');
     }
     _player.setOutputDevice(device.index);
+    _settingsService.setSelectedAudioDeviceIndex(device.index);
   }
 
   Future<List<AudioDevice>> getPlaybackDevices() async {

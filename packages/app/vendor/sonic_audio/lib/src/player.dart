@@ -51,6 +51,8 @@ class SonicPlayer {
     }
   }
 
+  int getLoadStatus() => _bindings.playerGetLoadStatus();
+
   static List<AudioDevice> getAvailableDevices() {
     final bindings = SonicAudioBridge.instance.bindings;
     bindings.init();
@@ -110,15 +112,35 @@ class SonicPlayer {
     final urlPtr = url.toNativeUtf8();
     final headersPtr = headers?.toNativeUtf8() ?? nullptr;
     try {
-      final result = _bindings.playerLoad(urlPtr, headersPtr);
-      if (result != 0) {
-        throw Exception('Failed to load: $result');
-      }
-      _startPolling();
+      _bindings.playerLoadAsync(urlPtr, headersPtr);
     } finally {
       calloc.free(urlPtr);
       if (headers != null) calloc.free(headersPtr);
     }
+
+    final completer = Completer<void>();
+    Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      if (_isDisposed) {
+        timer.cancel();
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Player disposed during load'));
+        }
+        return;
+      }
+      final status = _bindings.playerGetLoadStatus();
+      if (status == 1 /* SA_LOAD_OK */) {
+        timer.cancel();
+        _startPolling();
+        if (!completer.isCompleted) completer.complete();
+      } else if (status == 2 /* SA_LOAD_ERR */) {
+        timer.cancel();
+        if (!completer.isCompleted) {
+          completer.completeError(Exception('Failed to load: native load error'));
+        }
+      }
+    });
+
+    return completer.future;
   }
 
   void play() {

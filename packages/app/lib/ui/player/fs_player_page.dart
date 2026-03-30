@@ -276,6 +276,8 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
 
   void _showAudioSettings() {
     final audioService = context.read<AudioService>();
+    final settingsService = context.read<SettingsService>();
+    final devices = audioService.getPlaybackDevices();
 
     showModalBottomSheet(
       context: context,
@@ -283,7 +285,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return FutureBuilder<List<AudioDevice>>(
-              future: audioService.getPlaybackDevices(),
+              future: devices,
               builder: (context, snapshot) {
                 final devices = snapshot.data ?? [];
 
@@ -337,13 +339,14 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           const Text('No devices found')
                         else
                           RadioGroup<int>(
-                            groupValue: -1, // Current device not tracked so -1 for null
+                            groupValue: settingsService.selectedAudioDeviceIndex,
                             onChanged: (value) {
                               if (value != null) {
                                 final device = devices.firstWhere(
                                   (d) => d.index == value,
                                 );
                                 audioService.setOutputDevice(device);
+                                setModalState(() {});
                                 Navigator.pop(context);
                               }
                             },
@@ -351,7 +354,11 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               children: devices.map((device) {
                                 return RadioListTile<int>(
                                   title: Text(device.name),
-                                  subtitle: Text(device.backend),
+                                  subtitle: Text(
+                                    device.isDefault
+                                        ? '${device.backend} • Default'
+                                        : device.backend,
+                                  ),
                                   value: device.index,
                                 );
                               }).toList(),

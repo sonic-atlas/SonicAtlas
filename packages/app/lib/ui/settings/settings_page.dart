@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 
 import '/core/models/quality.dart';
 import '../../core/services/auth/auth.dart';
@@ -9,8 +10,33 @@ import '../../core/services/config/settings.dart';
 import '../../core/services/playback/audio.dart';
 import '/ui/common/layout.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  List<AudioDevice> _devices = [];
+  bool _devicesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    final audioService = context.read<AudioService>();
+    final devices = await audioService.getPlaybackDevices();
+    if (mounted) {
+      setState(() {
+        _devices = devices;
+        _devicesLoaded = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +153,49 @@ class SettingsPage extends StatelessWidget {
                 value: settings.useNativeSampleRate,
                 onChanged: (value) => settings.setUseNativeSampleRate(value),
               ),
+            ListTile(
+              title: const Text('Audio Output Device'),
+              subtitle: Text(
+                _devicesLoaded
+                    ? (_devices.isEmpty
+                          ? 'No devices found'
+                          : 'Choose playback device')
+                    : 'Loading devices…',
+              ),
+              trailing: _devicesLoaded && _devices.isNotEmpty
+                  ? DropdownButton<int>(
+                      value: settings.selectedAudioDeviceIndex >= 0 &&
+                              settings.selectedAudioDeviceIndex <
+                                  _devices.length
+                          ? settings.selectedAudioDeviceIndex
+                          : -1,
+                      onChanged: (int? index) {
+                        if (index == null) return;
+                        final audioService = context.read<AudioService>();
+                        if (index < 0) {
+                          settings.setSelectedAudioDeviceIndex(-1);
+                        } else {
+                          audioService.setOutputDevice(_devices[index]);
+                        }
+                      },
+                      items: [
+                        const DropdownMenuItem<int>(
+                          value: -1,
+                          child: Text('System Default'),
+                        ),
+                        ..._devices.map(
+                          (device) => DropdownMenuItem<int>(
+                            value: device.index,
+                            child: Text(
+                              '${device.name} [${device.backend}]${device.isDefault ? ' ✓' : ''}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
             ListTile(
               title: const Text('Song Start Buffer Duration'),
               subtitle: Text(

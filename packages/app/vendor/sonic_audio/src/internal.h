@@ -120,7 +120,17 @@ typedef struct {
   volatile int seek_request;
   volatile int seek_in_progress;
   volatile double seek_target;
+
+  volatile int load_status; /* SA_LOAD_IDLE | SA_LOAD_RUNNING | SA_LOAD_OK | SA_LOAD_ERR */
+  sa_thread_t load_thread;
+  char load_url[4096];
+  char load_headers[4096];
 } PlayerState;
+
+#define SA_LOAD_IDLE (-1)
+#define SA_LOAD_RUNNING (0)
+#define SA_LOAD_OK (1)
+#define SA_LOAD_ERR (2)
 
 typedef struct {
   ma_device device;

@@ -347,6 +347,36 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* heade
   return 0;
 }
 
+static void* load_thread_func(void* arg) {
+  (void)arg;
+  PlayerState* player = &g_sonic.player;
+
+  int result = sonic_audio_player_load(player->load_url, player->load_headers[0] != '\0' ? player->load_headers : NULL);
+
+  player->load_status = (result == 0) ? SA_LOAD_OK : SA_LOAD_ERR;
+  LOGI("SonicAudio Player: Async load finished with status %d (raw result %d)\n", player->load_status, result);
+  return NULL;
+}
+
+FFI_PLUGIN_EXPORT void sonic_audio_player_load_async(const char* url, const char* headers) {
+  if (!url) return;
+
+  PlayerState* player = &g_sonic.player;
+
+  sa_strncpy(player->load_url, sizeof(player->load_url), url, SA_TRUNCATE);
+  if (headers && headers[0] != '\0') {
+    sa_strncpy(player->load_headers, sizeof(player->load_headers), headers, SA_TRUNCATE);
+  } else {
+    player->load_headers[0] = '\0';
+  }
+
+  player->load_status = SA_LOAD_RUNNING;
+
+  sa_thread_create(&player->load_thread, load_thread_func, NULL);
+}
+
+FFI_PLUGIN_EXPORT int sonic_audio_player_get_load_status(void) { return g_sonic.player.load_status; }
+
 FFI_PLUGIN_EXPORT void sonic_audio_player_play(void) {
   if (!g_sonic.player.is_initialized) return;
 
@@ -368,9 +398,14 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_pause(void) {
 FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void) {
   PlayerState* player = &g_sonic.player;
 
-  if (!player->is_initialized) return;
-
   player->decoder.should_stop = 1;
+
+  if (player->load_status == SA_LOAD_RUNNING) {
+    sa_thread_join(&player->load_thread, NULL);
+    player->load_status = SA_LOAD_IDLE;
+  }
+
+  if (!player->is_initialized) return;
 
   if (player->decoder.is_running) {
     sa_thread_join(&player->decoder.thread, NULL);

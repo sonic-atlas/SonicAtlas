@@ -15,6 +15,7 @@ class SettingsService with ChangeNotifier {
   static const _useNativeSampleRateKey = 'use_native_sample_rate';
   static const _useExclusiveAudioKey = 'use_exclusive_audio';
   static const _audioVolumeKey = 'audio_volume';
+  static const _selectedAudioDeviceIndexKey = 'selected_audio_device_index';
 
   String? _serverUrl;
   String? get serverUrl => _serverUrl;
@@ -46,6 +47,9 @@ class SettingsService with ChangeNotifier {
   double _audioVolume = 1.0;
   double get audioVolume => _audioVolume;
 
+  int _selectedAudioDeviceIndex = -1;
+  int get selectedAudioDeviceIndex => _selectedAudioDeviceIndex;
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _serverUrl = _prefs.getString(_serverUrlKey);
@@ -56,6 +60,8 @@ class SettingsService with ChangeNotifier {
     _useNativeSampleRate = _prefs.getBool(_useNativeSampleRateKey) ?? true;
     _useExclusiveAudio = _prefs.getBool(_useExclusiveAudioKey) ?? false;
     _audioVolume = _prefs.getDouble(_audioVolumeKey) ?? 1.0;
+    _selectedAudioDeviceIndex =
+        _prefs.getInt(_selectedAudioDeviceIndexKey) ?? -1;
 
     final savedTheme = _prefs.getString(_themeModeKey);
     if (savedTheme != null) {
@@ -124,6 +130,16 @@ class SettingsService with ChangeNotifier {
   Future<void> setAudioVolume(double volume) async {
     _audioVolume = volume;
     await _prefs.setDouble(_audioVolumeKey, volume);
+    notifyListeners();
+  }
+
+  Future<void> setSelectedAudioDeviceIndex(int index) async {
+    _selectedAudioDeviceIndex = index;
+    if (index < 0) {
+      await _prefs.remove(_selectedAudioDeviceIndexKey);
+    } else {
+      await _prefs.setInt(_selectedAudioDeviceIndexKey, index);
+    }
     notifyListeners();
   }
 }

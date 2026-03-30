@@ -13,6 +13,8 @@ FFI_PLUGIN_EXPORT int sonic_audio_init(void);
 FFI_PLUGIN_EXPORT void sonic_audio_dispose(void);
 
 FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* headers);
+FFI_PLUGIN_EXPORT void sonic_audio_player_load_async(const char* url, const char* headers);
+FFI_PLUGIN_EXPORT int sonic_audio_player_get_load_status(void);
 FFI_PLUGIN_EXPORT void sonic_audio_player_play(void);
 FFI_PLUGIN_EXPORT void sonic_audio_player_pause(void);
 FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void);
