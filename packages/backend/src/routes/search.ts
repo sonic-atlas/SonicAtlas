@@ -8,6 +8,7 @@ import type { PgColumn } from 'drizzle-orm/pg-core';
 
 const router = Router();
 
+// Couldn't get drizzle to cooperate with .select so custom SQL it is
 function genSearchSQL(qc: string, pq: string | null, limit: number, offset: number, whereClauses: SQL[]) {
     const conditions: SQL[] = [];
 

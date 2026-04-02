@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sonic_atlas/core/models/track.dart';
 import 'package:sonic_atlas/core/services/config/settings.dart';
 import 'package:sonic_atlas/core/services/network/api.dart';
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 
 import '../playback/audio.dart';
 
@@ -99,17 +100,14 @@ class DiscordService with ChangeNotifier {
     try {
       await client.connect().timeout(const Duration(seconds: 2));
     } on TimeoutException {
-      if (kDebugMode) print('Discord IPC not available, skipping RPC.');
+      logger.w('Discord IPC not available, skipping RPC.');
       return;
     } catch (e, s) {
-      if (kDebugMode) {
-        print('DiscordService error: $e');
-        print('DiscordService stack trace: $s');
-      }
+      logger.e('DiscordService error', error: e, stackTrace: s);
       return;
     }
 
-    if (kDebugMode) print('DiscordService connected');
+    logger.i('DiscordService connected');
 
     _subscriptions.addAll([
       AudioService.onPlayTrack.listen(playTrack),
@@ -120,7 +118,7 @@ class DiscordService with ChangeNotifier {
 
     _currentActivity = null;
 
-    if (kDebugMode) print('DiscordService initialized');
+    logger.i('DiscordService initialised');
     notifyListeners();
   }
 
@@ -132,9 +130,7 @@ class DiscordService with ChangeNotifier {
 
     await client.disconnect();
 
-    if (kDebugMode) {
-      print('DiscordService disconnected');
-    }
+    logger.i('DiscordService disconnected');
   }
 
   void _onSettingsChanged() async {
@@ -160,9 +156,7 @@ class DiscordService with ChangeNotifier {
       if (url.length < 128) {
         return url;
       } else {
-        if (kDebugMode) {
-          print('DiscordRPC: Custom URL too long (${url.length} chars).');
-        }
+        logger.d('DiscordRPC: Custom URL too long (${url.length} chars).');
       }
     }
 
@@ -185,7 +179,7 @@ class DiscordService with ChangeNotifier {
         }
       }
     } catch (e) {
-      if (kDebugMode) print('DiscordRPC: iTunes fallback failed: $e');
+      logger.d('DiscordRPC: iTunes fallback failed', error: e);
     }
     return defaultAsset;
   }
@@ -219,10 +213,6 @@ class DiscordService with ChangeNotifier {
   }
 
   Future<void> playTrack(Track track) async {
-    if (kDebugMode) {
-      print('Playing track: ${track.title}');
-    }
-
     _currentlyPlaying = track;
     _trackStartTime = DateTime.now();
     _pauseTime = null;

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 
 import '/core/models/quality.dart';
 import '/core/models/track.dart';
@@ -50,9 +50,7 @@ class ApiService {
       }
       return false;
     } catch (e) {
-      if (kDebugMode) {
-        print('Login error: $e');
-      }
+      logger.e('Login error', error: e);
       return false;
     }
   }
@@ -70,9 +68,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Get tracks error: $e');
-      }
+      logger.e('Get tracks error', error: e);
       return [];
     }
   }
@@ -90,9 +86,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      if (kDebugMode) {
-        print('Get track error: $e');
-      }
+      logger.e('Get track error', error: e);
       return null;
     }
   }
@@ -121,9 +115,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Search tracks error: $e');
-      }
+      logger.e('Search tracks error', error: e);
       return [];
     }
   }
@@ -156,9 +148,7 @@ class ApiService {
         'availableQualities': Quality.values.toList(),
       };
     } catch (e) {
-      if (kDebugMode) {
-        print('Get track quality error: $e');
-      }
+      logger.e('Get track quality error', error: e);
       return {
         'sourceQuality': Quality.cd,
         'availableQualities': Quality.values.toList(),
@@ -195,9 +185,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      if (kDebugMode) {
-        print('Get release error: $e');
-      }
+      logger.e('Get release error', error: e);
       return null;
     }
   }
@@ -227,9 +215,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      if (kDebugMode) {
-        print('Get release tracks error: $e');
-      }
+      logger.e('Get releases from tracks error', error: e);
       return [];
     }
   }
@@ -372,7 +358,7 @@ class ApiService {
         'year': year,
         'releaseType': type,
         'extractAllCovers': extractAllCovers,
-        if (socketId != null) 'socketId': socketId,
+        'socketId': ?socketId,
       };
 
       String? coverFileName;
@@ -529,9 +515,7 @@ class ApiService {
       }
       throw Exception('Upload complete failed: ${response.body}');
     } catch (e) {
-      if (kDebugMode) {
-        print('Upload release error: $e');
-      }
+      logger.e('Upload release error', error: e);
       rethrow;
     }
   }
@@ -545,9 +529,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      if (kDebugMode) {
-        print('Update release error: $e');
-      }
+      logger.e('Update release error', error: e);
       return false;
     }
   }
@@ -561,9 +543,7 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      if (kDebugMode) {
-        print('Update track metadata error: $e');
-      }
+      logger.e('Update track metadata error', error: e);
       return false;
     }
   }

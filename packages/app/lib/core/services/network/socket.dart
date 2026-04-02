@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import '../config/settings.dart';
 
 class SocketService extends ChangeNotifier {
@@ -27,9 +28,7 @@ class SocketService extends ChangeNotifier {
     final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
     final socketUrl = uri.replace(scheme: scheme).toString();
 
-    if (kDebugMode) {
-      print('Connecting to socket at: $socketUrl');
-    }
+    logger.d('Connecting to socket at: $socketUrl');
 
     _socket = io.io(
       socketUrl,
@@ -38,17 +37,13 @@ class SocketService extends ChangeNotifier {
 
     _socket!.onConnect((_) {
       _id = _socket!.id;
-      if (kDebugMode) {
-        print('Socket connected: $_id');
-      }
+      logger.i('Socket connected: $_id');
       notifyListeners();
     });
 
     _socket!.onDisconnect((_) {
       _id = null;
-      if (kDebugMode) {
-        print('Socket disconnected');
-      }
+      logger.i('Socket disconnected');
       notifyListeners();
     });
 

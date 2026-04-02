@@ -1,17 +1,17 @@
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 
-import '/core/models/quality.dart';
+import 'queue_page.dart';
+import '../theme/app_theme.dart';
+import '../../core/models/quality.dart';
+import '../../core/services/config/settings.dart';
 import '../../core/services/network/api.dart';
 import '../../core/services/playback/audio.dart';
-import '../../core/services/config/settings.dart';
-import 'queue_page.dart';
-import 'package:sonic_audio/sonic_audio.dart';
-import '../theme/app_theme.dart';
+import '../../core/services/utils/logger.dart';
 
 class FullScreenPlayerPage extends StatefulWidget {
   const FullScreenPlayerPage({super.key});
@@ -66,9 +66,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading quality info: $e');
-      }
+      logger.e('Error loading quality info', error: e);
       if (mounted) {
         setState(() {
           _availableQualities = Quality.values.toList();

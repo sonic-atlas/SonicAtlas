@@ -18,7 +18,7 @@ class Activity {
       this.type = ActivityType.playing,
       this.url,
       this.timestamps,
-      this.assets});
+      this.assets,});
 
   final String name;
   final String? details;

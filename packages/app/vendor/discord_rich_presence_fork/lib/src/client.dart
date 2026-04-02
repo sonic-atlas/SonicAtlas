@@ -47,7 +47,7 @@ class Client {
   }
 
   Future<void> _request(
-      String cmd, Map<String, dynamic> args, String event) async {
+      String cmd, Map<String, dynamic> args, String event,) async {
     final Uuid uuid = Uuid();
     final String nonce = uuid.v4();
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import 'package:sonic_audio/sonic_audio.dart';
 import 'package:sonic_atlas/core/services/playback/media_handler.dart';
 
@@ -112,9 +113,7 @@ class AudioService with ChangeNotifier {
         } else if (state == PlayerState.ended) {
           _handleTrackEnd();
         } else if (state == PlayerState.error) {
-          if (kDebugMode) {
-            print('Player error state detected. Attempting recovery...');
-          }
+          logger.w('Player error state detected. Attempting recovery...');
           if (_currentTrack != null && !_isRecovering) {
             Future.delayed(const Duration(seconds: 2), () {
               if (_currentTrack != null && !_userPaused) {
@@ -138,9 +137,7 @@ class AudioService with ChangeNotifier {
           if (notNearEnd && position.inSeconds > 2) {
             Future.delayed(const Duration(milliseconds: 500), () {
               if (_player.state != PlayerState.playing && !_userPaused && !_isRecovering && _currentTrack != null) {
-                if (kDebugMode) {
-                  print('Unexpected stop confirmed. Attempting recovery.');
-                }
+                logger.w('Unexpected stop confirmed. Attempting recovery...');
                 _attemptRecovery();
               }
             });
@@ -150,9 +147,7 @@ class AudioService with ChangeNotifier {
         notifyListeners();
       });
 
-      if (kDebugMode) {
-        print('AudioService initialized');
-      }
+      logger.i('AudioService initialised');
 
       _player.setBufferDuration(_settingsService.audioBufferDuration);
       _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
@@ -164,20 +159,13 @@ class AudioService with ChangeNotifier {
         _player.setOutputDevice(savedDevice);
       }
     } catch (e, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('Error initializing AudioService: $e');
-        debugPrint('Stack trace: $stackTrace');
-      }
+      logger.f('Error initialising AudioService', error: e, stackTrace: stackTrace);
     }
 
     _player.positionStream.listen((p) {
       if (_isRecovering && _optimisticPosition != null) {
         if (_player.isPlaying && !_player.isBuffering && p.inSeconds >= (_optimisticPosition!.inSeconds - 2)) {
-          if (kDebugMode) {
-            debugPrint(
-              'Recovery complete. Player at ${p.inSeconds}s, target was ${_optimisticPosition!.inSeconds}s',
-            );
-          }
+          logger.i('Recovery complete. Player at ${p.inSeconds}s, target was ${_optimisticPosition!.inSeconds}s');
           _isRecovering = false;
           _optimisticPosition = null;
           _optimisticDuration = null;
@@ -218,11 +206,7 @@ class AudioService with ChangeNotifier {
     bool isRecovery = false,
   }) async {
     try {
-      if (kDebugMode) {
-        print(
-          'playTrack called. isRecovery: $isRecovery, track: ${track.title}',
-        );
-      }
+      logger.d('playTrack called. isRecovery: $isRecovery, track: ${track.title}');
       final qualityInfo = await _apiService.getTrackQuality(track.id);
       final List<Quality> availableQualities = qualityInfo['availableQualities'];
 
@@ -245,20 +229,14 @@ class AudioService with ChangeNotifier {
         for (int i = desiredIndex; i < qualityOrder.length; i++) {
           if (availableQualities.contains(qualityOrder[i])) {
             selectedQuality = qualityOrder[i];
-            if (kDebugMode) {
-              print(
-                'Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}',
-              );
-            }
+            logger.i('Quality ${desiredQuality.value} unavailable, using ${selectedQuality.value}');
             break;
           }
         }
 
         if (selectedQuality == null && availableQualities.isNotEmpty) {
           selectedQuality = availableQualities.first;
-          if (kDebugMode) {
-            print('Using fallback quality: ${selectedQuality.value}');
-          }
+          logger.i('Using fallback quality: ${selectedQuality.value}');
         }
       }
 
@@ -271,11 +249,10 @@ class AudioService with ChangeNotifier {
       final token = _authService.token;
       final url = _apiService.getStreamUrl(track.id, selectedQuality);
 
-      if (kDebugMode) {
-        print('Playing: ${track.title}');
-        print('Stream URL: $url');
-        print('Quality: ${selectedQuality.value}');
-      }
+      logger.i('''
+Playing: ${track.title}
+Stream URL: $url
+Quality: ${selectedQuality.value}''');
 
       _currentTrack = track;
 
@@ -313,19 +290,13 @@ class AudioService with ChangeNotifier {
       );
 
       if (isRecovery && _optimisticPosition != null && _optimisticPosition!.inSeconds > 0) {
-        if (kDebugMode) {
-          print(
-            'Waiting for stream to load before seeking to ${_optimisticPosition!.inSeconds}s...',
-          );
-        }
+        logger.d('Waiting for stream to load before seeking to ${_optimisticPosition!.inSeconds}...');
 
         bool streamReady = false;
         for (int i = 0; i < 100; i++) {
           await Future.delayed(const Duration(milliseconds: 100));
           if (_lastError != null) {
-            if (kDebugMode) {
-              print('Stream load aborted due to error: $_lastError');
-            }
+            logger.e('Stream load aborted due to error', error: _lastError);
             throw Exception('Stream failed to load: $_lastError');
           }
           if (_player.duration.inSeconds > 0) {
@@ -335,26 +306,17 @@ class AudioService with ChangeNotifier {
         }
 
         if (streamReady) {
-          if (kDebugMode) {
-            print(
-              'Stream loaded. Seeking to ${_optimisticPosition!.inSeconds}s...',
-            );
-          }
+          logger.i('Stream loaded. Seeking to ${_optimisticPosition!.inSeconds}...');
           _player.seek(_optimisticPosition!);
         } else {
-          if (kDebugMode) {
-            print('Warning: Timeout waiting for stream, seeking anyway...');
-          }
+          logger.w('Timeout waiting for stream, seeking anyway...');
           _player.seek(_optimisticPosition!);
         }
       }
 
       _player.play();
     } catch (e, stackTrace) {
-      if (kDebugMode) {
-        print('Error playing track: $e');
-        print('Stack trace: $stackTrace');
-      }
+      logger.e('Error playing track', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -465,9 +427,7 @@ class AudioService with ChangeNotifier {
       if (isRecovery && _optimisticPosition == null) {
         _optimisticPosition = _lastKnownPosition;
         _optimisticDuration = _lastKnownDuration;
-        if (kDebugMode) {
-          print('Freezing UI at position: ${_optimisticPosition!.inSeconds}s');
-        }
+        logger.d('Freezing UI at position: ${_optimisticPosition!.inSeconds}s');
       }
 
       await playTrack(
@@ -481,9 +441,7 @@ class AudioService with ChangeNotifier {
 
   Future<void> _attemptRecovery() async {
     if (_recoveryInProgress) {
-      if (kDebugMode) {
-        print('Recovery already in progress, skipping...');
-      }
+      logger.d('Recovery already in progress, skipping...');
       return;
     }
     _recoveryInProgress = true;
@@ -495,9 +453,7 @@ class AudioService with ChangeNotifier {
     }
 
     _retryCount++;
-    if (kDebugMode) {
-      print('Attempting recovery #$_retryCount...');
-    }
+    logger.i('Attempting recovery #$_retryCount...');
 
     await Future.delayed(const Duration(seconds: 2));
 
@@ -510,9 +466,7 @@ class AudioService with ChangeNotifier {
       await restartCurrentTrack(isRecovery: true);
       _recoveryInProgress = false;
     } catch (e) {
-      if (kDebugMode) {
-        print('Recovery attempt failed: $e');
-      }
+      logger.w('Recovery attempt failed', error: e);
       _recoveryInProgress = false;
       _attemptRecovery();
     }
@@ -524,9 +478,7 @@ class AudioService with ChangeNotifier {
   }
 
   void setOutputDevice(AudioDevice device) {
-    if (kDebugMode) {
-      print('Setting output device to: ${device.name}');
-    }
+    logger.i('Setting output device to: ${device.name}');
     _player.setOutputDevice(device.index);
     _settingsService.setSelectedAudioDeviceIndex(device.index);
   }

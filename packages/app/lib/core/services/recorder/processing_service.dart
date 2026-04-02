@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import '../../models/recorder.dart';
 import '../../models/release.dart';
 import '../../models/upload.dart';
@@ -97,7 +98,7 @@ class ProcessingService extends ChangeNotifier {
 
         args.addAll(['-c:a', 'flac', '-compression_level', '8', outPath]);
 
-        debugPrint('Processing Track: $args');
+        logger.d('Processing Track: $args');
         final process = await Process.start('ffmpeg', args);
         final exitCode = await process.exitCode;
 
@@ -116,7 +117,7 @@ class ProcessingService extends ChangeNotifier {
       return generatedFiles;
     } catch (e) {
       _error = e.toString();
-      debugPrint('Processing Error: $e');
+      logger.e('Processing Error', error: e);
       rethrow;
     } finally {
       _isProcessing = false;

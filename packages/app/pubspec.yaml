@@ -43,6 +43,7 @@ dependencies:
   url_launcher: ^6.3.0
   sonic_audio:
     path: vendor/sonic_audio
+  logger: ^2.7.0
 
   # Windows-specific dependencies
   audio_service_win: ^0.0.2

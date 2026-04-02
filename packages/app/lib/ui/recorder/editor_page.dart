@@ -1,13 +1,16 @@
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:sonic_audio/sonic_audio.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../../core/models/release.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 import '../../../../core/services/recorder/processing_service.dart';
-import '../../../../core/models/release.dart';
-import 'package:path/path.dart' as path;
-import 'package:uuid/uuid.dart';
+import '../../../../core/services/utils/logger.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage({super.key});
@@ -129,7 +132,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
           waveformPath,
         ]);
       } catch (e) {
-        debugPrint('Waveform generation failed: $e');
+        logger.e('Waveform generation failed', error: e);
       }
     }
 

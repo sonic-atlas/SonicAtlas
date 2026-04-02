@@ -311,6 +311,13 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const Divider(),
             ListTile(
+              title: const Text('Force crash'),
+              subtitle: const Text('Force a crash (for testing crash reports)'),
+              onTap: () {
+                throw Exception('Test crash.');
+              }
+            ),
+            ListTile(
               title: const Text('Log Out'),
               onTap: () {
                 context.read<AuthService>().logout();

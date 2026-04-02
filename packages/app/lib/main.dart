@@ -18,6 +18,7 @@ import 'core/services/network/socket.dart';
 import 'core/services/platform/wtaskbar.dart';
 import 'core/services/recorder/recorder_service.dart';
 import 'core/services/recorder/processing_service.dart';
+import 'core/services/utils/crash_reporter.dart';
 
 import 'ui/home/home_page.dart';
 import 'ui/auth/login_page.dart';
@@ -34,91 +35,97 @@ late MediaSessionHandler audioHandler;
 LinuxMprisManager? linuxMpris;
 
 void main(List<String> args) async {
-  WidgetsFlutterBinding.ensureInitialized();
+  CrashReporter.runAppGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await CrashReporter.init();
 
-  final settingsService = SettingsService();
-  await settingsService.init();
+    final settingsService = SettingsService();
+    await settingsService.init();
 
-  final authService = AuthService();
-  await authService.init();
+    final authService = AuthService();
+    await authService.init();
 
-  final discordService = DiscordService(settingsService);
+    final discordService = DiscordService(settingsService);
 
-  final apiService = ApiService(settingsService, authService);
-  final audioService = AudioService.create(
-    apiService,
-    authService,
-    settingsService,
-  );
-
-  if (Platform.isWindows) {
-    await WindowsSingleInstance.ensureSingleInstance(
-      args,
-      'com.sonicatlas/player',
-      onSecondWindow: (args) {
-        handleCLA(args, audioService: audioService, apiService: apiService);
-      },
+    final apiService = ApiService(settingsService, authService);
+    final audioService = AudioService.create(
+      apiService,
+      authService,
+      settingsService,
     );
-  }
 
-  discordService.setAudioService(audioService);
-  discordService.setApiService(apiService);
+    if (Platform.isWindows) {
+      await WindowsSingleInstance.ensureSingleInstance(
+        args,
+        'com.sonicatlas/player',
+        onSecondWindow: (args) {
+          handleCLA(args, audioService: audioService, apiService: apiService);
+        },
+      );
+    }
 
-  audioHandler = await audio_service.AudioService.init(
-    builder: () => MediaSessionHandler(
-      audioService.player,
-      onSkipNext: audioService.skipNext,
-      onSkipPrevious: audioService.skipPrevious,
-    ),
-    config: const audio_service.AudioServiceConfig(
-      androidNotificationChannelId: 'dev.heggo.sonic_atlas.channel',
-      androidNotificationChannelName: 'Sonic Atlas Playback',
-      androidNotificationChannelDescription: 'Media playback',
-      androidNotificationOngoing: false,
-      androidStopForegroundOnPause: false,
-      androidShowNotificationBadge: true,
-      notificationColor: Color(0xFF2196f3),
-    ),
-  );
+    discordService.setAudioService(audioService);
+    discordService.setApiService(apiService);
 
-  audioService.setAudioHandler(audioHandler);
-
-  if (Platform.isLinux) {
-    linuxMpris = LinuxMprisManager(audioHandler, audioService);
-  }
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: settingsService),
-        ChangeNotifierProvider.value(value: authService),
-        ChangeNotifierProvider.value(value: discordService),
-        ChangeNotifierProvider.value(value: audioService),
-        ChangeNotifierProvider(create: (_) => SonicRecorderService()),
-        ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
-        ProxyProvider2<SettingsService, AuthService, ApiService>(
-          update: (context, settings, auth, previous) => ApiService(settings, auth),
-        ),
-        ChangeNotifierProvider<SocketService>(
-          create: (context) => SocketService(
-            Provider.of<SettingsService>(context, listen: false),
+    audioHandler = await audio_service.AudioService.init(
+      builder: () =>
+          MediaSessionHandler(
+            audioService.player,
+            onSkipNext: audioService.skipNext,
+            onSkipPrevious: audioService.skipPrevious,
           ),
-        ),
-      ],
-      child: const SonicAtlasApp(),
-    ),
-  );
+      config: const audio_service.AudioServiceConfig(
+        androidNotificationChannelId: 'dev.heggo.sonic_atlas.channel',
+        androidNotificationChannelName: 'Sonic Atlas Playback',
+        androidNotificationChannelDescription: 'Media playback',
+        androidNotificationOngoing: false,
+        androidStopForegroundOnPause: false,
+        androidShowNotificationBadge: true,
+        notificationColor: Color(0xFF2196f3),
+      ),
+    );
 
-  if (args.isNotEmpty) {
-    handleCLA(args, audioService: audioService, apiService: apiService);
-  }
+    audioService.setAudioHandler(audioHandler);
 
-  Future.microtask(() => discordService.init());
+    if (Platform.isLinux) {
+      linuxMpris = LinuxMprisManager(audioHandler, audioService);
+    }
 
-  final wTaskBarService = WTaskbarService();
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    wTaskBarService.setup(audioService);
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: settingsService),
+          ChangeNotifierProvider.value(value: authService),
+          ChangeNotifierProvider.value(value: discordService),
+          ChangeNotifierProvider.value(value: audioService),
+          ChangeNotifierProvider(create: (_) => SonicRecorderService()),
+          ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
+          ProxyProvider2<SettingsService, AuthService, ApiService>(
+            update: (context, settings, auth, previous) =>
+                ApiService(settings, auth),
+          ),
+          ChangeNotifierProvider<SocketService>(
+            create: (context) =>
+                SocketService(
+                  Provider.of<SettingsService>(context, listen: false),
+                ),
+          ),
+        ],
+        child: const SonicAtlasApp(),
+      ),
+    );
+
+    if (args.isNotEmpty) {
+      handleCLA(args, audioService: audioService, apiService: apiService);
+    }
+
+    Future.microtask(() => discordService.init());
+
+    final wTaskBarService = WTaskbarService();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 200));
+      wTaskBarService.setup(audioService);
+    });
   });
 }
 

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import 'package:sonic_audio/sonic_audio.dart';
 
 import '../../models/recorder.dart';
@@ -48,7 +49,7 @@ class SonicRecorderService extends ChangeNotifier {
     } catch (e) {
       _error = 'Initialization error: $e';
       notifyListeners();
-      debugPrint('SonicRecorderService Init Error: $e');
+      logger.e('SonicRecorderService Init Error', error: e);
     }
   }
 
@@ -58,7 +59,7 @@ class SonicRecorderService extends ChangeNotifier {
       _devices = _engine.getDevices();
       notifyListeners();
     } catch (e) {
-      debugPrint('Device enumeration error: $e');
+      logger.e('Device enumeration error', error: e);
     }
   }
 
