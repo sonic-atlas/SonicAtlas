@@ -11,7 +11,7 @@ class WTaskbarService {
   WTaskbarService._internal();
 
   bool _initialised = false;
-  AudioService? _audioService;
+  late AudioService _audioService;
 
   void setup(AudioService audioService) async {
     if (!Platform.isWindows) return;
@@ -24,8 +24,6 @@ class WTaskbarService {
   }
 
   void _updateToolbar() async {
-    if (_audioService == null) return;
-
     /**
      * TODO: Swap between play/pause depending on audioService.isPlaying
      * TODO: Use mode: ThumbnailToolbarButtonMode.disabled | ThumbnailToolbarButtonMode.dismissionClick for skip next/previous if !audioService.hasNext & !audioService.hasPrevious respectively
@@ -36,22 +34,22 @@ class WTaskbarService {
         ThumbnailToolbarButton(
           ThumbnailToolbarAssetIcon('assets/wtaskbar/skip_previous.ico'),
           'Previous',
-          _audioService!.skipPrevious,
+          _audioService.skipPrevious,
         ),
         ThumbnailToolbarButton(
           ThumbnailToolbarAssetIcon('assets/wtaskbar/play.ico'),
           'Play',
-          _audioService!.play,
+          _audioService.play,
         ),
         ThumbnailToolbarButton(
           ThumbnailToolbarAssetIcon('assets/wtaskbar/pause.ico'),
           'Pause',
-          _audioService!.pause,
+          _audioService.pause,
         ),
         ThumbnailToolbarButton(
           ThumbnailToolbarAssetIcon('assets/wtaskbar/skip_next.ico'),
           'Next',
-          _audioService!.skipNext,
+          _audioService.skipNext,
         ),
       ]);
     } catch (e) {
