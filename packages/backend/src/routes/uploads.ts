@@ -105,7 +105,9 @@ router.post('/:uploadId/file', upload.single('file'), async (req, res) => {
             return res.status(400).json({ error: 'BAD_REQUEST', message: 'No file data received' });
         }
 
-        const tmpFileName = `${Date.now()}-${file.fileName}`;
+        // Prevent file names being like '../../something_malicious'
+        const sanitizedFileName = path.basename(file.fileName);
+        const tmpFileName = `${Date.now()}-${sanitizedFileName}`;
         const filePath = path.join(uploadFolder, tmpFileName);
         await fsp.writeFile(filePath, req.file.buffer);
 
@@ -199,7 +201,8 @@ router.post('/:uploadId/file/:fileId/complete', async (req, res) => {
         }
 
         const assembled = assembleFile(file);
-        const tmpFileName = `${Date.now()}-${file.fileName}`;
+        const sanitizedFileName = path.basename(file.fileName);
+        const tmpFileName = `${Date.now()}-${sanitizedFileName}`;
         const filePath = path.join(uploadFolder, tmpFileName);
         await fsp.writeFile(filePath, assembled);
 

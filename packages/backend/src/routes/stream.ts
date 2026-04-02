@@ -93,10 +93,17 @@ router.get('/:trackId/quality', async (req, res) => {
 
 const hlsRoot = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 
-// I don't think there's any need to check if trackId is a UUID here. Don't need to add unnecessary latency.
 // Master playlist, for ABR
 router.get('/:trackId/master.m3u8', async (req, res) => {
     const { trackId } = req.params;
+    if (!isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'TRACK_002',
+            message: 'Track id must be a valid UUID'
+        });
+    }
+    
     const sessionId = req.query.session as string | undefined;
     const filepath = path.join(hlsRoot, trackId!, 'master.m3u8');
 
@@ -131,8 +138,19 @@ router.get('/:trackId/master.m3u8', async (req, res) => {
 // Routes for individual qualities
 router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
     const { trackId, quality, filename } = req.params;
+    if (!isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'TRACK_002',
+            message: 'Track id must be a valid UUID'
+        });
+    }
+
+    const sanitizedQuality = path.basename(quality!);
+    const sanitizedFilename = path.basename(filename!);
+
     const sessionId = req.query.session as string | undefined;
-    const filepath = path.join(hlsRoot, trackId!, quality!, `${filename}.m3u8`);
+    const filepath = path.join(hlsRoot, trackId!, sanitizedQuality, `${sanitizedFilename}.m3u8`);
 
     if (!fs.existsSync(filepath)) {
         return res.status(404).json({
@@ -164,8 +182,19 @@ router.get('/:trackId/:quality/:filename.m3u8', async (req, res) => {
 
 router.get('/:trackId/:quality/:segment', async (req, res) => {
     const { trackId, quality, segment } = req.params;
+    if (!isUUID(trackId!)) {
+        return res.status(422).json({
+            error: 'UNPROCESSABLE_ENTITY',
+            code: 'TRACK_002',
+            message: 'Track id must be a valid UUID'
+        });
+    }
+
+    const sanitizedQuality = path.basename(quality!);
+    const sanitizedSegment = path.basename(segment!);
+
     const sessionId = req.query.session as string | undefined;
-    const filepath = path.join(hlsRoot, trackId!, quality!, `${segment}`!);
+    const filepath = path.join(hlsRoot, trackId!, sanitizedQuality, sanitizedSegment);
 
     if (!fs.existsSync(filepath)) {
         return res.status(404).json({

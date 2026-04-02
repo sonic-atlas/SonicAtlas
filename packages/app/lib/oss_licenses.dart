@@ -70,6 +70,7 @@ const allDependencies = <Package>[
   _leak_tracker_flutter_testing,
   _leak_tracker_testing,
   _lints,
+  _logger,
   _logging,
   _markdown,
   _matcher,
@@ -178,6 +179,7 @@ const dependencies = <Package>[
   _cached_network_image,
   _url_launcher,
   _sonic_audio,
+  _logger,
   _audio_service_win,
   _windows_taskbar,
   _windows_single_instance
@@ -2336,13 +2338,13 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
   );
 
-/// flutter 3.41.4
+/// flutter 3.41.6
 const _flutter = Package(
     name: 'flutter',
     description: 'A framework for writing Flutter applications',
     homepage: 'https://flutter.dev',
     authors: [],
-    version: '3.41.4',
+    version: '3.41.6',
     spdxIdentifiers: ['BSD-3-Clause'],
     isMarkdown: false,
     isSdk: true,
@@ -3153,6 +3155,43 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.''',
+  );
+
+/// logger 2.7.0
+const _logger = Package(
+    name: 'logger',
+    description: 'Small, easy to use and extensible logger which prints beautiful logs.',
+    repository: 'https://github.com/SourceHorizon/logger',
+    authors: [],
+    version: '2.7.0',
+    spdxIdentifiers: ['MIT'],
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [PackageRef('meta'), PackageRef('clock')],
+    devDependencies: [PackageRef('test'), PackageRef('lints'), PackageRef('file')],
+    license: '''MIT License
+
+Copyright (c) 2019 Simon Leier
+Copyright (c) 2019 Harm Aarts
+Copyright (c) 2023 Severin Hamader
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.''',
   );
 
 /// logging 1.3.0
@@ -4314,7 +4353,7 @@ const _posix = Package(
     isMarkdown: false,
     isSdk: false,
     dependencies: [PackageRef('ffi'), PackageRef('meta'), PackageRef('path')],
-    devDependencies: [PackageRef('logging'), PackageRef('stack_trace'), PackageRef('test'), PackageRef('uuid')],
+    devDependencies: [PackageRef('logger'), PackageRef('logging'), PackageRef('stack_trace'), PackageRef('test'), PackageRef('uuid')],
     license: '''MIT License
 
 Copyright (c) 2020 Brett Sutton
@@ -37946,7 +37985,7 @@ const _sonic_atlas = Package(
     spdxIdentifiers: [],
     isMarkdown: false,
     isSdk: false,
-    dependencies: [PackageRef('flutter'), PackageRef('ffi'), PackageRef('http'), PackageRef('path'), PackageRef('uuid'), PackageRef('path_provider'), PackageRef('provider'), PackageRef('shared_preferences'), PackageRef('cupertino_icons'), PackageRef('discord_rich_presence'), PackageRef('audio_service'), PackageRef('rxdart'), PackageRef('file_picker'), PackageRef('socket_io_client'), PackageRef('mime'), PackageRef('http_parser'), PackageRef('cached_network_image'), PackageRef('url_launcher'), PackageRef('sonic_audio'), PackageRef('audio_service_win'), PackageRef('windows_taskbar'), PackageRef('windows_single_instance')],
+    dependencies: [PackageRef('flutter'), PackageRef('ffi'), PackageRef('http'), PackageRef('path'), PackageRef('uuid'), PackageRef('path_provider'), PackageRef('provider'), PackageRef('shared_preferences'), PackageRef('cupertino_icons'), PackageRef('discord_rich_presence'), PackageRef('audio_service'), PackageRef('rxdart'), PackageRef('file_picker'), PackageRef('socket_io_client'), PackageRef('mime'), PackageRef('http_parser'), PackageRef('cached_network_image'), PackageRef('url_launcher'), PackageRef('sonic_audio'), PackageRef('logger'), PackageRef('audio_service_win'), PackageRef('windows_taskbar'), PackageRef('windows_single_instance')],
     devDependencies: [PackageRef('flutter_test'), PackageRef('flutter_lints'), PackageRef('flutter_launcher_icons'), PackageRef('dart_pubspec_licenses')],
   );
 

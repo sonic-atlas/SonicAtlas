@@ -15,11 +15,13 @@ import { SocketServer } from './socket/ws.ts';
 import { register } from 'prom-client';
 import { metricsMiddleware } from './middleware/metrics.ts';
 import { rebuildStorageMetrics } from './services/metrics/storageMetrics.ts';
+import helmet from 'helmet';
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();
 
 const app = express();
+app.use(helmet());
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
 
@@ -149,8 +151,11 @@ async function main() {
     socket.setupSocket();
 
     app.use((err: any, req: express.Request, res: express.Response, _: express.NextFunction) => {
-        logger.error(`Error: ${err.message}`);
-        res.status(err.status || 500).json({ error: err.message });
+        logger.error(`Unhandled Error: ${err.stack || err.message}`);
+        res.status(err.status || 500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+        });
     });
 
     server.listen(PORT, '0.0.0.0', () => {
