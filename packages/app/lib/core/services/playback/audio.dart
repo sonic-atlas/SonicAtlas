@@ -483,6 +483,12 @@ Quality: ${selectedQuality.value}''');
     _settingsService.setSelectedAudioDeviceIndex(device.index);
   }
 
+  void resetOutputDevice() {
+    logger.i('Resetting output device to system default');
+    _player.setOutputDevice(-1);
+    _settingsService.setSelectedAudioDeviceIndex(-1);
+  }
+
   Future<List<AudioDevice>> getPlaybackDevices() async {
     return SonicPlayer.getAvailableDevices();
   }

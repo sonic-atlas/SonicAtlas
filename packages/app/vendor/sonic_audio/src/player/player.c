@@ -450,8 +450,6 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_set_volume(float volume) {
 }
 
 FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
-  if (index < 0) return -1;
-
   ma_device_id* pDeviceID = NULL;
   ma_device_id deviceID;
 
@@ -466,7 +464,11 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
       if (index < (int)playbackCount) {
         deviceID = pPlaybackInfos[index].id;
         pDeviceID = &deviceID;
+      } else {
+        return -1;
       }
+    } else {
+      return -1;
     }
   }
 

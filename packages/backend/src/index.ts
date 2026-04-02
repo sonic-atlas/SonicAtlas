@@ -21,7 +21,11 @@ const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();
 
 const app = express();
-app.use(helmet());
+// TODO: Make same domain instead of this allowing cross-origin
+// (might not be needed keeping anyway for now)
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
 
