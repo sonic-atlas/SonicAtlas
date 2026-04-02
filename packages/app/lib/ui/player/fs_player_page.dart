@@ -1,16 +1,17 @@
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 
-import '/core/models/quality.dart';
-import '../../core/services/network/api.dart';
-import '../../core/services/playback/audio.dart';
-import '../../core/services/config/settings.dart';
 import 'queue_page.dart';
 import '../theme/app_theme.dart';
+import '../../core/models/quality.dart';
+import '../../core/services/config/settings.dart';
+import '../../core/services/network/api.dart';
+import '../../core/services/playback/audio.dart';
+import '../../core/services/utils/logger.dart';
 
 class FullScreenPlayerPage extends StatefulWidget {
   const FullScreenPlayerPage({super.key});
@@ -65,9 +66,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
         });
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error loading quality info: $e');
-      }
+      logger.e('Error loading quality info', error: e);
       if (mounted) {
         setState(() {
           _availableQualities = Quality.values.toList();
@@ -96,8 +95,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
             final selectedQuality = settingsService.audioQuality;
             final playingQuality = audioService.currentTrackQuality;
 
-            final qualityChanged =
-                playingQuality != null && playingQuality != selectedQuality;
+            final qualityChanged = playingQuality != null && playingQuality != selectedQuality;
 
             return SingleChildScrollView(
               child: Container(
@@ -134,9 +132,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         children: [
                           ...Quality.values.map((quality) {
                             final isAvailable = _isQualityAvailable(quality);
-                            final isSource =
-                                quality == _sourceQuality &&
-                                quality != Quality.auto;
+                            final isSource = quality == _sourceQuality && quality != Quality.auto;
                             final isSelected = quality == selectedQuality;
                             final info = quality.info;
 
@@ -148,9 +144,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                   Text(
                                     info.label,
                                     style: TextStyle(
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : null,
+                                      fontWeight: isSelected ? FontWeight.bold : null,
                                       color: isAvailable
                                           ? (isSelected
                                                 ? Theme.of(
@@ -278,6 +272,108 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
     );
   }
 
+  void _showAudioSettings() {
+    final audioService = context.read<AudioService>();
+    final settingsService = context.read<SettingsService>();
+    final devices = audioService.getPlaybackDevices();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return FutureBuilder<List<AudioDevice>>(
+              future: devices,
+              builder: (context, snapshot) {
+                final devices = snapshot.data ?? [];
+
+                return SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Audio Settings',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 24),
+
+                        Text(
+                          'Volume',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Consumer<AudioService>(
+                          builder: (context, audio, child) {
+                            return Row(
+                              children: [
+                                const Icon(Icons.volume_down, size: 20),
+                                Expanded(
+                                  child: Slider(
+                                    value: audio.volume.clamp(0.0, 1.0),
+                                    onChanged: (value) {
+                                      audio.setVolume(value);
+                                    },
+                                  ),
+                                ),
+                                const Icon(Icons.volume_up, size: 20),
+                              ],
+                            );
+                          },
+                        ),
+
+                        const Divider(height: 32),
+
+                        Text(
+                          'Output Device',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        if (snapshot.connectionState == ConnectionState.waiting)
+                          const Center(child: CircularProgressIndicator())
+                        else if (devices.isEmpty)
+                          const Text('No devices found')
+                        else
+                          RadioGroup<int>(
+                            groupValue: settingsService.selectedAudioDeviceIndex,
+                            onChanged: (value) {
+                              if (value != null) {
+                                final device = devices.firstWhere(
+                                  (d) => d.index == value,
+                                );
+                                audioService.setOutputDevice(device);
+                                setModalState(() {});
+                                Navigator.pop(context);
+                              }
+                            },
+                            child: Column(
+                              children: devices.map((device) {
+                                return RadioListTile<int>(
+                                  title: Text(device.name),
+                                  subtitle: Text(
+                                    device.isDefault
+                                        ? '${device.backend} • Default'
+                                        : device.backend,
+                                  ),
+                                  value: device.index,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final audioService = context.watch<AudioService>();
@@ -305,8 +401,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
             httpHeaders: apiService.headers,
             fit: BoxFit.cover,
             fadeInDuration: Duration.zero,
-            errorWidget: (context, url, error) =>
-                Container(color: Colors.black),
+            errorWidget: (context, url, error) => Container(color: Colors.black),
             placeholder: (context, url) => Container(color: Colors.black),
           ),
           BackdropFilter(
@@ -317,9 +412,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final useSideBySide =
-                    constraints.maxWidth > constraints.maxHeight &&
-                    constraints.maxHeight < 710;
+                final useSideBySide = constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 710;
 
                 final maxSize = constraints.maxHeight * 0.45;
                 final albumArtSize = useSideBySide
@@ -348,8 +441,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               currentQuality.label,
                               style: const TextStyle(fontSize: 12),
                             ),
-                            if (playingQuality != null &&
-                                playingQuality != currentQuality)
+                            if (playingQuality != null && playingQuality != currentQuality)
                               const Padding(
                                 padding: EdgeInsets.only(left: 4),
                                 child: Icon(
@@ -382,6 +474,12 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                         );
                       },
                       tooltip: 'Queue',
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.volume_up, color: Colors.white),
+                      onPressed: _showAudioSettings,
+                      tooltip: 'Audio Settings',
                     ),
                   ],
                 );
@@ -427,11 +525,10 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                   children: [
                     Text(
                       track.title,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -461,6 +558,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
 
                 final progressBarWidget = StreamBuilder<Duration>(
                   stream: audioService.positionStream,
+                  initialData: audioService.position,
                   builder: (context, snapshot) {
                     final position = snapshot.data ?? Duration.zero;
                     final duration = audioService.duration;
@@ -489,9 +587,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                               activeColor: AppTheme.primaryColor,
                               inactiveColor: Colors.white24,
                               thumbColor: AppTheme.primaryColor,
-                              value: position.inMilliseconds
-                                  .clamp(0, duration.inMilliseconds)
-                                  .toDouble(),
+                              value: position.inMilliseconds.clamp(0, duration.inMilliseconds).toDouble(),
                               min: 0,
                               max: duration.inMilliseconds.toDouble(),
                               onChanged: (value) {
@@ -538,40 +634,28 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                     IconButton(
                       icon: Icon(
                         Icons.skip_previous,
-                        color: audioService.hasPrevious
-                            ? Colors.white
-                            : Colors.white38,
+                        color: audioService.hasPrevious ? Colors.white : Colors.white38,
                       ),
                       iconSize: 40,
-                      onPressed: audioService.hasPrevious
-                          ? () => audioService.skipPrevious()
-                          : null,
+                      onPressed: audioService.hasPrevious ? () => audioService.skipPrevious() : null,
                     ),
                     const SizedBox(width: 24),
                     IconButton(
                       icon: Icon(
-                        audioService.isPlaying
-                            ? Icons.pause_circle
-                            : Icons.play_circle,
+                        audioService.isPlaying ? Icons.pause_circle : Icons.play_circle,
                         color: Colors.white,
                       ),
                       iconSize: 64,
-                      onPressed: audioService.isPlaying
-                          ? audioService.pause
-                          : audioService.play,
+                      onPressed: audioService.isPlaying ? audioService.pause : audioService.play,
                     ),
                     const SizedBox(width: 24),
                     IconButton(
                       icon: Icon(
                         Icons.skip_next,
-                        color: audioService.hasNext
-                            ? Colors.white
-                            : Colors.white38,
+                        color: audioService.hasNext ? Colors.white : Colors.white38,
                       ),
                       iconSize: 40,
-                      onPressed: audioService.hasNext
-                          ? () => audioService.skipNext()
-                          : null,
+                      onPressed: audioService.hasNext ? () => audioService.skipNext() : null,
                     ),
                   ],
                 );
@@ -602,8 +686,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                                 child: Center(
                                   child: SingleChildScrollView(
                                     child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         trackInfoWidget,
                                         const SizedBox(height: 24),

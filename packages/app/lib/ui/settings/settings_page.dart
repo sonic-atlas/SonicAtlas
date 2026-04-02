@@ -1,13 +1,42 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 
 import '/core/models/quality.dart';
 import '../../core/services/auth/auth.dart';
 import '../../core/services/config/settings.dart';
+import '../../core/services/playback/audio.dart';
 import '/ui/common/layout.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  List<AudioDevice> _devices = [];
+  bool _devicesLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    final audioService = context.read<AudioService>();
+    final devices = await audioService.getPlaybackDevices();
+    if (mounted) {
+      setState(() {
+        _devices = devices;
+        _devicesLoaded = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +49,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             ListTile(
               title: const Text('Server Address'),
-              subtitle: Text(settings.serverIp ?? 'Not set'),
+              subtitle: Text(settings.serverUrl ?? 'Not set'),
               onTap: () {
                 Navigator.pushReplacementNamed(context, '/setup');
               },
@@ -66,6 +95,139 @@ class SettingsPage extends StatelessWidget {
                   }),
                 ],
               ),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Text(
+                'Playback',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+            if (Platform.isAndroid)
+              SwitchListTile(
+                title: const Text('Exclusive Audio'),
+                // TODO: Add note in docs
+                // This does not work most of the time
+                // You would need a custom usb driver to take control of a usb dac for example
+                subtitle: const Text(
+                  'Tries to take exclusive control of the specific device for playback (requires restart)',
+                ),
+                value: settings.useExclusiveAudio,
+                onChanged: (value) async {
+                  await settings.setUseExclusiveAudio(value);
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Restart Required'),
+                        content: const Text(
+                          'Exclusive audio settings require a full app restart to take effect.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => exit(0),
+                            child: const Text('Restart Now'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+              )
+            else
+              SwitchListTile(
+                title: const Text('Native Sample Rate'),
+                subtitle: const Text(
+                  'Avoid resampling (requires track change)',
+                ),
+                value: settings.useNativeSampleRate,
+                onChanged: (value) => settings.setUseNativeSampleRate(value),
+              ),
+            ListTile(
+              title: const Text('Audio Output Device'),
+              subtitle: Text(
+                _devicesLoaded
+                    ? (_devices.isEmpty
+                          ? 'No devices found'
+                          : 'Choose playback device')
+                    : 'Loading devices…',
+              ),
+              trailing: _devicesLoaded && _devices.isNotEmpty
+                  ? DropdownButton<int>(
+                      value: settings.selectedAudioDeviceIndex >= 0 &&
+                              settings.selectedAudioDeviceIndex <
+                                  _devices.length
+                          ? settings.selectedAudioDeviceIndex
+                          : -1,
+                      onChanged: (int? index) {
+                        if (index == null) return;
+                        final audioService = context.read<AudioService>();
+                        if (index < 0) {
+                          settings.setSelectedAudioDeviceIndex(-1);
+                        } else {
+                          audioService.setOutputDevice(_devices[index]);
+                        }
+                      },
+                      items: [
+                        const DropdownMenuItem<int>(
+                          value: -1,
+                          child: Text('System Default'),
+                        ),
+                        ..._devices.map(
+                          (device) => DropdownMenuItem<int>(
+                            value: device.index,
+                            child: Text(
+                              '${device.name} [${device.backend}]${device.isDefault ? ' ✓' : ''}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
+            ListTile(
+              title: const Text('Song Start Buffer Duration'),
+              subtitle: Text(
+                'This changes how much a song buffers when starting (This will probably will removed later on).',
+              ),
+              trailing: DropdownButton<double>(
+                value: settings.audioBufferDuration,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setAudioBufferDuration(value);
+                  }
+                },
+                items: const [
+                  DropdownMenuItem(value: 1.0, child: Text('Low (1s)')),
+                  DropdownMenuItem(value: 2.0, child: Text('Default (2s)')),
+                  DropdownMenuItem(value: 4.0, child: Text('Stable (4s)')),
+                  DropdownMenuItem(value: 7.0, child: Text('Long (7s)')),
+                  DropdownMenuItem(value: 10.0, child: Text('Max (10s)')),
+                ],
+              ),
+            ),
+            ListTile(
+              title: const Text('Default Volume'),
+              subtitle: Text('${(settings.audioVolume * 100).toInt()}%'),
+            ),
+            Slider(
+              value: settings.audioVolume.clamp(0.0, 1.0),
+              min: 0.0,
+              max: 1.0,
+              onChanged: (value) {
+                context.read<AudioService>().setVolume(value);
+              },
             ),
             const Divider(),
             Padding(
@@ -122,6 +284,14 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             ListTile(
+              title: const Text('Open Source Licenses'),
+              subtitle: const Text('View third-party software licenses'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pushNamed(context, '/licenses');
+              },
+            ),
+            ListTile(
               title: const Text('Upload Music'),
               subtitle: const Text('Upload releases to the server'),
               leading: const Icon(Icons.upload),
@@ -140,6 +310,13 @@ class SettingsPage extends StatelessWidget {
               },
             ),
             const Divider(),
+            ListTile(
+              title: const Text('Force crash'),
+              subtitle: const Text('Force a crash (for testing crash reports)'),
+              onTap: () {
+                throw Exception('Test crash.');
+              }
+            ),
             ListTile(
               title: const Text('Log Out'),
               onTap: () {

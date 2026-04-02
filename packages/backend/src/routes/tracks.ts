@@ -1,6 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { db } from '#db/db';
-import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
+import { authMiddleware } from '../middleware/auth.ts';
 import multer from 'multer';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
@@ -16,7 +16,7 @@ import { generateHLS } from '../utils/pretranscode.ts';
 import { ImageService } from '../services/ImageService.ts';
 
 const router = Router();
-router.use(authMiddleware, uploaderPerms);
+router.use(authMiddleware);
 
 const uploadFolder = path.join($rootDir, process.env.STORAGE_PATH ?? 'storage', 'originals');
 fs.mkdirSync(uploadFolder, { recursive: true });
@@ -327,7 +327,7 @@ router.use((err: any, req: Request, res: Response, next: NextFunction) => {
 router.delete('/:trackId', async (req, res) => {
     const { trackId } = req.params;
 
-    if (!isUUID(trackId!)) {
+    if (!isUUID(trackId)) {
         return res.status(422).json({
             error: 'UNPROCESSABLE_ENTITY',
             code: 'TRACK_002'

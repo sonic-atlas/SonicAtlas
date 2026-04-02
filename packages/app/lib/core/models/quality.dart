@@ -1,4 +1,3 @@
-/// Quality information with codec and bitrate details
 class QualityInfo {
   final String label;
   final String codec;
@@ -13,7 +12,6 @@ class QualityInfo {
   });
 }
 
-/// Audio quality options for streaming
 /// Matches the Quality type from @sonic-atlas/shared/types
 enum Quality {
   auto('auto'),
@@ -28,7 +26,6 @@ enum Quality {
   @override
   String toString() => value;
 
-  /// Get display label for this quality
   String get label {
     switch (this) {
       case Quality.auto:
@@ -44,7 +41,6 @@ enum Quality {
     }
   }
 
-  /// Get detailed quality information
   QualityInfo get info {
     switch (this) {
       case Quality.auto:
@@ -56,11 +52,15 @@ enum Quality {
       case Quality.efficiency:
         return const QualityInfo(
           label: 'Efficiency',
-          codec: 'AAC',
+          codec: 'Opus',
           bitrate: '128k',
         );
       case Quality.high:
-        return const QualityInfo(label: 'High', codec: 'AAC', bitrate: '320k');
+        return const QualityInfo(
+          label: 'High',
+          codec: 'Opus',
+          bitrate: '320k',
+        );
       case Quality.cd:
         return const QualityInfo(
           label: 'CD',
@@ -76,7 +76,6 @@ enum Quality {
     }
   }
 
-  /// Parse quality from string value
   static Quality fromString(String value) {
     return Quality.values.firstWhere(
       (q) => q.value == value,

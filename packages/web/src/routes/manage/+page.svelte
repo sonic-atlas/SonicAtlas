@@ -9,11 +9,7 @@
     let deleting = $state<string | null>(null);
 
     async function deleteRelease(id: string) {
-        if (
-            !confirm(
-                'Are you sure you want to delete this release? This will delete all associated tracks and files.'
-            )
-        )
+        if (!confirm('Are you sure you want to delete this release? This will delete all associated tracks and files.'))
             return;
 
         deleting = id;

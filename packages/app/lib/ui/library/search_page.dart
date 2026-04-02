@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -41,8 +40,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       if (!_isSearching && _hasMoreResults && _lastQuery.isNotEmpty) {
         _performSearch(_lastQuery, append: true);
       }
@@ -72,9 +70,6 @@ class _SearchPageState extends State<SearchPage> {
         limit: _pageSize,
         offset: offset,
       );
-      if (kDebugMode) {
-        print('Search results for "$query" (offset $offset): $results');
-      }
 
       setState(() {
         if (append) {
@@ -191,8 +186,7 @@ class _SearchPageState extends State<SearchPage> {
 
     return ListView.builder(
       controller: _scrollController,
-      itemCount:
-          _searchResults.length + (_isSearching && _hasMoreResults ? 1 : 0),
+      itemCount: _searchResults.length + (_isSearching && _hasMoreResults ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < _searchResults.length) {
           return TrackListItem(track: _searchResults[index]);

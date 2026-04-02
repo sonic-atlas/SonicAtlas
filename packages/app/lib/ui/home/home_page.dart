@@ -69,9 +69,7 @@ class _HomePageState extends State<HomePage> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              if (snapshot.hasError ||
-                  !snapshot.hasData ||
-                  snapshot.data!.isEmpty) {
+              if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(
                   child: Text('Could not load tracks or no tracks found.'),
                 );

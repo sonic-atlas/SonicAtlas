@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { JWT_EXPIRY, signJwt } from '../utils/jwt.ts';
 import { logger } from '../utils/logger.ts';
+import { loginAttemptsTotal } from '../services/metrics/authMetrics.ts';
 
 const router = Router();
 
@@ -16,6 +17,8 @@ router.post('/login', async (req, res) => {
     }
 
     if (password !== process.env.SERVER_PASSWORD) {
+        loginAttemptsTotal.inc({ status: 'failure' });
+
         return res.status(401).json({
             error: 'UNAUTHORIZED',
             code: 'AUTH_002',
@@ -25,6 +28,7 @@ router.post('/login', async (req, res) => {
 
     try {
         const token = signJwt({ authenticated: true, timestamp: Date.now() });
+        loginAttemptsTotal.inc({ status: 'success' });
 
         return res.status(200).json({
             token,
@@ -32,6 +36,8 @@ router.post('/login', async (req, res) => {
         });
     } catch (err) {
         logger.error(`(POST /api/auth/login) Token generation failed:\n${err}`);
+        loginAttemptsTotal.labels('error').inc();
+
         return res.status(500).json({
             error: 'INTERNAL_SERVER_ERROR',
             message: 'Login failed due to an internal error'

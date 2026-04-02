@@ -1,6 +1,6 @@
 {
   "name": "@sonic-atlas/web",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,29 +14,29 @@
     "lint": "prettier --check . && eslint ."
   },
   "devDependencies": {
-    "@eslint/compat": "^1.4.0",
-    "@eslint/js": "^9.38.0",
-    "@sveltejs/adapter-node": "^5.4.0",
-    "@sveltejs/kit": "^2.49.5",
-    "@sveltejs/vite-plugin-svelte": "^6.2.1",
-    "@types/node": "^24",
-    "eslint": "^9.38.0",
+    "@eslint/compat": "^2.0.3",
+    "@eslint/js": "^10.0.1",
+    "@sveltejs/adapter-node": "^5.5.4",
+    "@sveltejs/kit": "^2.55.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.12.5",
-    "globals": "^16.4.0",
-    "prettier": "^3.6.2",
-    "prettier-plugin-svelte": "^3.4.0",
-    "rollup-plugin-visualizer": "^6.0.5",
-    "svelte": "^5.43.0",
-    "svelte-check": "^4.3.3",
+    "eslint-plugin-svelte": "^3.16.0",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.1",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "svelte": "^5.55.1",
+    "svelte-check": "^4.4.5",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2",
-    "vite": "^7.1.12"
+    "typescript-eslint": "^8.57.2",
+    "vite": "^8.0.3"
   },
   "dependencies": {
     "@material/web": "^2.4.1",
-    "hls.js": "^1.6.14",
-    "socket.io-client": "^4.8.1",
+    "hls.js": "^1.6.15",
+    "socket.io-client": "^4.8.3",
     "svelte-dnd-action": "^0.9.69"
   }
 }

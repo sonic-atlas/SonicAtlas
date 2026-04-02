@@ -38,3 +38,9 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Crash reports
+crash_report_*
+
+# Not production ready or finished
+packages/backend/src/services/metrics/dbMetrics.ts

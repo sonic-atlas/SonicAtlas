@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sonic_recorder/sonic_recorder.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 
 class DeviceSelector extends StatelessWidget {
@@ -48,21 +48,21 @@ class DeviceSelector extends StatelessWidget {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<AudioDevice>(
                     isExpanded: true,
-                    items: recorderService.devices.map((d) {
-                      return DropdownMenuItem(
+                    items: recorderService.devices.map<DropdownMenuItem<AudioDevice>>((AudioDevice d) {
+                      return DropdownMenuItem<AudioDevice>(
                         value: d,
                         child: Text(
                           d.toString(),
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.color,
                           ),
                         ),
                       );
                     }).toList(),
-                    onChanged: recorderService.isRecording
-                        ? null
-                        : onDeviceChanged,
+                    onChanged: recorderService.isRecording ? null : onDeviceChanged,
                     hint: const Text('Select a device'),
                     value: selectedDevice,
                   ),
@@ -72,28 +72,19 @@ class DeviceSelector extends StatelessWidget {
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: recorderService.isRecording
-                  ? null
-                  : () => recorderService.refreshDevices(),
+              onPressed: recorderService.isRecording ? null : () => recorderService.refreshDevices(),
               tooltip: 'Refresh Devices',
             ),
             const SizedBox(width: 8),
             IconButton.filledTonal(
               icon: Icon(
-                recorderService.isMonitoring
-                    ? Icons.volume_up
-                    : Icons.volume_off,
+                recorderService.isMonitoring ? Icons.volume_up : Icons.volume_off,
               ),
-              onPressed: () =>
-                  recorderService.toggleMonitor(sampleRate: sampleRate),
+              onPressed: () => recorderService.toggleMonitor(sampleRate: sampleRate),
               tooltip: 'Monitor Output',
               style: IconButton.styleFrom(
-                backgroundColor: recorderService.isMonitoring
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-                foregroundColor: recorderService.isMonitoring
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : null,
+                backgroundColor: recorderService.isMonitoring ? Theme.of(context).colorScheme.primary : null,
+                foregroundColor: recorderService.isMonitoring ? Theme.of(context).colorScheme.onPrimary : null,
               ),
             ),
           ],
@@ -122,14 +113,12 @@ class DeviceSelector extends StatelessWidget {
                       child: DropdownButton<int>(
                         isExpanded: true,
                         items: sampleRates.map((sr) {
-                          return DropdownMenuItem(
+                          return DropdownMenuItem<int>(
                             value: sr,
                             child: Text('${sr}Hz'),
                           );
                         }).toList(),
-                        onChanged: recorderService.isRecording
-                            ? null
-                            : onSampleRateChanged,
+                        onChanged: recorderService.isRecording ? null : onSampleRateChanged,
                         value: sampleRate,
                       ),
                     ),
@@ -172,9 +161,7 @@ class DeviceSelector extends StatelessWidget {
                             child: Text('32-bit (Studio)'),
                           ),
                         ],
-                        onChanged: recorderService.isRecording
-                            ? null
-                            : onBitDepthChanged,
+                        onChanged: recorderService.isRecording ? null : onBitDepthChanged,
                         value: bitDepth,
                       ),
                     ),

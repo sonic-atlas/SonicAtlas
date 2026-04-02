@@ -1,0 +1,3 @@
+packages/app/vendor/sonic_audio/src/vendor/miniaudio.* linguist-vendored
+packages/app/lib/oss_licenses.dart linguist-vendored
+packages/app/lib/generated_extra_licenses.dart linguist-vendored

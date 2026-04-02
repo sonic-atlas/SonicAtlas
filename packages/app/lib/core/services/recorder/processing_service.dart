@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import '../../models/recorder.dart';
 import '../../models/release.dart';
+import '../../models/upload.dart';
 import '../network/api.dart';
 
 export '../../models/recorder.dart';
@@ -18,6 +20,9 @@ class ProcessingService extends ChangeNotifier {
   double? _progress = 0.0;
   double? get progress => _progress;
 
+  ReleaseUploadProgress? _uploadProgress;
+  ReleaseUploadProgress? get uploadProgress => _uploadProgress;
+
   String? _error;
   String? get error => _error;
 
@@ -30,6 +35,7 @@ class ProcessingService extends ChangeNotifier {
   }) async {
     _isProcessing = true;
     _progress = 0.0;
+    _uploadProgress = null;
     _error = null;
     notifyListeners();
 
@@ -37,8 +43,7 @@ class ProcessingService extends ChangeNotifier {
 
     try {
       final dir = path.dirname(wavPath);
-      final folderName = '${metadata.primaryArtist} - ${metadata.title}'
-          .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+      final folderName = '${metadata.primaryArtist} - ${metadata.title}'.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
       final outputDir = Directory(path.join(dir, folderName));
 
       if (!await outputDir.exists()) {
@@ -52,8 +57,7 @@ class ProcessingService extends ChangeNotifier {
         notifyListeners();
 
         final safeTitle = track.title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-        final outName =
-            '${discNumber.toString()}-${track.number.toString().padLeft(2, '0')} - $safeTitle.flac';
+        final outName = '${discNumber.toString()}-${track.number.toString().padLeft(2, '0')} - $safeTitle.flac';
         final outPath = path.join(outputDir.path, outName);
         generatedFiles.add(outPath);
 
@@ -94,7 +98,7 @@ class ProcessingService extends ChangeNotifier {
 
         args.addAll(['-c:a', 'flac', '-compression_level', '8', outPath]);
 
-        debugPrint('Processing Track: $args');
+        logger.d('Processing Track: $args');
         final process = await Process.start('ffmpeg', args);
         final exitCode = await process.exitCode;
 
@@ -113,7 +117,7 @@ class ProcessingService extends ChangeNotifier {
       return generatedFiles;
     } catch (e) {
       _error = e.toString();
-      debugPrint('Processing Error: $e');
+      logger.e('Processing Error', error: e);
       rethrow;
     } finally {
       _isProcessing = false;
@@ -134,6 +138,10 @@ class ProcessingService extends ChangeNotifier {
       metadata.releaseType ?? 'album',
       false,
       null,
+      onProgress: (progress) {
+        _uploadProgress = progress;
+        notifyListeners();
+      },
     );
   }
 

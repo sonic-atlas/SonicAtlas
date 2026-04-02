@@ -87,9 +87,7 @@ class AppTheme {
         surfaceContainerHighest: c.surface,
         surfaceTint: Colors.transparent,
         onPrimary: brightness == Brightness.dark ? Colors.black : Colors.white,
-        onSecondary: brightness == Brightness.dark
-            ? Colors.black
-            : Colors.white,
+        onSecondary: brightness == Brightness.dark ? Colors.black : Colors.white,
         onSurface: c.textPrimary,
         onSurfaceVariant: c.textSecondary,
         outline: c.textSecondary,

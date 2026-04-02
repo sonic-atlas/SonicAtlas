@@ -12,7 +12,7 @@ import {
 // import { SQL, sql } from 'drizzle-orm';
 // import { tsVectorColumn } from './tsvector.ts';
 
-export const trackFormatEnum = pgEnum('track_format_enum', ['flac', 'mp3', 'wav', 'aac']);
+export const trackFormatEnum = pgEnum('track_format_enum', ['mp3', 'flac', 'wav', 'ogg', 'opus', 'aac', 'wma']);
 
 export const releaseTypeEnum = pgEnum('release_type_enum', ['album', 'ep', 'single', 'compilation']);
 

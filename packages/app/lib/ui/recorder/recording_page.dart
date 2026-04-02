@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sonic_recorder/sonic_recorder.dart';
+import 'package:sonic_audio/sonic_audio.dart';
 import '/core/services/recorder/recorder_service.dart';
 import 'components/device_selector.dart';
 import 'components/vu_meter.dart';
@@ -82,11 +82,9 @@ class _AnalogTabState extends State<_AnalogTab> {
                     ignoring: recorderService.isRecording,
                     child: DeviceSelector(
                       selectedDevice: _selectedDevice,
-                      onDeviceChanged: (d) =>
-                          setState(() => _selectedDevice = d),
+                      onDeviceChanged: (d) => setState(() => _selectedDevice = d),
                       sampleRate: _sampleRate,
-                      onSampleRateChanged: (sr) =>
-                          setState(() => _sampleRate = sr ?? 48000),
+                      onSampleRateChanged: (sr) => setState(() => _sampleRate = sr ?? 48000),
                       bitDepth: recorderService.bitDepth,
                       onBitDepthChanged: (bd) {
                         if (bd != null) recorderService.setBitDepth(bd);
@@ -112,7 +110,7 @@ class _AnalogTabState extends State<_AnalogTab> {
 
                       if (!recorderService.isRecording)
                         Padding(
-                          padding: EdgeInsets.only(bottom: 24.0),
+                          padding: const EdgeInsets.only(bottom: 24.0),
                           child: Text(
                             'Record the entire side or album as one continuous track.\nYou can stop recording when switching sides; multiple recordings will be grouped into a session.\nYou can split tracks and remove silence in the editor after recording.',
                             textAlign: TextAlign.center,
@@ -125,21 +123,29 @@ class _AnalogTabState extends State<_AnalogTab> {
                           ),
                         ),
 
+                      if (!recorderService.isRecording && recorderService.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Text(
+                            'Error: ${recorderService.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+
                       const SizedBox(height: 16),
 
                       ElevatedButton.icon(
                         icon: Icon(
-                          recorderService.isRecording
-                              ? Icons.stop
-                              : Icons.fiber_manual_record,
-                          color: recorderService.isRecording
-                              ? Colors.grey
-                              : Colors.red,
+                          recorderService.isRecording ? Icons.stop : Icons.fiber_manual_record,
+                          color: recorderService.isRecording ? Colors.grey : Colors.red,
                         ),
                         label: Text(
-                          recorderService.isRecording
-                              ? 'STOP RECORDING'
-                              : 'START RECORDING',
+                          recorderService.isRecording ? 'STOP RECORDING' : 'START RECORDING',
                         ),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -150,12 +156,8 @@ class _AnalogTabState extends State<_AnalogTab> {
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
-                          backgroundColor: recorderService.isRecording
-                              ? Colors.red.shade900
-                              : null,
-                          foregroundColor: recorderService.isRecording
-                              ? Colors.white
-                              : null,
+                          backgroundColor: recorderService.isRecording ? Colors.red.shade900 : null,
+                          foregroundColor: recorderService.isRecording ? Colors.white : null,
                         ),
                         onPressed: () {
                           if (recorderService.isRecording) {
@@ -171,8 +173,7 @@ class _AnalogTabState extends State<_AnalogTab> {
                         },
                       ),
 
-                      if (!recorderService.isRecording &&
-                          recorderService.sessionFiles.isNotEmpty) ...[
+                      if (!recorderService.isRecording && recorderService.sessionFiles.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Container(
                           padding: const EdgeInsets.all(16),

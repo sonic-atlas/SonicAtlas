@@ -24,9 +24,7 @@ class VUMeter extends StatelessWidget {
         initialData: 0.0,
         builder: (context, snapshot) {
           final rms = snapshot.data ?? 0.0;
-          final db = (rms < 0.00001)
-              ? -100.0
-              : 20 * (math.log(rms) / math.ln10);
+          final db = (rms < 0.00001) ? -100.0 : 20 * (math.log(rms) / math.ln10);
 
           double percent = (db + 60.0) / 60.0;
           if (percent < 0) percent = 0;
@@ -103,9 +101,7 @@ class _VUPainter extends CustomPainter {
     }
 
     final displayDb = currentDb.clamp(-100.0, 0.0);
-    final validDisplay = displayDb <= -100
-        ? '-∞'
-        : displayDb.toStringAsFixed(1);
+    final validDisplay = displayDb <= -100 ? '-∞' : displayDb.toStringAsFixed(1);
 
     textPainter.text = TextSpan(
       text: '$validDisplay dB',
@@ -124,7 +120,5 @@ class _VUPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VUPainter oldDelegate) =>
-      oldDelegate.percent != percent ||
-      oldDelegate.currentDb != currentDb ||
-      oldDelegate.context != context;
+      oldDelegate.percent != percent || oldDelegate.currentDb != currentDb || oldDelegate.context != context;
 }

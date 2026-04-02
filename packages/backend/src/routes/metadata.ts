@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '#db/db';
-import { authMiddleware, uploaderPerms } from '../middleware/auth.ts';
+import { authMiddleware } from '../middleware/auth.ts';
 import { eq, and } from 'drizzle-orm';
 import { trackMetadata, releaseTracks } from '#db/schema';
 import path from 'node:path';
@@ -107,7 +107,7 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
     }
 });
 
-router.patch('/:trackId', authMiddleware, uploaderPerms, async (req, res) => {
+router.patch('/:trackId', authMiddleware, async (req, res) => {
     const { trackId } = req.params;
     const { title, artist } = req.body;
 

@@ -1,3 +1,6 @@
+// Import logger first to init crash reporting
+import { logger } from './utils/logger.ts';
+
 import express from 'express';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
@@ -6,16 +9,21 @@ import { pathToFileURL } from 'node:url';
 import { healthRoute } from './utils/health.ts';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { logger } from './utils/logger.ts';
 import compression from 'compression';
 import http from 'node:http';
 import { SocketServer } from './socket/ws.ts';
+import { register } from 'prom-client';
+import { metricsMiddleware } from './middleware/metrics.ts';
+import { rebuildStorageMetrics } from './services/metrics/storageMetrics.ts';
+import helmet from 'helmet';
 
 const PORT = Number(process.env.BACKEND_PORT) || 3000;
 const ip = getLocalIp();
 
 const app = express();
+app.use(helmet());
 app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
 
 const allowedOrigins = (process.env.CORS_ORIGIN ?? `http://localhost:5173,http://${ip}:5173`)
     .split(',')
@@ -34,7 +42,7 @@ const corsOptions: CorsOptions = {
     },
     methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-server-password', 'If-None-Match'],
     optionsSuccessStatus: 204
 }
 
@@ -52,6 +60,8 @@ app.use(express.json({
         }
     },
 }));
+
+app.use(metricsMiddleware);
 
 app.use('/api',
     //* IP rate limit
@@ -97,6 +107,11 @@ app.head('/api/stream/:trackId{/*path}', (req, res) => res.sendStatus(200));
 app.get('/health', healthRoute);
 logger.info('Loaded route: /health');
 
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+});
+
 //* Load api routes dynamically
 const apiDir = path.join(import.meta.dirname, 'routes');
 async function loadRoutes(dir: string) {
@@ -107,9 +122,9 @@ async function loadRoutes(dir: string) {
 
         if (entry.isDirectory()) {
             await loadRoutes(fullPath);
-        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.startsWith('_')) {
+        } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) && !entry.name.endsWith('.d.ts') && !entry.name.startsWith('_')) {
             const relativePath = path.relative(apiDir, fullPath);
-            const routePath = relativePath.replace(/\.ts/, '').replace(/\\/g, '/');
+            const routePath = relativePath.replace(/\.(ts|js)$/, '').replace(/\\/g, '/');
 
             try {
                 const importUrl = pathToFileURL(fullPath).href + `?v=${Date.now()}`;
@@ -135,15 +150,22 @@ async function main() {
     await loadRoutes(apiDir);
     socket.setupSocket();
 
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-        logger.error(`Error: ${err.message}`);
-        res.status(err.status || 500).json({ error: err.message });
+    app.use((err: any, req: express.Request, res: express.Response, _: express.NextFunction) => {
+        logger.error(`Unhandled Error: ${err.stack || err.message}`);
+        res.status(err.status || 500).json({
+            error: 'INTERNAL_SERVER_ERROR',
+            message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+        });
     });
 
     server.listen(PORT, '0.0.0.0', () => {
         logger.info(`Server is running at:
 Local:   \x1b[32m\x1b[4mhttp://localhost:${PORT}\x1b[0m
 Network: \x1b[32m\x1b[4mhttp://${ip}:${PORT}\x1b[0m`);
+
+        setImmediate(() => {
+            rebuildStorageMetrics().catch(err => logger.error(err));
+        });
     });
 }
 

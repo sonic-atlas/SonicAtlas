@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from 'svelte';
     import { apiPatch } from '$lib/api';
     import { socket } from '$lib/stores/socket.svelte';
     import { dndzone, type DndEvent } from 'svelte-dnd-action';
@@ -12,20 +13,16 @@
     import '@material/web/progress/linear-progress.js';
     import '@material/web/progress/circular-progress.js';
 
-    let {
-        release: initialRelease,
-        tracks: initialTracks,
-        isExistingRelease = false
-    } = $props<{
+    let props = $props<{
         release: any;
         tracks: any[];
         isExistingRelease?: boolean;
     }>();
 
-    let release = $state(initialRelease);
+    let release = $state(untrack(() => props.release));
 
-    const processedTracks = initialTracks.map((t: any) => {
-        if (isExistingRelease && !t.transcodeStatus) {
+    const processedTracks = untrack(() => props.tracks).map((t: any) => {
+        if (untrack(() => props.isExistingRelease) && !t.transcodeStatus) {
             return { ...t, transcodeStatus: 'done' };
         }
         return t;
@@ -62,10 +59,7 @@
 
     let totalTracks = $derived(discs.reduce((acc, d) => acc + d.items.length, 0));
     let completedTracks = $derived(
-        discs.reduce(
-            (acc, d) => acc + d.items.filter((t: any) => t.transcodeStatus === 'done').length,
-            0
-        )
+        discs.reduce((acc, d) => acc + d.items.filter((t: any) => t.transcodeStatus === 'done').length, 0)
     );
 
     $effect(() => {
@@ -225,8 +219,7 @@
             <md-outlined-text-field
                 label="Artist"
                 value={release.primaryArtist}
-                oninput={(e: Event) =>
-                    (release.primaryArtist = (e.target as HTMLInputElement).value)}
+                oninput={(e: Event) => (release.primaryArtist = (e.target as HTMLInputElement).value)}
             ></md-outlined-text-field>
         </div>
         <div class="row">
@@ -242,19 +235,12 @@
                 <md-outlined-select
                     label="Type"
                     value={release.releaseType}
-                    onchange={(e: Event) =>
-                        (release.releaseType = (e.target as HTMLSelectElement).value)}
+                    onchange={(e: Event) => (release.releaseType = (e.target as HTMLSelectElement).value)}
                 >
-                    <md-select-option value="album"
-                        ><div slot="headline">Album</div></md-select-option
-                    >
+                    <md-select-option value="album"><div slot="headline">Album</div></md-select-option>
                     <md-select-option value="ep"><div slot="headline">EP</div></md-select-option>
-                    <md-select-option value="single"
-                        ><div slot="headline">Single</div></md-select-option
-                    >
-                    <md-select-option value="compilation"
-                        ><div slot="headline">Compilation</div></md-select-option
-                    >
+                    <md-select-option value="single"><div slot="headline">Single</div></md-select-option>
+                    <md-select-option value="compilation"><div slot="headline">Compilation</div></md-select-option>
                 </md-outlined-select>
             </div>
         </div>
@@ -347,8 +333,7 @@
                                     label="Artist"
                                     value={track.artist}
                                     onchange={() => saveTrack(track)}
-                                    oninput={(e: Event) =>
-                                        (track.artist = (e.target as HTMLInputElement).value)}
+                                    oninput={(e: Event) => (track.artist = (e.target as HTMLInputElement).value)}
                                 ></md-outlined-text-field>
                             </div>
                         </div>

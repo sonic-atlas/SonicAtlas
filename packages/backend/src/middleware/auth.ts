@@ -6,7 +6,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
         const decoded = verifyJwt(token);
-        
+
         if (decoded && decoded.authenticated) {
             req.user = decoded;
             return next();
@@ -35,14 +35,5 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
         });
     }
 
-    next();
-}
-
-// keeping this for idk, future use?
-export async function uploaderPerms(req: Request, res: Response, next: NextFunction) {
-    next();
-}
-
-export async function adminPerms(req: Request, res: Response, next: NextFunction) {
     next();
 }

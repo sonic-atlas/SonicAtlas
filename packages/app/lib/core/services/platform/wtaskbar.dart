@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 import '../playback/audio.dart';
@@ -53,7 +53,7 @@ class WTaskbarService {
         ),
       ]);
     } catch (e) {
-      if (kDebugMode) print('Failed to set thumbnail toolbar: $e');
+      logger.e('Failed to set thumbnail toolbar', error: e);
     }
   }
 }

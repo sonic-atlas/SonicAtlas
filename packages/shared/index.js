@@ -1,10 +1,5 @@
-import { join, resolve } from 'node:path';
-
-/**
- * @
- * @deprecated Just use `import.meta.dirname` bro since idk if this works man
- */
-const __dirname = import.meta.dirname;
+import fs from 'node:fs';
+import { join } from 'node:path';
 
 export const $rootDir = join(import.meta.dirname, '..', '..');
 
@@ -29,7 +24,10 @@ export class Logger {
             : '';
         const color = this.options.color ? colors[level] : '';
         const reset = this.options.color ? colors.reset : '';
-        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}:${reset} ${message.replace(/\n(?!$)/g, '\n    ')}`;
+
+        const msgStr = message instanceof Error ? (message.stack || message.message) : String(message);
+
+        return `${time}${color}[${this.prefix}] ${level.toUpperCase()}:${reset} ${msgStr.replace(/\n(?!$)/g, '\n    ')}`;
     }
 
     info(msg) {
@@ -50,3 +48,38 @@ export class Logger {
         }
     }
 }
+
+const logger = new Logger('Shared');
+
+// Crash reporting, also can't be bothered to put in another file
+
+export function writeCrashReport(type, error) {
+    const timestamp = new Date().toISOString();
+    const filePath = join($rootDir, `crash_report_${Date.now()}.txt`);
+
+    const report = `=== CRASH REPORT ===
+Time: ${timestamp}
+Type: ${type}
+
+Error: ${error instanceof Error ? error.message : String(error)}
+Stack: ${error instanceof Error ? error.stack : 'N/A'}
+
+Node Version: ${process.version}
+Platform: ${process.platform} (${process.arch})
+Memory Usage: ${JSON.stringify(process.memoryUsage(), null, 2)}
+Uptime: ${process.uptime()} seconds
+`;
+
+    fs.writeFileSync(filePath, report, 'utf-8');
+    logger.error(`Crash report saved to ${filePath}`);
+}
+
+process.on('uncaughtException', (err) => {
+    writeCrashReport('uncaughtException', err);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    writeCrashReport('unhandledRejection', reason);
+    process.exit(1);
+});

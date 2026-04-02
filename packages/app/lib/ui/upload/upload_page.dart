@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
+import '../../core/models/upload.dart';
 import '../../core/services/network/api.dart';
 import '../../core/services/network/socket.dart';
 import 'release_editor_page.dart';
@@ -28,6 +29,7 @@ class _UploadPageState extends State<UploadPage> {
   String _releaseType = 'album';
   bool _extractAllCovers = false;
   bool _uploading = false;
+  ReleaseUploadProgress? _progress;
   String? _error;
 
   Future<void> _pickFiles() async {
@@ -37,12 +39,10 @@ class _UploadPageState extends State<UploadPage> {
         'mp3',
         'flac',
         'wav',
-        'm4a',
         'ogg',
         'opus',
         'aac',
         'wma',
-        'alac',
       ],
       allowMultiple: true,
     );
@@ -76,6 +76,7 @@ class _UploadPageState extends State<UploadPage> {
 
     setState(() {
       _uploading = true;
+      _progress = null;
       _error = null;
     });
 
@@ -94,13 +95,24 @@ class _UploadPageState extends State<UploadPage> {
         _releaseType,
         _extractAllCovers,
         socket.id,
+        onProgress: (progress) {
+          if (mounted) {
+            setState(() {
+              _progress = progress;
+            });
+            WindowsTaskbar.setProgress(
+              progress.overallProgress,
+              100,
+            );
+            WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal);
+          }
+        },
       );
 
       if (mounted && result != null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) =>
-                ReleaseEditorPage(releaseId: result['release']['id']),
+            builder: (_) => ReleaseEditorPage(releaseId: result['release']['id']),
           ),
         );
       }
@@ -120,9 +132,7 @@ class _UploadPageState extends State<UploadPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 480;
-        final maxWidth = constraints.maxWidth > 700
-            ? 700.0
-            : constraints.maxWidth;
+        final maxWidth = constraints.maxWidth > 700 ? 700.0 : constraints.maxWidth;
 
         final fileButton = Container(
           decoration: BoxDecoration(
@@ -136,9 +146,7 @@ class _UploadPageState extends State<UploadPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             label: Text(
-              _files.isEmpty
-                  ? 'Select Audio Files'
-                  : '${_files.length} files selected',
+              _files.isEmpty ? 'Select Audio Files' : '${_files.length} files selected',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
@@ -171,9 +179,7 @@ class _UploadPageState extends State<UploadPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             label: Text(
-              _coverFile == null
-                  ? 'Select Cover Art (Optional)'
-                  : 'Cover: ${_coverFile!.name}',
+              _coverFile == null ? 'Select Cover Art (Optional)' : 'Cover: ${_coverFile!.name}',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             style: ButtonStyle(
@@ -216,6 +222,44 @@ class _UploadPageState extends State<UploadPage> {
         );
       },
     );
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'pending':
+        return Icons.hourglass_empty;
+      case 'uploading':
+        return Icons.cloud_upload;
+      case 'processing':
+        return Icons.settings;
+      case 'complete':
+        return Icons.check_circle;
+      case 'error':
+        return Icons.error;
+      default:
+        return Icons.help;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'complete':
+        return Colors.green;
+      case 'error':
+        return Colors.red;
+      case 'uploading':
+        return Theme.of(context).colorScheme.primary;
+      case 'processing':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
@@ -288,6 +332,100 @@ class _UploadPageState extends State<UploadPage> {
               ),
 
               const SizedBox(height: 24),
+
+              if (_uploading && _progress != null) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Overall Progress',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        Text('${_progress!.overallProgress}%'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    LinearProgressIndicator(
+                      value: _progress!.overallProgress / 100,
+                      backgroundColor: Colors.grey.shade800,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        itemCount: _progress!.files.length,
+                        itemBuilder: (context, index) {
+                          final fp = _progress!.files[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: fp.status == 'error'
+                                  ? Colors.red.withValues(alpha: 0.1)
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      _getStatusIcon(fp.status),
+                                      color: _getStatusColor(fp.status),
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        fp.fileName,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${_formatBytes(fp.bytesUploaded)} / ${_formatBytes(fp.bytesTotal)}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (fp.status == 'uploading' && fp.bytesTotal > 0) ...[
+                                  const SizedBox(height: 6),
+                                  LinearProgressIndicator(
+                                    value: fp.bytesUploaded / fp.bytesTotal,
+                                    minHeight: 4,
+                                    backgroundColor: Colors.grey.shade800,
+                                  ),
+                                ],
+                                if (fp.error != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      fp.error!,
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+
               ElevatedButton(
                 onPressed: _uploading ? null : _upload,
                 style: ElevatedButton.styleFrom(
@@ -296,7 +434,9 @@ class _UploadPageState extends State<UploadPage> {
                   foregroundColor: Colors.white,
                 ),
                 child: _uploading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? (_progress != null
+                          ? Text('UPLOADING... ${_progress!.overallProgress}%')
+                          : const Text('PREPARING...'))
                     : const Text('UPLOAD'),
               ),
             ],

@@ -132,9 +132,7 @@ class MiniPlayer extends StatelessWidget {
                         audioService.isPlaying ? Icons.pause : Icons.play_arrow,
                       ),
                       onPressed: () {
-                        audioService.isPlaying
-                            ? audioService.pause()
-                            : audioService.play();
+                        audioService.isPlaying ? audioService.pause() : audioService.play();
                       },
                     ),
                 ],

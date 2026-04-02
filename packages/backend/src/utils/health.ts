@@ -1,80 +1,88 @@
 import type { Request, Response, NextFunction } from 'express';
-import { pgClient, /* redisClient, redisConnected */ } from '#db/db';
+import { pgClient } from '#db/db';
 import { logger } from './logger.ts';
+import { exec } from 'node:child_process';
+import pkg from '../../package.json' with { type: 'json' }
+
+type HealthComponentRes = 'ok' | 'not ok' | 'err';
 
 export async function healthRoute(req: Request, res: Response, next: NextFunction) {
-    const [pgStatus, /* redisStatus, transcoderStatus */] = await Promise.all([checkPg(), /* checkRedis(), checkTranscoder() */]);
-    const allOk = pgStatus === 'ok' /* && redisStatus === 'ok' && transcoderStatus === 'ok' */ ? 'ok' : 'not ok';
-    const httpStatus = allOk === 'ok' ? 200 : 503;
+    const start = performance.now();
+
+    const checks = await Promise.allSettled([
+        checkPg(),
+        checkFrontend(), 
+        checkFFmpeg()
+    ]);
+    const [pgStatus, feStatus, ffStatus] = checks.map(c => c.status === 'fulfilled' ? c.value : 'err');
+
+    const critOk = pgStatus === 'ok';
+    const allOk = critOk && feStatus === 'ok' && ffStatus === 'ok'
+    const status = allOk ? 'ok' : critOk ? 'degraded' : 'down';
+    const httpStatus = critOk ? 200 : 503;
 
     if (pgStatus === 'not ok') {
         logger.warn(`(GET /health) Postgres server is 'not ok'. This is most likely due to the server not currently running.`);
-    } /* else if (transcoderStatus === 'not ok') {
-        logger.warn(`(GET /health) Transcoder server is 'not ok'. This is because it isn't running.`);
-    } */
+    }
+    if (feStatus === 'not ok') {
+        logger.warn(`(GET /health) Frontend is 'not ok'. It appears the website cannot be reached.`);
+    }
+    if (ffStatus === 'not ok') {
+        logger.warn(`(GET /health) FFmpeg is 'not ok'. This error appeared when checking via 'ffmpeg -version'.`);
+    }
+
+    const duration = performance.now() - start;
 
     return res.status(httpStatus).json({
-        status: allOk,
+        status: status,
+        version: pkg.version,
+        uptime: process.uptime(),
+        responseTimeMs: duration,
+
         backend: 'ok',
-        database: pgStatus,
-        // redis: redisStatus,
-        // transcoder: transcoderStatus
+        postgres: pgStatus,
+        frontend: feStatus,
+        ffmpeg: ffStatus
     });
 }
 
-/* async function checkRedis(): Promise<'ok' | 'not ok'> {
-    if (!redisConnected || !redisClient.isOpen) {
-        return 'not ok';
-    }
-
+async function checkPg(): Promise<HealthComponentRes> {
     try {
-        const result = await redisClient.ping();
-
-        if (result === 'PONG') {
-            return 'ok';
-        }
-    } catch { }
-
-    return 'not ok';
-} */
-
-async function checkPg(): Promise<'ok' | 'not ok'> {
-    try {
-        const result = await pgClient`SELECT 1;`;
-
-        if (result.columns.length > 0) {
-            return 'ok';
-        }
-
-        return 'not ok';
-    } catch (err) {
-        return 'not ok';
+        const result = await pgClient`SELECT 1 as health;`;
+        return result.length ? 'ok' : 'not ok';
+    } catch {
+        return 'err';
     }
 }
 
-/* async function checkTranscoder(): Promise<'ok' | 'not ok'> {
+async function checkFrontend(): Promise<HealthComponentRes> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const url = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
 
-        const response = await fetch(`${process.env.TRANSCODER_PATH ?? 'http://localhost:8000'}/health`, {
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error. Status: ${response.status}`);
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) {
+            return 'not ok';
         }
 
-        const data = (await response.json()) as { status: string };
-
-        if (data.status === 'ok') {
-            return 'ok';
-        }
-
-        return 'not ok';
+        return 'ok';
     } catch {
-        return 'not ok';
+        return 'err';
+    } finally {
+        clearTimeout(timeout);
     }
-} */
+}
+
+async function checkFFmpeg(): Promise<HealthComponentRes> {
+    try {
+        return new Promise((resolve) => {
+            exec('ffmpeg -version', (err) => {
+                resolve(err ? 'not ok' : 'ok');
+            });
+        });
+    } catch {
+        return 'err';
+    }
+}

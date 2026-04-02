@@ -9,11 +9,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import fsp from 'node:fs/promises';
-import { parseFile } from 'music-metadata';
-import { enqueueTranscodeJob } from '../services/transcodeQueue.ts';
-import { stripCoverArt } from '../utils/stripCoverArt.ts';
 import { $rootDir } from '@sonic-atlas/shared';
 import { ImageService } from '../services/ImageService.ts';
+import { processTrackFile } from '../utils/processTrackFile.ts';
 
 const router = Router();
 
@@ -235,141 +233,22 @@ router.post('/upload', uploadFields, async (req, res) => {
         const processedTracks: any[] = [];
 
         for (const file of files) {
-            let attempts = 0;
-            const maxAttempts = 3;
-            let success = false;
+            const result = await processTrackFile({
+                filePath: file.path,
+                originalFilename: file.originalname,
+                releaseId: newRelease.id,
+                primaryArtist,
+                releaseTitle,
+                year,
+                socketId,
+                extractAllCovers: shouldExtractAllCovers,
+                existingReleaseCoverPath: newRelease.coverArtPath,
+            });
 
-            while (attempts < maxAttempts && !success) {
-                attempts++;
-                try {
-                    const metadata = await parseFile(file.path);
-                    const ext = path.extname(file.originalname).slice(1).toLowerCase() as any;
-
-                    const meta = {
-                        duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
-                        sampleRate: metadata.format.sampleRate ?? null,
-                        bitDepth: metadata.format.bitsPerSample ?? null,
-                        format: ext,
-                        title: metadata.common.title ?? path.parse(file.originalname).name,
-                        artist: metadata.common.artist ?? primaryArtist ?? 'Unknown Artist',
-                        album: metadata.common.album ?? releaseTitle ?? 'Unknown Album',
-                        year: metadata.common.year ?? (year ? parseInt(year) : null),
-                        genres: metadata.common.genre ?? null,
-                        trackNo: metadata.common.track.no ?? null,
-                        diskNo: metadata.common.disk.no ?? 1
-                    };
-
-                    const trackInfo = await db.transaction(async (tx) => {
-                        const [track] = await tx.insert(tracks).values({
-                            filename: file.filename,
-                            originalFilename: file.originalname,
-                            duration: meta.duration,
-                            sampleRate: meta.sampleRate,
-                            bitDepth: meta.bitDepth,
-                            format: meta.format,
-                            fileSize: file.size
-                        }).returning();
-
-                        if (!track) throw new Error('Failed to insert track');
-
-                        const fileExt = path.extname(file.originalname);
-                        const filename = `${track.id}${fileExt}`;
-                        const newPath = path.join(uploadFolder, filename);
-
-
-                        if (fs.existsSync(file.path)) {
-                            await fsp.rename(file.path, newPath);
-                        } else if (!fs.existsSync(newPath)) {
-                            throw new Error('Source file not found for processing');
-                        }
-
-                        await stripCoverArt(newPath);
-
-                        await tx.update(tracks).set({ filename }).where(eq(tracks.id, track.id));
-
-                        // Guess track number from filename if not in metadata
-                        let trackNumber = meta.trackNo;
-                        if (!trackNumber) {
-                            const match = file.originalname.match(/^(\d+)/);
-                            if (match && match[1]) trackNumber = parseInt(match[1]);
-                        }
-
-                        await tx.insert(releaseTracks).values({
-                            releaseId: newRelease.id,
-                            trackId: track.id,
-                            discNumber: meta.diskNo || 1,
-                            trackNumber: trackNumber
-                        });
-
-                        await tx.insert(trackMetadata).values({
-                            trackId: track.id,
-                            title: meta.title,
-                            artist: meta.artist,
-                            year: meta.year,
-                            genres: meta.genres
-                        });
-
-                        if (metadata.common.picture && metadata.common.picture.length > 0) {
-                            try {
-                                const picture = metadata.common.picture[0];
-                                if (picture && picture.data) {
-
-                                    if (!newRelease.coverArtPath) {
-                                        const releaseCoverName = `release_${newRelease.id}_cover`;
-                                        await ImageService.processAndSaveCover(Buffer.from(picture.data), metadataFolder, releaseCoverName);
-
-                                        const coverUrl = `/api/releases/${newRelease.id}/cover`;
-
-                                        await tx.update(releases)
-                                            .set({ coverArtPath: coverUrl })
-                                            .where(eq(releases.id, newRelease.id));
-
-                                        newRelease.coverArtPath = coverUrl;
-                                    }
-
-                                    if (shouldExtractAllCovers) {
-                                        const trackCoverName = `${track.id}_cover`;
-                                        await ImageService.processAndSaveCover(Buffer.from(picture.data), metadataFolder, trackCoverName);
-
-                                        await tx.update(tracks)
-                                            .set({ coverArtPath: `/api/metadata/${track.id}/cover` })
-                                            .where(eq(tracks.id, track.id));
-                                    }
-                                }
-                            } catch (e) {
-                                logger.warn(`Failed to extract cover art for ${track.id}: ${e}`);
-                            }
-                        }
-
-                        return { ...track, newPath };
-                    });
-
-                    enqueueTranscodeJob({
-                        track: trackInfo as any,
-                        filePath: trackInfo.newPath,
-                        socketId
-                    });
-
-                    processedTracks.push({
-                        id: trackInfo.id,
-                        originalFilename: trackInfo.originalFilename,
-                        title: meta.title,
-                        artist: meta.artist,
-                        discNumber: meta.diskNo || 1,
-                        trackNumber: meta.trackNo,
-                        duration: meta.duration,
-                        transcodeStatus: 'pending'
-                    });
-
-                    success = true;
-
-                } catch (fileErr) {
-                    logger.error(`Failed to process file ${file.originalname} (Attempt ${attempts}/${maxAttempts}): ${fileErr}`);
-                    if (attempts >= maxAttempts) {
-                        logger.error(`Giving up on file ${file.originalname} after ${maxAttempts} attempts.`);
-                    } else {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
+            if (result) {
+                processedTracks.push(result.track);
+                if (result.releaseCoverUrl) {
+                    newRelease.coverArtPath = result.releaseCoverUrl;
                 }
             }
         }

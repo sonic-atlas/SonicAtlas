@@ -36,6 +36,8 @@ print_menu() {
 build_flutter_linux() {
   log_step "Building Flutter Linux release..."
   cd "$APP_DIR"
+  dart run dart_pubspec_licenses:generate
+  dart run ../packaging/common/gen_extra_licenses.dart
   flutter build linux --release
   cd "$SCRIPT_DIR"
 
@@ -45,6 +47,8 @@ build_flutter_linux() {
 build_flutter_android() {
   log_step "Building Flutter Android release (split-per-abi)..."
   cd "$APP_DIR"
+  dart run dart_pubspec_licenses:generate
+  dart run ../packaging/common/gen_extra_licenses.dart
   flutter build apk --release --split-per-abi
   cd "$SCRIPT_DIR"
   log_success "Flutter Android build complete"

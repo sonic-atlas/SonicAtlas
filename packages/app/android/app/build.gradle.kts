@@ -30,7 +30,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.heggo.sonic_atlas"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

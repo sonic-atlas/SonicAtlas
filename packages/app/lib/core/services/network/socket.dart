@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:sonic_atlas/core/services/utils/logger.dart';
 import '../config/settings.dart';
 
 class SocketService extends ChangeNotifier {
@@ -16,40 +17,33 @@ class SocketService extends ChangeNotifier {
   io.Socket? get socket => _socket;
 
   void _connect() {
-    final ip = _settingsService.serverIp;
-    if (ip == null) return;
+    final url = _settingsService.serverUrl;
+    if (url == null) return;
 
     if (_socket != null) {
       _socket!.dispose();
     }
 
-    final url = 'ws://$ip:3000';
-    if (kDebugMode) {
-      print('Connecting to socket at: $url');
-    }
+    final uri = Uri.parse(url);
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    final socketUrl = uri.replace(scheme: scheme).toString();
+
+    logger.d('Connecting to socket at: $socketUrl');
 
     _socket = io.io(
-      url,
-      io.OptionBuilder()
-          .setPath('/ws')
-          .setTransports(['websocket'])
-          .disableAutoConnect()
-          .build(),
+      socketUrl,
+      io.OptionBuilder().setPath('/ws').setTransports(['websocket']).disableAutoConnect().build(),
     );
 
     _socket!.onConnect((_) {
       _id = _socket!.id;
-      if (kDebugMode) {
-        print('Socket connected: $_id');
-      }
+      logger.i('Socket connected: $_id');
       notifyListeners();
     });
 
     _socket!.onDisconnect((_) {
       _id = null;
-      if (kDebugMode) {
-        print('Socket disconnected');
-      }
+      logger.i('Socket disconnected');
       notifyListeners();
     });
 

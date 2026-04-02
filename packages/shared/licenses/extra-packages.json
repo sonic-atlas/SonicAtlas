@@ -1,0 +1,47 @@
+[
+  {
+    "name": "FFmpeg",
+    "description": "FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.",
+    "authors": [
+      "FFmpeg developers"
+    ],
+    "version": "8.0.1",
+    "licenseFile": "ffmpeg.txt",
+    "isMarkdown": false,
+    "isSdk": false,
+    "dependencies": [],
+    "devDependencies": [],
+    "homepage": "https://ffmpeg.org/",
+    "spdxIdentifier": "LGPL-2.1"
+  },
+  {
+    "name": "miniaudio",
+    "description": "Audio playback and capture library written in C, in a single source file.",
+    "authors": [
+      "David Reid"
+    ],
+    "version": "0.11.25",
+    "licenseFile": "miniaudio.txt",
+    "isMarkdown": false,
+    "isSdk": false,
+    "dependencies": [],
+    "devDependencies": [],
+    "homepage": "https://miniaud.io/",
+    "spdxIdentifier": "Unlicense"
+  },
+  {
+    "name": "OpenSSL",
+    "description": "OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.",
+    "authors": [
+      "OpenSSL Project Authors"
+    ],
+    "version": "3.6.1",
+    "licenseFile": "openssl.txt",
+    "isMarkdown": false,
+    "isSdk": false,
+    "dependencies": [],
+    "devDependencies": [],
+    "homepage": "https://www.openssl.org/",
+    "spdxIdentifier": "Apache-2.0"
+  }
+]

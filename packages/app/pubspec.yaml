@@ -14,7 +14,7 @@ publish_to: 'none'
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.1.0+1
+version: 0.3.0+1
 
 environment:
   sdk: ^3.9.2
@@ -23,9 +23,7 @@ dependencies:
   flutter:
     sdk: flutter
   ffi: ^2.1.4
-  media_kit: ^1.2.6
-  media_kit_video: ^2.0.1
-  media_kit_libs_video: ^1.0.7
+
   http: ^1.5.0
   path: ^1.9.1
   uuid: ^4.5.2
@@ -36,17 +34,19 @@ dependencies:
   discord_rich_presence:
     path: vendor/discord_rich_presence_fork
   audio_service: ^0.18.18
-  audio_service_win: ^0.0.2
   rxdart: ^0.28.0
   file_picker: ^10.3.8
   socket_io_client: ^3.1.2
   mime: ^2.0.0
   http_parser: ^4.1.2
   cached_network_image: ^3.4.1
-  sonic_recorder:
-    path: vendor/sonic_recorder
+  url_launcher: ^6.3.0
+  sonic_audio:
+    path: vendor/sonic_audio
+  logger: ^2.7.0
 
   # Windows-specific dependencies
+  audio_service_win: ^0.0.2
   windows_taskbar:
     path: vendor/windows_taskbar_fork
   windows_single_instance: ^1.0.1
@@ -57,6 +57,7 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  dart_pubspec_licenses: ^3.1.0
 
 flutter:
 

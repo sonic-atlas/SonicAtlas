@@ -1,6 +1,6 @@
 {
   "name": "sonic-atlas",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Open-source music streaming for self-hosting",
   "private": true,
   "workspaces": [
@@ -16,7 +16,8 @@
     "start": "npm run dev",
     "db:migrate": "npm run db:migrate --workspace=packages/backend",
     "db:push": "npm run db:push --workspace=packages/backend",
-    "check": "npm run check --workspaces --if-present"
+    "check": "npm run check --workspaces --if-present",
+    "generate-licenses": "node packages/shared/npm-licenses.js"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

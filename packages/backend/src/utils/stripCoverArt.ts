@@ -2,12 +2,13 @@ import { spawn } from 'node:child_process';
 import { logger } from './logger.ts';
 import path from 'node:path';
 import fsp from 'node:fs/promises';
+import { trackFormatEnum } from '#db/schema';
 
 export async function stripCoverArt(inputPath: string): Promise<string> {
     const ext = path.extname(inputPath);
     const format = ext.toLowerCase().slice(1);
     
-    if (!['flac', 'mp3', 'm4a', 'ogg'].includes(format)) {
+    if (!(trackFormatEnum.enumValues as readonly string[]).includes(format)) {
         return inputPath;
     }
 

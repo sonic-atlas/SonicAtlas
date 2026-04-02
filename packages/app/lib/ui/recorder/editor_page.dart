@@ -1,13 +1,16 @@
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:sonic_audio/sonic_audio.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../../core/models/release.dart';
 import '../../../../core/services/recorder/recorder_service.dart';
 import '../../../../core/services/recorder/processing_service.dart';
-import '../../../../core/models/release.dart';
-import 'package:path/path.dart' as path;
-import 'package:uuid/uuid.dart';
+import '../../../../core/services/utils/logger.dart';
 
 class EditorPage extends StatefulWidget {
   const EditorPage({super.key});
@@ -16,9 +19,8 @@ class EditorPage extends StatefulWidget {
   State<EditorPage> createState() => _EditorPageState();
 }
 
-class _EditorPageState extends State<EditorPage>
-    with SingleTickerProviderStateMixin {
-  late final Player _player;
+class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateMixin {
+  late final SonicPlayer _player;
   late final TabController _tabController;
 
   final Map<String, List<TrackSplit>> _fileSplits = {};
@@ -33,13 +35,13 @@ class _EditorPageState extends State<EditorPage>
   @override
   void initState() {
     super.initState();
-    _player = Player();
+    _player = SonicPlayer();
 
-    _player.stream.position.listen((pos) {
+    _player.positionStream.listen((pos) {
       if (mounted) setState(() => _currentPosition = pos);
     });
 
-    _player.stream.duration.listen((dur) {
+    _player.durationStream.listen((dur) {
       if (mounted) setState(() => _totalDuration = dur);
     });
 
@@ -105,7 +107,7 @@ class _EditorPageState extends State<EditorPage>
   }
 
   Future<void> _loadFile(String path) async {
-    await _player.open(Media(path));
+    await _player.load(path);
     setState(() {});
   }
 
@@ -130,7 +132,7 @@ class _EditorPageState extends State<EditorPage>
           waveformPath,
         ]);
       } catch (e) {
-        debugPrint('Waveform generation failed: $e');
+        logger.e('Waveform generation failed', error: e);
       }
     }
 
@@ -245,9 +247,7 @@ class _EditorPageState extends State<EditorPage>
                   children: [
                     Expanded(
                       child: Text(
-                        coverPath != null
-                            ? path.basename(coverPath!)
-                            : 'No Cover Selected',
+                        coverPath != null ? path.basename(coverPath!) : 'No Cover Selected',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -274,8 +274,7 @@ class _EditorPageState extends State<EditorPage>
             ),
             FilledButton(
               onPressed: () {
-                if (artistController.text.isEmpty ||
-                    albumController.text.isEmpty) {
+                if (artistController.text.isEmpty || albumController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Artist and Album are required'),
@@ -288,9 +287,7 @@ class _EditorPageState extends State<EditorPage>
                   title: albumController.text,
                   primaryArtist: artistController.text,
                   year: int.tryParse(yearController.text),
-                  genre: genreController.text.isEmpty
-                      ? null
-                      : genreController.text,
+                  genre: genreController.text.isEmpty ? null : genreController.text,
                   releaseType: releaseType,
                   coverArtPath: coverPath,
                   createdAt: DateTime.now(),
@@ -430,8 +427,7 @@ class _EditorPageState extends State<EditorPage>
                     .asMap()
                     .entries
                     .map(
-                      (e) =>
-                          Tab(text: 'Side ${String.fromCharCode(65 + e.key)}'),
+                      (e) => Tab(text: 'Side ${String.fromCharCode(65 + e.key)}'),
                     )
                     .toList(),
               )
@@ -480,14 +476,9 @@ class _EditorPageState extends State<EditorPage>
                           ),
                         if (splits != null && _totalDuration.inMilliseconds > 0)
                           ...splits.map((track) {
-                            final startPct =
-                                track.start.inMilliseconds /
-                                _totalDuration.inMilliseconds;
-                            final endMs =
-                                track.end?.inMilliseconds ??
-                                _totalDuration.inMilliseconds;
-                            final endPct =
-                                endMs / _totalDuration.inMilliseconds;
+                            final startPct = track.start.inMilliseconds / _totalDuration.inMilliseconds;
+                            final endMs = track.end?.inMilliseconds ?? _totalDuration.inMilliseconds;
+                            final endPct = endMs / _totalDuration.inMilliseconds;
 
                             return Positioned(
                               left: constraints.maxWidth * startPct,
@@ -523,12 +514,10 @@ class _EditorPageState extends State<EditorPage>
                             thumbColor: Colors.white,
                           ),
                           child: Slider(
-                            value: _currentPosition.inMilliseconds
-                                .toDouble()
-                                .clamp(
-                                  0,
-                                  _totalDuration.inMilliseconds.toDouble(),
-                                ),
+                            value: _currentPosition.inMilliseconds.toDouble().clamp(
+                              0,
+                              _totalDuration.inMilliseconds.toDouble(),
+                            ),
                             max: _totalDuration.inMilliseconds.toDouble(),
                             onChanged: (val) {
                               _player.seek(Duration(milliseconds: val.toInt()));
@@ -548,13 +537,19 @@ class _EditorPageState extends State<EditorPage>
                         _currentPosition - const Duration(seconds: 5),
                       ),
                     ),
-                    StreamBuilder<bool>(
-                      stream: _player.stream.playing,
+                    StreamBuilder<PlayerState>(
+                      stream: _player.stateStream,
                       builder: (context, snapshot) {
-                        final playing = snapshot.data ?? false;
+                        final playing = snapshot.data == PlayerState.playing;
                         return IconButton.filled(
                           icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                          onPressed: () => _player.playOrPause(),
+                          onPressed: () {
+                            if (playing) {
+                              _player.pause();
+                            } else {
+                              _player.play();
+                            }
+                          },
                         );
                       },
                     ),
@@ -569,8 +564,101 @@ class _EditorPageState extends State<EditorPage>
               ],
             ),
           ),
-          if (processor.isProcessing)
+          if (processor.isProcessing && processor.uploadProgress == null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'Processing audio...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
             LinearProgressIndicator(value: processor.progress),
+          ] else if (processor.uploadProgress != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Uploading Release...',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Text('${processor.uploadProgress!.overallProgress}%'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: processor.uploadProgress!.overallProgress / 100,
+                    backgroundColor: Colors.grey.shade800,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      itemCount: processor.uploadProgress!.files.length,
+                      itemBuilder: (context, index) {
+                        final fp = processor.uploadProgress!.files[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: fp.status == 'error'
+                                ? Colors.red.withValues(alpha: 0.1)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                fp.status == 'complete'
+                                    ? Icons.check_circle
+                                    : (fp.status == 'error' ? Icons.error : Icons.cloud_upload),
+                                color: fp.status == 'complete'
+                                    ? Colors.green
+                                    : (fp.status == 'error'
+                                          ? Colors.red
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary),
+                                size: 14,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  fp.fileName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              if (fp.status == 'uploading' && fp.bytesTotal > 0)
+                                SizedBox(
+                                  width: 40,
+                                  child: LinearProgressIndicator(
+                                    value: fp.bytesUploaded / fp.bytesTotal,
+                                    minHeight: 2,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           Expanded(
             child: splits != null
                 ? ListView.builder(
@@ -578,13 +666,10 @@ class _EditorPageState extends State<EditorPage>
                     itemBuilder: (context, index) {
                       final track = splits[index];
                       final isSelected =
-                          (_currentPosition >= track.start) &&
-                          (track.end == null || _currentPosition < track.end!);
+                          (_currentPosition >= track.start) && (track.end == null || _currentPosition < track.end!);
 
                       return Card(
-                        color: isSelected
-                            ? colorScheme.primary.withValues(alpha: 0.1)
-                            : null,
+                        color: isSelected ? colorScheme.primary.withValues(alpha: 0.1) : null,
                         margin: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
@@ -599,9 +684,7 @@ class _EditorPageState extends State<EditorPage>
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: TextFormField(
-                                      initialValue: track.title.isNotEmpty
-                                          ? track.title
-                                          : 'Track ${track.number}',
+                                      initialValue: track.title.isNotEmpty ? track.title : 'Track ${track.number}',
                                       decoration: const InputDecoration(
                                         isDense: true,
                                         border: InputBorder.none,
@@ -610,8 +693,7 @@ class _EditorPageState extends State<EditorPage>
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
-                                      onChanged: (val) =>
-                                          _updateTrackTitle(index, val),
+                                      onChanged: (val) => _updateTrackTitle(index, val),
                                     ),
                                   ),
                                   IconButton(
@@ -641,9 +723,7 @@ class _EditorPageState extends State<EditorPage>
                                     child: OutlinedButton(
                                       onPressed: () => _setEnd(index),
                                       child: Text(
-                                        track.end == null
-                                            ? 'End: (File End)'
-                                            : 'End: ${_formatDuration(track.end!)}',
+                                        track.end == null ? 'End: (File End)' : 'End: ${_formatDuration(track.end!)}',
                                       ),
                                     ),
                                   ),
@@ -687,9 +767,7 @@ class _EditorPageState extends State<EditorPage>
                       )
                     : const Icon(Icons.save_as),
                 label: Text(
-                  processor.isProcessing
-                      ? 'Processing (Splitting WAV to FLAC)...'
-                      : 'Confirm Regions & Process',
+                  processor.isProcessing ? 'Processing (Splitting WAV to FLAC)...' : 'Confirm Regions & Process',
                 ),
                 onPressed: processor.isProcessing ? null : _showMetadataDialog,
                 style: FilledButton.styleFrom(
@@ -715,8 +793,7 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
   }) {
     final double trackHeight = sliderTheme.trackHeight!;
     final double trackLeft = offset.dx;
-    final double trackTop =
-        offset.dy + (parentBox.size.height - trackHeight) / 2;
+    final double trackTop = offset.dy + (parentBox.size.height - trackHeight) / 2;
     final double trackWidth = parentBox.size.width;
     return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
   }

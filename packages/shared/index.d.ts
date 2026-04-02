@@ -1,5 +1,8 @@
 // Types for index.js
 declare module '@sonic-atlas/shared' {
+    // Change schema enum when changing this as well
+    export type UploadAudioFormat = 'mp3' | 'flac' | 'wav' | 'ogg' | 'opus' | 'aac' | 'wma';
+
     const $rootDir: string;
 
     // Logger
@@ -7,6 +10,7 @@ declare module '@sonic-atlas/shared' {
         timestamp?: boolean;
         color?: boolean;
     }
+
     class Logger {
         private prefix;
         private options;
@@ -17,6 +21,9 @@ declare module '@sonic-atlas/shared' {
         error(msg: string): void;
         debug(msg: string): void;
     }
+
+    // Crash logs
+    function writeCrashReport(type: string, error: unknown): void;
 
     // API Types
     export interface Track {
@@ -71,6 +78,51 @@ declare module '@sonic-atlas/shared' {
         error: string;
         code?: string;
         message: string;
+    }
+
+    export type UploadFileStatus = 'pending' | 'uploading' | 'processing' | 'complete' | 'error';
+
+    export interface FileManifestEntry {
+        fileName: string;
+        fileSize: number;
+        mimeType: string;
+    }
+
+    export interface ReleaseUploadMetadata {
+        title: string;
+        primaryArtist?: string;
+        year?: string;
+        releaseType?: string;
+        extractAllCovers?: boolean;
+        socketId?: string;
+    }
+
+    export interface UploadFilePlan {
+        fileId: string;
+        fileName: string;
+        needsChunking: boolean;
+        totalChunks: number;
+        chunkSize: number;
+    }
+
+    export interface UploadInitResponse {
+        uploadId: string;
+        files: UploadFilePlan[];
+    }
+
+    export interface FileUploadProgress {
+        fileId: string;
+        fileName: string;
+        bytesUploaded: number;
+        bytesTotal: number;
+        status: UploadFileStatus;
+        error?: string;
+    }
+
+    export interface ReleaseUploadProgress {
+        uploadId: string;
+        files: FileUploadProgress[];
+        overallProgress: number;
     }
 
 }

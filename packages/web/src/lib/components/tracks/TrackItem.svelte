@@ -67,9 +67,7 @@
     </div>
 
     <div slot="headline" class="headline">
-        <span class:active={isPlaying}
-            >{track.metadata?.title || track.originalFilename || track.filename}</span
-        >
+        <span class:active={isPlaying}>{track.metadata?.title || track.originalFilename || track.filename}</span>
     </div>
     <div slot="supporting-text" class="supportingText">
         {track.metadata?.artist || track.releaseArtist}
