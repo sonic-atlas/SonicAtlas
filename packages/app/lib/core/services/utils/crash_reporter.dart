@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sonic_atlas/core/services/utils/logger.dart';
 
 import '../../models/crash_event.dart';
@@ -17,13 +18,14 @@ class CrashReporter {
     if (_initialised) return;
     _initialised = true;
 
-    final dir = Directory('crash_reports');
+    final appDir = await getApplicationDocumentsDirectory();
+    final dir = Directory('${appDir.path}/crash_reports');
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
 
     final now = DateTime.now();
-    _sessionFilePath = 'crash_reports/session_${now.toIso8601String().replaceAll(':', '-')}.txt';
+    _sessionFilePath = '${dir.path}/session_${now.toIso8601String().replaceAll(':', '-')}.txt';
 
     FlutterError.onError = (FlutterErrorDetails details) async {
       FlutterError.dumpErrorToConsole(details);

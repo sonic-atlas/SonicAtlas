@@ -2,6 +2,15 @@ import 'dart:io';
 
 import 'package:logger/logger.dart';
 
+int _getLineLength() {
+  try {
+    if (stdout.hasTerminal) {
+      return stdout.terminalColumns;
+    }
+  } catch (_) {}
+  return 120;
+}
+
 /// logger
 /// ------
 /// Usage:
@@ -17,7 +26,7 @@ Logger logger = Logger(
   printer: PrettyPrinter(
     methodCount: 0,
     errorMethodCount: 8,
-    lineLength: stdout.hasTerminal ? stdout.terminalColumns : 120,
+    lineLength: _getLineLength(),
     colors: /* stdout.supportsAnsiEscapes */ true,
     printEmojis: false,
     dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart

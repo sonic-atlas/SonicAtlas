@@ -61,6 +61,9 @@ static sa_thread_result_t sa_thread_join(sa_thread_t* t, void** retval) {
   if (!t) return SA_THREAD_ERR_INVALID;
 
 #ifdef _WIN32
+  if (GetThreadId(t->handle) == GetCurrentThreadId()) {
+    return SA_THREAD_ERR_JOIN;
+  }
   DWORD rc = WaitForSingleObject(t->handle, INFINITE);
   if (rc != WAIT_OBJECT_0) return SA_THREAD_ERR_JOIN;
 

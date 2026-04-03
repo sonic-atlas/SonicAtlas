@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node check-node-version.js && node --env-file=../../.env --watch src/index.ts",
+    "dev": "node check-node-version.js && node --env-file=../../.env --conditions development --watch src/index.ts",
     "build": "tsc",
     "start": "node --env-file=../../.env dist/src/index.js",
     "check": "tsc --noEmit",
@@ -45,6 +45,9 @@
     "node": ">=22.18.0"
   },
   "imports": {
-    "#db/*": "./db/*.ts"
+    "#db/*": {
+      "development": "./db/*.ts",
+      "default": "./db/*.js"
+    }
   }
 }

@@ -159,7 +159,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 _devicesLoaded
                     ? (_devices.isEmpty
                           ? 'No devices found'
-                          : 'Choose playback device')
+                          : (Platform.isLinux
+                              ? 'We recommend keeping "System Default" and managing audio routing with your system (PipeWire) to avoid playback errors.'
+                              : 'Choose playback device'))
                     : 'Loading devices…',
               ),
               trailing: _devicesLoaded && _devices.isNotEmpty
@@ -173,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         if (index == null) return;
                         final audioService = context.read<AudioService>();
                         if (index < 0) {
-                          settings.setSelectedAudioDeviceIndex(-1);
+                          audioService.resetOutputDevice();
                         } else {
                           audioService.setOutputDevice(_devices[index]);
                         }
