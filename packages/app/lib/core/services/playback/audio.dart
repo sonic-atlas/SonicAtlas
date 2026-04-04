@@ -30,6 +30,7 @@ class AudioService with ChangeNotifier {
   List<models.Track> get queue => _queue;
   int _currentIndex = -1;
   int _retryCount = 0;
+  int _lastSelectedDeviceIndex = -1;
 
   int get currentIndex => _currentIndex;
 
@@ -155,6 +156,7 @@ class AudioService with ChangeNotifier {
       _player.setVolume(_settingsService.audioVolume);
 
       final savedDevice = _settingsService.selectedAudioDeviceIndex;
+      _lastSelectedDeviceIndex = savedDevice;
       if (savedDevice >= 0) {
         _player.setOutputDevice(savedDevice);
       }
@@ -192,7 +194,8 @@ class AudioService with ChangeNotifier {
     _player.setVolume(_settingsService.audioVolume);
 
     final savedDevice = _settingsService.selectedAudioDeviceIndex;
-    if (savedDevice >= 0) {
+    if (savedDevice != _lastSelectedDeviceIndex) {
+      _lastSelectedDeviceIndex = savedDevice;
       _player.setOutputDevice(savedDevice);
     }
 
@@ -479,12 +482,14 @@ Quality: ${selectedQuality.value}''');
 
   void setOutputDevice(AudioDevice device) {
     logger.i('Setting output device to: ${device.name}');
+    _lastSelectedDeviceIndex = device.index;
     _player.setOutputDevice(device.index);
     _settingsService.setSelectedAudioDeviceIndex(device.index);
   }
 
   void resetOutputDevice() {
     logger.i('Resetting output device to system default');
+    _lastSelectedDeviceIndex = -1;
     _player.setOutputDevice(-1);
     _settingsService.setSelectedAudioDeviceIndex(-1);
   }

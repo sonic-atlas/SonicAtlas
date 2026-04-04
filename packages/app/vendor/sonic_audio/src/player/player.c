@@ -6,8 +6,31 @@
 #include "sonic_audio.h"
 #include "thread/sonic_thread.h"
 
+static void player_unload_stream(PlayerState* player);
 static void* decoder_thread_func(void* arg);
 static void playback_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count);
+
+static void player_unload_stream(PlayerState* player) {
+  player->decoder.should_stop = 1;
+
+  if (player->load_status == SA_LOAD_RUNNING) {
+    sa_thread_join(&player->load_thread, NULL);
+    player->load_status = SA_LOAD_IDLE;
+  }
+
+  if (!player->is_initialized) return;
+
+  if (player->decoder.is_running) {
+    sa_thread_join(&player->decoder.thread, NULL);
+    player->decoder.is_running = 0;
+  }
+
+  ma_pcm_rb_uninit(&player->pcm_buffer);
+  decoder_close(&player->decoder);
+
+  player->state = SONIC_STATE_IDLE;
+  player->position = 0.0;
+}
 
 static void* decoder_thread_func(void* arg) {
   PlayerState* player = (PlayerState*)arg;
@@ -180,11 +203,18 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* heade
     if (sonic_audio_init_context() != 0) return -2;
   }
 
-  sonic_audio_player_stop();
+  PlayerState* player = &g_sonic.player;
+
+  int current_format = player->format;
+  int current_sample_rate = player->sample_rate;
+  int current_channels = 2;
+  int device_was_initialized = player->is_initialized;
+
+  player_unload_stream(player);
 
   sa_thread_mutex_lock(&g_sonic.lock);
 
-  PlayerState* player = &g_sonic.player;
+  player->state = SONIC_STATE_BUFFERING;
 
   if (player->total_buffer_seconds <= 1.0f) {
     player->total_buffer_seconds = 30.0f;
@@ -269,43 +299,59 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* heade
     return -4;
   }
 
-  ma_device_config config = ma_device_config_init(ma_device_type_playback);
-  config.playback.format = player->format;
-  config.playback.channels = player->channels;
-  config.sampleRate = player->sample_rate;
-  config.dataCallback = playback_callback;
-  config.pUserData = player;
-
-  if (player->has_selected_device) {
-    config.playback.pDeviceID = &player->selected_device_id;
+  int requires_device_reinit = 1;
+  if (device_was_initialized && player->format == current_format && player->sample_rate == current_sample_rate &&
+      player->channels == current_channels) {
+    requires_device_reinit = 0;
   }
 
-  if (player->use_exclusive_audio) {
-    config.playback.shareMode = ma_share_mode_exclusive;
-    config.aaudio.usage = ma_aaudio_usage_media;
-    config.aaudio.contentType = ma_aaudio_content_type_music;
-  }
+  if (requires_device_reinit) {
+    if (device_was_initialized) {
+      ma_device_stop(&player->device);
+      ma_device_uninit(&player->device);
+    }
 
-  ret = ma_device_init(&g_sonic.ma_ctx, &config, &player->device);
-  if (ret != MA_SUCCESS) {
-    LOGE("SonicAudio Player: Failed to initialize playback device\n");
-    ma_pcm_rb_uninit(&player->pcm_buffer);
-    decoder_close(&player->decoder);
-    sa_thread_mutex_unlock(&g_sonic.lock);
-    return -5;
-  }
+    ma_device_config config = ma_device_config_init(ma_device_type_playback);
+    config.playback.format = player->format;
+    config.playback.channels = player->channels;
+    config.sampleRate = player->sample_rate;
+    config.dataCallback = playback_callback;
+    config.pUserData = player;
 
-  LOGI(
-      "SonicAudio Player: Device Initialized. Rate: %d (Requested: %d), "
-      "Channels: %d, Format: %d, Shared: %s\n",
-      player->device.sampleRate, player->sample_rate, player->device.playback.channels, player->device.playback.format,
-      player->device.playback.shareMode == ma_share_mode_exclusive ? "EXCLUSIVE" : "SHARED");
+    if (player->has_selected_device) {
+      config.playback.pDeviceID = &player->selected_device_id;
+    }
 
-  if (player->device.sampleRate != player->sample_rate) {
+    if (player->use_exclusive_audio) {
+      config.playback.shareMode = ma_share_mode_exclusive;
+      config.aaudio.usage = ma_aaudio_usage_media;
+      config.aaudio.contentType = ma_aaudio_content_type_music;
+    }
+
+    ret = ma_device_init(&g_sonic.ma_ctx, &config, &player->device);
+    if (ret != MA_SUCCESS) {
+      LOGE("SonicAudio Player: Failed to initialize playback device\n");
+      ma_pcm_rb_uninit(&player->pcm_buffer);
+      decoder_close(&player->decoder);
+      sa_thread_mutex_unlock(&g_sonic.lock);
+      return -5;
+    }
+
     LOGI(
-        "SonicAudio Player: WARNING: Device rate mismatch! Requested %d, got "
-        "%d. This may cause speed/pitch issues.\n",
-        player->device.sampleRate, player->device.sampleRate);
+        "SonicAudio Player: Device Initialized. Rate: %d (Requested: %d), "
+        "Channels: %d, Format: %d, Shared: %s\n",
+        player->device.sampleRate, player->sample_rate, player->device.playback.channels,
+        player->device.playback.format,
+        player->device.playback.shareMode == ma_share_mode_exclusive ? "EXCLUSIVE" : "SHARED");
+
+    if (player->device.sampleRate != player->sample_rate) {
+      LOGI(
+          "SonicAudio Player: WARNING: Device rate mismatch! Requested %d, got "
+          "%d. This may cause speed/pitch issues.\n",
+          player->device.sampleRate, player->device.sampleRate);
+    }
+  } else {
+    LOGI("SonicAudio Player: Reusing audio device. Rate: %d, Format: %d\n", player->sample_rate, player->format);
   }
 
   player->is_initialized = 1;
@@ -398,32 +444,18 @@ FFI_PLUGIN_EXPORT void sonic_audio_player_pause(void) {
 FFI_PLUGIN_EXPORT void sonic_audio_player_stop(void) {
   PlayerState* player = &g_sonic.player;
 
-  player->decoder.should_stop = 1;
-
-  if (player->load_status == SA_LOAD_RUNNING) {
-    sa_thread_join(&player->load_thread, NULL);
-    player->load_status = SA_LOAD_IDLE;
-  }
+  player_unload_stream(player);
 
   if (!player->is_initialized) return;
-
-  if (player->decoder.is_running) {
-    sa_thread_join(&player->decoder.thread, NULL);
-    player->decoder.is_running = 0;
-  }
 
   ma_device_stop(&player->device);
 
   ma_device_uninit(&player->device);
   memset(&player->device, 0, sizeof(ma_device));
-  ma_pcm_rb_uninit(&player->pcm_buffer);
-  decoder_close(&player->decoder);
 
   sa_sleep(50);
 
   player->is_initialized = 0;
-  player->state = SONIC_STATE_IDLE;
-  player->position = 0.0;
 
   LOGI("SonicAudio Player: Stopped\n");
 }

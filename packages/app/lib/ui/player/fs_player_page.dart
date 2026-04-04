@@ -272,105 +272,53 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
     );
   }
 
-  void _showAudioSettings() {
-    final audioService = context.read<AudioService>();
-    final settingsService = context.read<SettingsService>();
-    final devices = audioService.getPlaybackDevices();
+  void _showVolumePopup(BuildContext buttonContext) {
+    final RenderBox button = buttonContext.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(button.size.bottomLeft(const Offset(0, 8)), ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(const Offset(0, 8)), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
 
-    showModalBottomSheet(
+    showMenu(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return FutureBuilder<List<AudioDevice>>(
-              future: devices,
-              builder: (context, snapshot) {
-                final devices = snapshot.data ?? [];
-
-                return SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Audio Settings',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 24),
-
-                        Text(
-                          'Volume',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Consumer<AudioService>(
-                          builder: (context, audio, child) {
-                            return Row(
-                              children: [
-                                const Icon(Icons.volume_down, size: 20),
-                                Expanded(
-                                  child: Slider(
-                                    value: audio.volume.clamp(0.0, 1.0),
-                                    onChanged: (value) {
-                                      audio.setVolume(value);
-                                    },
-                                  ),
-                                ),
-                                const Icon(Icons.volume_up, size: 20),
-                              ],
-                            );
+      position: position,
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.volume_down, size: 20),
+              SizedBox(
+                width: 150,
+                child: Consumer<AudioService>(
+                  builder: (context, audio, child) {
+                    return StatefulBuilder(
+                      builder: (context, setSliderState) {
+                        return Slider(
+                          value: audio.volume.clamp(0.0, 1.0),
+                          onChanged: (value) {
+                            audio.setVolume(value);
+                            setSliderState(() {});
                           },
-                        ),
-
-                        const Divider(height: 32),
-
-                        Text(
-                          'Output Device',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        if (snapshot.connectionState == ConnectionState.waiting)
-                          const Center(child: CircularProgressIndicator())
-                        else if (devices.isEmpty)
-                          const Text('No devices found')
-                        else
-                          RadioGroup<int>(
-                            groupValue: settingsService.selectedAudioDeviceIndex,
-                            onChanged: (value) {
-                              if (value != null) {
-                                final device = devices.firstWhere(
-                                  (d) => d.index == value,
-                                );
-                                audioService.setOutputDevice(device);
-                                setModalState(() {});
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: Column(
-                              children: devices.map((device) {
-                                return RadioListTile<int>(
-                                  title: Text(device.name),
-                                  subtitle: Text(
-                                    device.isDefault
-                                        ? '${device.backend} • Default'
-                                        : device.backend,
-                                  ),
-                                  value: device.index,
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const Icon(Icons.volume_up, size: 20),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -476,10 +424,14 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                       tooltip: 'Queue',
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.volume_up, color: Colors.white),
-                      onPressed: _showAudioSettings,
-                      tooltip: 'Audio Settings',
+                    Builder(
+                      builder: (buttonContext) {
+                        return IconButton(
+                          icon: const Icon(Icons.volume_up, color: Colors.white),
+                          onPressed: () => _showVolumePopup(buttonContext),
+                          tooltip: 'Volume',
+                        );
+                      }
                     ),
                   ],
                 );
