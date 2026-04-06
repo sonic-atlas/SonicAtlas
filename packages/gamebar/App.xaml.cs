@@ -53,8 +53,15 @@ namespace gamebar
                         widgetArgs,
                         Window.Current.CoreWindow,
                         rootFrame
-                    );
-                    rootFrame.Navigate(typeof(Widget1));
+                    )
+                    {
+                        MinWindowSize = new Windows.Foundation.Size(200, 50),
+                        MaxWindowSize = new Windows.Foundation.Size(500, 500),
+                        HorizontalResizeSupported = false,
+                        VerticalResizeSupported = false
+                    };
+
+                    rootFrame.Navigate(typeof(Widget1), widget1);
 
                     Window.Current.Closed += Widget1Window_Closed;
 

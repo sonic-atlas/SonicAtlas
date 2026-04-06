@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Input;
+using Microsoft.Gaming.XboxGameBar;
 
 namespace gamebar
 {
@@ -17,6 +18,7 @@ namespace gamebar
     public sealed partial class Widget1 : Page
     {
         private readonly PlayerController _controller = new PlayerController();
+        private XboxGameBarWidget _widget;
 
         public Widget1()
         {
@@ -60,7 +62,36 @@ namespace gamebar
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            _widget = e.Parameter as XboxGameBarWidget;
+
+            if (_widget != null)
+            {
+                _widget.PinnedChanged += Widget1_PinnedChanged;
+
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    UpdateVisualState(_widget.Pinned);
+                });
+            }
+
             await _controller.RefreshStateAsync(CancellationToken.None);
+        }
+
+        private async void Widget1_PinnedChanged(XboxGameBarWidget sender, object args)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                UpdateVisualState(sender.Pinned);
+            });
+
+            if (sender.Pinned)
+            {
+                await sender.TryResizeWindowAsync(new Windows.Foundation.Size(244, 84));
+            }
+            else
+            {
+                await sender.TryResizeWindowAsync(new Windows.Foundation.Size(300, 320));
+            }
         }
 
         private async void OnStateUpdated(PlayerState state)
@@ -73,6 +104,9 @@ namespace gamebar
 
                 ProgressBar.Maximum = state.Duration;
                 ProgressBar.Value = state.Position;
+
+                MiniProgressBar.Maximum = state.Duration;
+                MiniProgressBar.Value = state.Position;
 
                 NextButton.IsEnabled = state.HasNext;
                 PrevButton.IsEnabled = state.HasPrev;
@@ -87,6 +121,7 @@ namespace gamebar
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 ProgressBar.Value = value;
+                MiniProgressBar.Value = value;
             });
         }
 
@@ -157,6 +192,30 @@ namespace gamebar
             else
             {
                 await _controller.AdjustVolumeAsync(delta > 0 ? +0.02 : -0.02);
+            }
+        }
+
+        private void UpdateVisualState(bool isPinned)
+        {
+            VisualStateManager.GoToState(this, isPinned ? "Pinned" : "Unpinned", true);
+        }
+
+        private async void InteractionLayer_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var pos = e.GetPosition(RootGrid).X;
+            var width = RootGrid.ActualWidth;
+
+            if (pos < width * 0.33)
+            {
+                await _controller.PrevAsync();
+            }
+            else if (pos > width * 0.66)
+            {
+                await _controller.NextAsync();
+            }
+            else
+            {
+                await _controller.PlayPauseAsync();
             }
         }
     }
