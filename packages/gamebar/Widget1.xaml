@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
+    Background="Transparent">
 
   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical" Width="250" Margin="10">
     <Border Background="{ThemeResource SystemControlAcrylicWindowBrush}" CornerRadius="16" Padding="10">
