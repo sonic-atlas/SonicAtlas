@@ -47,9 +47,7 @@ class AudioService with ChangeNotifier {
 
   Duration get position => _optimisticPosition ?? _player.position;
 
-  Stream<Duration> get positionStream =>
-      _player.stream.position.map((p) => _optimisticPosition ?? p);
-  Duration get currentPosition => _player.state.position;
+  Duration get currentPosition => _player.position;
 
   Stream<bool> get playingStream => _player.stateStream.map((s) => s == PlayerState.playing);
 
@@ -82,6 +80,7 @@ class AudioService with ChangeNotifier {
   static final _seekController = StreamController<Duration>.broadcast();
   static final _restartController = StreamController<models.Track>.broadcast();
   static final _trackStartController = StreamController<models.Track>.broadcast();
+  static final _queueChangeController = StreamController<void>.broadcast();
 
   static Stream<models.Track> get onPlayTrack => _playTrackController.stream;
   static Stream<AudioService> get onPlay => _playController.stream;
@@ -89,6 +88,7 @@ class AudioService with ChangeNotifier {
   static Stream<Duration> get onSeek => _seekController.stream;
   static Stream<models.Track> get onRestart => _restartController.stream;
   static Stream<models.Track> get onTrackStart => _trackStartController.stream;
+  static Stream<void> get onQueueChange => _queueChangeController.stream;
 
   void setCurrentTrack(models.Track? track) {
     _currentTrack = track;
@@ -342,6 +342,7 @@ Quality: ${selectedQuality.value}''');
 
   void addToQueue(models.Track track) {
     _queue.add(track);
+    _queueChangeController.add(null);
     notifyListeners();
   }
 
@@ -356,6 +357,7 @@ Quality: ${selectedQuality.value}''');
     } else {
       _queue.add(track);
     }
+    _queueChangeController.add(null);
     notifyListeners();
   }
 
@@ -365,6 +367,7 @@ Quality: ${selectedQuality.value}''');
       if (index < _currentIndex) {
         _currentIndex--;
       }
+      _queueChangeController.add(null);
       notifyListeners();
     }
   }
@@ -376,6 +379,7 @@ Quality: ${selectedQuality.value}''');
     _currentIndex = -1;
     setCurrentTrack(null);
     _player.stop();
+    _queueChangeController.add(null);
     notifyListeners();
   }
 

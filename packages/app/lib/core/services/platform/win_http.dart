@@ -4,6 +4,7 @@ import 'dart:io';
 
 import '../playback/audio.dart';
 import '../network/api.dart';
+import '../utils/logger.dart';
 
 typedef Json = Map<String, dynamic>;
 typedef VoidCallback = void Function();
@@ -28,7 +29,11 @@ class WinHttp {
       return;
     }
 
-    _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port, shared: true);
+    try {
+      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port, shared: true);
+    } catch (e, s) {
+      logger.e('Error starting HTTP server', error: e, stackTrace: s);
+    }
 
     /*_audioService.trackStream.listen((track) async {
       if (track == null) return;
@@ -46,7 +51,9 @@ class WinHttp {
         ...track.toJson(),
         'albumUrl': _apiService.getAlbumArtUrl(track.id),
         'position': _audioService.currentPosition.inSeconds,
-        'isPlaying': _audioService.isPlaying
+        'isPlaying': _audioService.isPlaying,
+        'hasNext': _audioService.hasNext,
+        'hasPrev': _audioService.hasPrevious
       };
       broadcast('state', trackState);
     });
@@ -56,7 +63,9 @@ class WinHttp {
         ...track.toJson(),
         'albumUrl': _apiService.getAlbumArtUrl(track.id),
         'position': _audioService.currentPosition.inSeconds,
-        'isPlaying': _audioService.isPlaying
+        'isPlaying': _audioService.isPlaying,
+        'hasNext': _audioService.hasNext,
+        'hasPrev': _audioService.hasPrevious
       };
       broadcast('state', trackState);
     });
@@ -71,12 +80,18 @@ class WinHttp {
     });
 
     AudioService.onPause.listen((_) {
-      trackState['isPlaying'] = true;
+      trackState['isPlaying'] = false;
       broadcast('pause', {});
     });
 
     AudioService.onRestart.listen((_) {
       broadcast('state', trackState);
+    });
+
+    AudioService.onQueueChange.listen((_) {
+        trackState['hasNext'] = _audioService.hasNext;
+        trackState['hasPrev'] = _audioService.hasPrevious;
+        broadcast('state', trackState);
     });
 
     _listen();
@@ -105,33 +120,57 @@ class WinHttp {
 
   // Http
   void _handleHttp(HttpRequest req) {
-    switch (req.uri.path) {
+    final path = req.uri.path;
+
+    switch (path) {
       case '/state':
         trackState = {
           ...trackState,
           'position': _audioService.currentPosition.inSeconds
         };
         _sendJson(req, trackState);
-        break;
+        return;
       case '/play':
         _audioService.play();
         _ok(req);
-        break;
+        return;
       case '/pause':
         _audioService.pause();
         _ok(req);
-        break;
+        return;
       case '/next':
         _audioService.skipNext();
         _ok(req);
-        break;
+        return;
       case '/previous':
         _audioService.skipPrevious();
         _ok(req);
-        break;
-      default:
-        _notFound(req);
+        return;
     }
+
+    // Volume by difference
+    final vdiffMatch = RegExp(r'^/vdiff_(-?\d+(\.\d+)?|\.\d+)$').firstMatch(path);
+    if (vdiffMatch != null) {
+      logger.i('Changing volume');
+      final value = double.parse(vdiffMatch.group(1)!);
+      logger.i('Changing volume by $value');
+      _audioService.setVolume((_audioService.volume + value).clamp(0.0, 1.0));
+      logger.i('Volume set to ${_audioService.volume}');
+      _ok(req);
+      return;
+    }
+
+    // Seek by difference
+    final sdiffMatch = RegExp(r'^/sdiff_(-?\d+)$').firstMatch(path);
+    if (sdiffMatch != null) {
+      final value = int.parse(sdiffMatch.group(1)!);
+      _audioService.seek(Duration(seconds: _audioService.currentPosition.inSeconds + value));
+      logger.i('Seeked to ${_audioService.currentPosition}');
+      _ok(req);
+      return;
+    }
+
+    _notFound(req);
   }
 
   // WebSocket

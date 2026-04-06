@@ -1,8 +1,13 @@
 ﻿using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Newtonsoft.Json;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Core;
+using System.Threading.Tasks;
+using Windows.UI.Xaml.Navigation;
+using System.Threading;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Input;
 
 namespace gamebar
 {
@@ -11,114 +16,148 @@ namespace gamebar
     /// </summary>
     public sealed partial class Widget1 : Page
     {
-        private bool isPlaying = false;
-        private WsClient wsClient;
-        private DispatcherTimer _progressTimer;
+        private readonly PlayerController _controller = new PlayerController();
 
         public Widget1()
         {
             this.InitializeComponent();
+
             Loaded += Widget1_Loaded;
+            Unloaded += Widget1_Unloaded;
+            Window.Current.VisibilityChanged += Widget1_VisibilityChanged;
+            Application.Current.Resuming += App_Resuming;
         }
 
         private async void Widget1_Loaded(object sender, RoutedEventArgs e)
         {
+            _controller.StateUpdated += OnStateUpdated;
+            _controller.ProgressUpdated += OnProgressUpdated;
+            _controller.AvailabilityChanged += OnAvailabilityChanged;
+
+            await _controller.InitialiseAsync();
+        }
+
+        private void Widget1_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _controller.StateUpdated -= OnStateUpdated;
+            _controller.ProgressUpdated -= OnProgressUpdated;
+            _controller.Dispose();
+        }
+
+        private async void Widget1_VisibilityChanged(object sender, VisibilityChangedEventArgs e)
+        {
+            if (e.Visible)
+            {
+                await _controller.RefreshStateAsync(CancellationToken.None);
+            }
+        }
+
+        private async void App_Resuming(object sender, object e)
+        {
+            await _controller.RefreshStateAsync(CancellationToken.None);
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            await _controller.RefreshStateAsync(CancellationToken.None);
+        }
+
+        private async void OnStateUpdated(PlayerState state)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PlayPauseButton.Content = state.IsPlaying ? "D" : "B";
+                SongTitle.Text = state.Title;
+                Artist.Text = state.Artist;
+
+                ProgressBar.Maximum = state.Duration;
+                ProgressBar.Value = state.Position;
+
+                NextButton.IsEnabled = state.HasNext;
+                PrevButton.IsEnabled = state.HasPrev;
+
+                AlbumArt.Source = new BitmapImage(new Uri(state.AlbumUrl));
+            });
+        }
+
+        // TODO: On next/prev set to 0 and keep at 0 until song start
+        private async void OnProgressUpdated(double value)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                ProgressBar.Value = value;
+            });
+        }
+
+        private async void OnAvailabilityChanged(bool available)
+        {
+            await SetOverlayVisible(!available);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                OfflineOverlay.Visibility = available ? Visibility.Collapsed : Visibility.Visible;
+            });
+        }
+
+        private async Task SetOverlayVisible(bool visible)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                OfflineOverlay.IsHitTestVisible = visible;
+
+                var animation = new DoubleAnimation
+                {
+                    To = visible ? 1 : 0,
+                    Duration = new Duration(TimeSpan.FromMilliseconds(250))
+                };
+
+                var storyboard = new Storyboard();
+                storyboard.Children.Add(animation);
+
+                Storyboard.SetTarget(animation, OfflineOverlay);
+                Storyboard.SetTargetProperty(animation, "Opacity");
+
+                storyboard.Begin();
+            });
+        }
+
+        private async void RetryButton_Click(object sender, RoutedEventArgs e)
+        {
             try
             {
-                var json = await ApiClient.GetStateAsync();
-                var state = JsonConvert.DeserializeObject<PlayerState>(json);
-                ApplyState(state);
-
-                wsClient = new WsClient();
-                wsClient.StateReceived += s =>
-                {
-                    _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    {
-                        ApplyState(s);
-                    });
-                };
-                wsClient.SeekReceived += o =>
-                {
-                    _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    {
-                        ProgressBar.Value = o.Position;
-                    });
-                };
-
-                wsClient.IsPlayingReceived += b =>
-                {
-                    _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                    {
-                        isPlaying = b;
-                        PlayPauseButton.Content = isPlaying ? "D" : "B";
-                    });
-                };
-
-                wsClient.ConnectWebSocket();
-
-                StartProgressTimer();
+                await _controller.RefreshStateAsync(CancellationToken.None);
             }
-            catch
+            catch (Exception ex)
             {
-
+                System.Diagnostics.Debug.WriteLine(ex);
             }
-        }
-
-        private void ApplyState(PlayerState state)
-        {
-            isPlaying = state.IsPlaying;
-            PlayPauseButton.Content = isPlaying ? "D" : "B";
-
-            SetAlbumArt(state.AlbumUrl);
-
-            SongTitle.Text = state.Title;
-            Artist.Text = state.Artist;
-
-            ProgressBar.Maximum = state.Duration;
-            ProgressBar.Value = state.Position;
-        }
-
-        private void SetAlbumArt(string albumArtUrl)
-        {
-            AlbumArt.Source = new BitmapImage(new Uri(albumArtUrl));
-        }
-
-        private async void PrevButton_Click(object sender, RoutedEventArgs e)
-        {
-            isPlaying = true;
-            await ApiClient.SendCommandAsync("previous");
         }
 
         private async void PlayPauseButton_Click(object sender, RoutedEventArgs e)
         {
-            isPlaying = !isPlaying;
-            PlayPauseButton.Content = isPlaying ? "D" : "B";
-
-            await ApiClient.SendCommandAsync(isPlaying ? "play" : "pause");
+            await _controller.RefreshStateAsync(CancellationToken.None);
+            await _controller.PlayPauseAsync();
         }
 
         private async void NextButton_Click(object sender, RoutedEventArgs e)
-        {
-            isPlaying = true;
-            await ApiClient.SendCommandAsync("next");
-        }
+            => await _controller.NextAsync();
 
-        private void StartProgressTimer()
-        {
-            if (_progressTimer != null) return;
+        private async void PrevButton_Click(object sender, RoutedEventArgs e)
+            => await _controller.PrevAsync();
 
-            _progressTimer = new DispatcherTimer()
+        private async void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        {
+            var delta = e.GetCurrentPoint(null).Properties.MouseWheelDelta;
+            var ctrl = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control);
+
+            if (ctrl.HasFlag(CoreVirtualKeyStates.Down))
             {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _progressTimer.Tick += (s, e) =>
+                await _controller.SeekAsync(delta > 0 ? +5 : -5);
+            }
+            else
             {
-                if (isPlaying && ProgressBar.Value < ProgressBar.Maximum)
-                {
-                    ProgressBar.Value += 1;
-                }
-            };
-            _progressTimer.Start();
+                await _controller.AdjustVolumeAsync(delta > 0 ? +0.02 : -0.02);
+            }
         }
     }
 }

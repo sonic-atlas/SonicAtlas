@@ -10,40 +10,51 @@
 
   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical" Width="250" Margin="10">
     <Border Background="{ThemeResource SystemControlAcrylicWindowBrush}" CornerRadius="16" Padding="10">
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical" Spacing="0">
-        <Border Width="150" Height="150" CornerRadius="12">
-          <Image x:Name="AlbumArt" Stretch="UniformToFill" />
-        </Border>
+      <Grid PointerWheelChanged="OnPointerWheelChanged">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical" Spacing="0">
+          <Border Width="150" Height="150" CornerRadius="12">
+            <Image x:Name="AlbumArt" Stretch="UniformToFill" />
+          </Border>
 
-        <StackPanel Margin="0,10,0,10">
-          <TextBlock x:Name="SongTitle" Text="Song Title"
-                     FontSize="16" FontWeight="SemiBold"
-                     TextAlignment="Center" Foreground="White"
-                     TextWrapping="WrapWholeWords" />
-          <TextBlock x:Name="Artist" Text="Artist Name"
-                     FontSize="14" Foreground="#B3FFFFFF"
-                     TextAlignment="Center" />
+          <StackPanel Margin="0,10,0,10">
+            <TextBlock x:Name="SongTitle" Text="Song Title"
+                       FontSize="16" FontWeight="SemiBold"
+                       TextAlignment="Center" Foreground="White"
+                       TextWrapping="WrapWholeWords" />
+            <TextBlock x:Name="Artist" Text="Artist Name"
+                       FontSize="14" Foreground="#B3FFFFFF"
+                       TextAlignment="Center" />
+          </StackPanel>
+
+          <!-- TODO: Keep ProgressBar the same length regardless of song duration -->
+          <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="100" Height="6"
+                       Foreground="#1DB954" Background="#33FFFFFF"
+                       Margin="0,0,0,10" />
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+            <Button x:Name="PrevButton" Width="40" Height="40"
+                    Content="A" FontSize="18"
+                    Background="Transparent" Foreground="White"
+                    BorderBrush="Transparent" Click="PrevButton_Click" />
+            <Button x:Name="PlayPauseButton" Width="40" Height="40"
+              Content="B" FontSize="18"
+              Background="Transparent" Foreground="White"
+              BorderBrush="Transparent" Click="PlayPauseButton_Click" />
+            <Button x:Name="NextButton" Width="40" Height="40"
+              Content="C" FontSize="18"
+              Background="Transparent" Foreground="White"
+              BorderBrush="Transparent" Click="NextButton_Click" />
+          </StackPanel>
         </StackPanel>
 
-        <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="100" Height="6"
-                     Foreground="#1DB954" Background="#33FFFFFF"
-                     Margin="0,0,0,10" />
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
-          <Button x:Name="PrevButton" Width="40" Height="40"
-                  Content="A" FontSize="18"
-                  Background="Transparent" Foreground="White"
-                  BorderBrush="Transparent" Click="PrevButton_Click" />
-          <Button x:Name="PlayPauseButton" Width="40" Height="40"
-            Content="B" FontSize="18"
-            Background="Transparent" Foreground="White"
-            BorderBrush="Transparent" Click="PlayPauseButton_Click" />
-          <Button x:Name="NextButton" Width="40" Height="40"
-            Content="C" FontSize="18"
-            Background="Transparent" Foreground="White"
-            BorderBrush="Transparent" Click="NextButton_Click" />
-        </StackPanel>
-      </StackPanel>
+        <Grid x:Name="OfflineOverlay" Background="#AA000000" Visibility="Collapsed" IsHitTestVisible="True">
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+            <TextBlock Text="App not running" FontSize="18" Foreground="White" HorizontalAlignment="Center" />
+            <TextBlock Text="Start the app to control playback" FontSize="12" Foreground="#B3FFFFFF" HorizontalAlignment="Center" />
+            <Button Content="Retry" Click="RetryButton_Click" HorizontalAlignment="Center" Padding="12,6" />
+          </StackPanel>
+        </Grid>
+      </Grid>
     </Border>
   </StackPanel>
 </Page>

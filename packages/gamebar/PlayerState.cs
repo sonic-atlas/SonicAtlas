@@ -8,6 +8,8 @@
         public double Position { get; set; }
         public double Duration { get; set; }
         public string AlbumUrl { get; set; }
+        public bool HasNext { get; set; }
+        public bool HasPrev { get; set; }
     }
 
     internal class SeekWebSocketObject
