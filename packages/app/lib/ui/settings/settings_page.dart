@@ -109,42 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            if (Platform.isAndroid)
-              SwitchListTile(
-                title: const Text('Exclusive Audio'),
-                // TODO: Add note in docs
-                // This does not work most of the time
-                // You would need a custom usb driver to take control of a usb dac for example
-                subtitle: const Text(
-                  'Tries to take exclusive control of the specific device for playback (requires restart)',
-                ),
-                value: settings.useExclusiveAudio,
-                onChanged: (value) async {
-                  await settings.setUseExclusiveAudio(value);
-                  if (context.mounted) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Restart Required'),
-                        content: const Text(
-                          'Exclusive audio settings require a full app restart to take effect.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => exit(0),
-                            child: const Text('Restart Now'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              )
-            else
+            if (!Platform.isAndroid)
               SwitchListTile(
                 title: const Text('Native Sample Rate'),
                 subtitle: const Text(
@@ -157,18 +122,13 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('Audio Output Device'),
               subtitle: Text(
                 _devicesLoaded
-                    ? (_devices.isEmpty
-                          ? 'No devices found'
-                          : (Platform.isLinux
-                              ? 'We recommend keeping "System Default" and managing audio routing with your system (PipeWire) to avoid playback errors.'
-                              : 'Choose playback device'))
+                    ? (_devices.isEmpty ? 'No devices found' : 'Choose playback device')
                     : 'Loading devices…',
               ),
               trailing: _devicesLoaded && _devices.isNotEmpty
                   ? DropdownButton<int>(
-                      value: settings.selectedAudioDeviceIndex >= 0 &&
-                              settings.selectedAudioDeviceIndex <
-                                  _devices.length
+                      value:
+                          settings.selectedAudioDeviceIndex >= 0 && settings.selectedAudioDeviceIndex < _devices.length
                           ? settings.selectedAudioDeviceIndex
                           : -1,
                       onChanged: (int? index) {
@@ -317,7 +277,7 @@ class _SettingsPageState extends State<SettingsPage> {
               subtitle: const Text('Force a crash (for testing crash reports)'),
               onTap: () {
                 throw Exception('Test crash.');
-              }
+              },
             ),
             ListTile(
               title: const Text('Log Out'),

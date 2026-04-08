@@ -437,7 +437,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
         children: [
           Container(
             height: 200,
-            color: Colors.black,
+            color: theme.colorScheme.surface,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
@@ -446,15 +446,15 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                   children: [
                     Text(
                       _formatDuration(_currentPosition),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
                         fontFamily: 'monospace',
                       ),
                     ),
                     Text(
                       _formatDuration(_totalDuration),
-                      style: const TextStyle(
-                        color: Colors.grey,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontFamily: 'monospace',
                       ),
                     ),
@@ -480,9 +480,12 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                             final endMs = track.end?.inMilliseconds ?? _totalDuration.inMilliseconds;
                             final endPct = endMs / _totalDuration.inMilliseconds;
 
+                            double width = constraints.maxWidth * (endPct - startPct);
+                            if (width < 0) width = 0;
+
                             return Positioned(
                               left: constraints.maxWidth * startPct,
-                              width: constraints.maxWidth * (endPct - startPct),
+                              width: width,
                               top: 0,
                               bottom: 0,
                               child: Container(
@@ -511,7 +514,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                             ),
                             activeTrackColor: Colors.transparent,
                             inactiveTrackColor: Colors.transparent,
-                            thumbColor: Colors.white,
+                            thumbColor: theme.colorScheme.onSurface,
                           ),
                           child: Slider(
                             value: _currentPosition.inMilliseconds.toDouble().clamp(
@@ -532,7 +535,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.replay_5, color: Colors.white),
+                      icon: Icon(Icons.replay_5, color: theme.colorScheme.onSurface),
                       onPressed: () => _player.seek(
                         _currentPosition - const Duration(seconds: 5),
                       ),
@@ -554,7 +557,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.forward_5, color: Colors.white),
+                      icon: Icon(Icons.forward_5, color: theme.colorScheme.onSurface),
                       onPressed: () => _player.seek(
                         _currentPosition + const Duration(seconds: 5),
                       ),
@@ -565,11 +568,11 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
             ),
           ),
           if (processor.isProcessing && processor.uploadProgress == null) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
                 'Processing audio...',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             ),
             LinearProgressIndicator(value: processor.progress),
@@ -585,9 +588,9 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Uploading Release...',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                       Text('${processor.uploadProgress!.overallProgress}%'),
                     ],
@@ -595,7 +598,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                   const SizedBox(height: 4),
                   LinearProgressIndicator(
                     value: processor.uploadProgress!.overallProgress / 100,
-                    backgroundColor: Colors.grey.shade800,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -612,10 +615,8 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                           ),
                           decoration: BoxDecoration(
                             color: fp.status == 'error'
-                                ? Colors.red.withValues(alpha: 0.1)
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest,
+                                ? colorScheme.error.withValues(alpha: 0.1)
+                                : theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
@@ -626,11 +627,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                                     : (fp.status == 'error' ? Icons.error : Icons.cloud_upload),
                                 color: fp.status == 'complete'
                                     ? Colors.green
-                                    : (fp.status == 'error'
-                                          ? Colors.red
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary),
+                                    : (fp.status == 'error' ? colorScheme.error : theme.colorScheme.primary),
                                 size: 14,
                               ),
                               const SizedBox(width: 8),
@@ -757,11 +754,11 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
               width: double.infinity,
               child: FilledButton.icon(
                 icon: processor.isProcessing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                           strokeWidth: 2,
                         ),
                       )

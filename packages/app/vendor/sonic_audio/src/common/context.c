@@ -6,27 +6,26 @@
 
 SonicContext g_sonic = {0};
 
-static int get_backend_id(ma_backend const backend) {
-  switch (backend) {
-    case ma_backend_alsa:
-      return 1;
-    case ma_backend_pulseaudio:
-      return 2;
-    case ma_backend_wasapi:
-      return 3;
+static int get_backend_id(ma_device_backend_vtable* pVTable) {
+#ifdef MA_ENABLE_ALSA
+  if (pVTable == ma_device_backend_alsa) return 1;
+#endif
+#ifdef MA_ENABLE_PULSEAUDIO
+  if (pVTable == ma_device_backend_pulseaudio) return 2;
+#endif
+#ifdef MA_ENABLE_WASAPI
+  if (pVTable == ma_device_backend_wasapi) return 3;
+#endif
 #ifdef MA_HAS_AAUDIO
-    case ma_backend_aaudio:
-      return 4;
+  if (pVTable == ma_device_backend_aaudio) return 4;
 #endif
-
 #ifdef MA_HAS_OPENSL
-      // Pretty much redundant as all devices above android 8 support aaudio
-    case ma_backend_opensl:
-      return 5;
+  if (pVTable == ma_device_backend_opensl) return 5;
 #endif
-    default:
-      return 0;
-  }
+#ifdef MA_ENABLE_PIPEWIRE
+  if (pVTable == ma_device_backend_pipewire) return 6;
+#endif
+  return 0;
 }
 
 int sonic_audio_init_context(void) {
@@ -36,17 +35,25 @@ int sonic_audio_init_context(void) {
     printf("SonicAudio Error: Failed to initialize mutex\n");
     return -1;
   }
+  if (sa_thread_mutex_init(&g_sonic.load_mutex) != SA_THREAD_OK) {
+    printf("SonicAudio Error: Failed to initialize load mutex\n");
+    sa_thread_mutex_destroy(&g_sonic.lock);
+    return -1;
+  }
 
-  ma_backend backends[] = {
 #ifdef __ANDROID__
-      ma_backend_aaudio,
-      ma_backend_opensl,
-#else
-      ma_backend_alsa,
-      ma_backend_wasapi,
-      ma_backend_pulseaudio,
-#endif
+  ma_device_backend_config backends[] = {
+      {ma_device_backend_aaudio, NULL},
+      {ma_device_backend_opensl, NULL},
   };
+#else
+  ma_device_backend_config backends[] = {
+      {ma_device_backend_pipewire, NULL},
+      {ma_device_backend_alsa, NULL},
+      {ma_device_backend_pulseaudio, NULL},
+      {ma_device_backend_wasapi, NULL},
+  };
+#endif
 
   ma_context_config config = ma_context_config_init();
   config.threadPriority = ma_thread_priority_realtime;
@@ -61,7 +68,7 @@ int sonic_audio_init_context(void) {
     }
   }
 
-  printf("SonicAudio: Context initialized. Backend: %d\n", get_backend_id(g_sonic.ma_ctx.backend));
+  printf("SonicAudio: Context initialized. Backend: %d\n", get_backend_id(g_sonic.ma_ctx.pVTable));
 
   g_sonic.player.state = SONIC_STATE_IDLE;
   g_sonic.player.volume = 1.0f;
@@ -83,7 +90,7 @@ void sonic_audio_dispose_context(void) {
   ma_context_uninit(&g_sonic.ma_ctx);
 
   sa_thread_mutex_destroy(&g_sonic.lock);
-
+  sa_thread_mutex_destroy(&g_sonic.load_mutex);
   g_sonic.is_initialized = 0;
   printf("SonicAudio: Context disposed\n");
 }

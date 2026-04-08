@@ -84,7 +84,7 @@ class _AlbumPageState extends State<AlbumPage> {
                             errorWidget: (context, url, error) => Container(
                               width: 160,
                               height: 160,
-                              color: Colors.grey[900],
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
                               child: const Icon(Icons.album, size: 64),
                             ),
                           ),

@@ -12,8 +12,10 @@ typedef SonicDisposeDart = void Function();
 typedef PlayerLoadC = Int32 Function(Pointer<Utf8> url, Pointer<Utf8> headers);
 typedef PlayerLoadDart = int Function(Pointer<Utf8> url, Pointer<Utf8> headers);
 
-typedef PlayerLoadAsyncC = Void Function(Pointer<Utf8> url, Pointer<Utf8> headers);
-typedef PlayerLoadAsyncDart = void Function(Pointer<Utf8> url, Pointer<Utf8> headers);
+typedef PlayerLoadAsyncC =
+    Void Function(Pointer<Utf8> url, Pointer<Utf8> headers);
+typedef PlayerLoadAsyncDart =
+    void Function(Pointer<Utf8> url, Pointer<Utf8> headers);
 
 typedef PlayerGetLoadStatusC = Int32 Function();
 typedef PlayerGetLoadStatusDart = int Function();
@@ -175,11 +177,12 @@ class SonicAudioBindings {
     playerLoad = _lib.lookupFunction<PlayerLoadC, PlayerLoadDart>(
       'sonic_audio_player_load',
     );
-    playerLoadAsync = _lib.lookupFunction<PlayerLoadAsyncC, PlayerLoadAsyncDart>(
-      'sonic_audio_player_load_async',
-    );
-    playerGetLoadStatus =
-        _lib.lookupFunction<PlayerGetLoadStatusC, PlayerGetLoadStatusDart>(
+    playerLoadAsync = _lib
+        .lookupFunction<PlayerLoadAsyncC, PlayerLoadAsyncDart>(
+          'sonic_audio_player_load_async',
+        );
+    playerGetLoadStatus = _lib
+        .lookupFunction<PlayerGetLoadStatusC, PlayerGetLoadStatusDart>(
           'sonic_audio_player_get_load_status',
         );
     playerPlay = _lib.lookupFunction<PlayerPlayC, PlayerPlayDart>(

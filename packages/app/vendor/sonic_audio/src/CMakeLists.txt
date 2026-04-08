@@ -18,9 +18,10 @@ target_compile_definitions(sonic_audio PRIVATE
         MA_ENABLE_ONLY_SPECIFIC_BACKENDS
         MA_ENABLE_WASAPI
         MA_ENABLE_WINMM
+        MA_ENABLE_PIPEWIRE
         MA_ENABLE_ALSA
-        MA_ENABLE_PULSEAUDIO
         MA_ENABLE_AAUDIO
+        MA_ENABLE_PULSEAUDIO
         MA_ENABLE_OPENSL
         MA_NO_DECODING
         MA_NO_ENCODING

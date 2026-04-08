@@ -60,8 +60,7 @@ class SettingsService with ChangeNotifier {
     _useNativeSampleRate = _prefs.getBool(_useNativeSampleRateKey) ?? true;
     _useExclusiveAudio = _prefs.getBool(_useExclusiveAudioKey) ?? false;
     _audioVolume = _prefs.getDouble(_audioVolumeKey) ?? 1.0;
-    _selectedAudioDeviceIndex =
-        _prefs.getInt(_selectedAudioDeviceIndexKey) ?? -1;
+    _selectedAudioDeviceIndex = _prefs.getInt(_selectedAudioDeviceIndexKey) ?? -1;
 
     final savedTheme = _prefs.getString(_themeModeKey);
     if (savedTheme != null) {

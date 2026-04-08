@@ -82,6 +82,8 @@ class SonicPlayer {
               return 'AAudio';
             case 5:
               return 'OpenSL';
+            case 6:
+              return 'PipeWire';
             default:
               return 'Unknown';
           }
@@ -128,14 +130,16 @@ class SonicPlayer {
         return;
       }
       final status = _bindings.playerGetLoadStatus();
-      if (status == 1 /* SA_LOAD_OK */) {
+      if (status == 1 /* SA_LOAD_OK */ ) {
         timer.cancel();
         _startPolling();
         if (!completer.isCompleted) completer.complete();
-      } else if (status == 2 /* SA_LOAD_ERR */) {
+      } else if (status == 2 /* SA_LOAD_ERR */ ) {
         timer.cancel();
         if (!completer.isCompleted) {
-          completer.completeError(Exception('Failed to load: native load error'));
+          completer.completeError(
+            Exception('Failed to load: native load error'),
+          );
         }
       }
     });

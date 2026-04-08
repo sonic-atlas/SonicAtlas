@@ -5,7 +5,8 @@ class CrashEvent {
 
   CrashEvent(this.error, this.stack) : time = DateTime.now();
 
-  String format() => '''
+  String format() =>
+      '''
 --- EVENT ---
 Time: $time
 Error: $error

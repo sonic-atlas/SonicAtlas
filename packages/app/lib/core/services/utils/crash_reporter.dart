@@ -19,7 +19,7 @@ class CrashReporter {
     _initialised = true;
 
     final appDir = await getApplicationDocumentsDirectory();
-    final dir = Directory('${appDir.path}/crash_reports');
+    final dir = Directory('${appDir.path}/SonicAtlas/crash_reports');
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
@@ -37,18 +37,23 @@ class CrashReporter {
       return true;
     };
 
-    Isolate.current.addErrorListener(RawReceivePort((pair) async {
-      final List<dynamic> errorAndStack = pair;
-      await _recordEvent(errorAndStack[0].toString(), StackTrace.fromString(errorAndStack[1].toString()));
-    }).sendPort);
+    Isolate.current.addErrorListener(
+      RawReceivePort((pair) async {
+        final List<dynamic> errorAndStack = pair;
+        await _recordEvent(errorAndStack[0].toString(), StackTrace.fromString(errorAndStack[1].toString()));
+      }).sendPort,
+    );
   }
 
   static void runAppGuarded(Future<void> Function() appRunner) {
-    runZonedGuarded(() async {
-      await appRunner();
-    }, (error, stackTrace) async {
-      await _recordEvent(error.toString(), stackTrace);
-    });
+    runZonedGuarded(
+      () async {
+        await appRunner();
+      },
+      (error, stackTrace) async {
+        await _recordEvent(error.toString(), stackTrace);
+      },
+    );
   }
 
   static Future<void> _recordEvent(String error, StackTrace? stackTrace) async {

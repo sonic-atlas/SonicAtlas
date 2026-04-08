@@ -8,7 +8,7 @@ int decoder_open(DecoderState* state, const char* url, const char* headers, int 
 
 int decoder_change_format(DecoderState* state, int target_format);
 
-int decoder_read_frames(DecoderState* state, ma_pcm_rb* buffer, int max_frames);
+int decoder_read_frames(DecoderState* state, ma_audio_ring_buffer* buffer, int max_frames);
 
 int decoder_seek(DecoderState* state, double seconds);
 
