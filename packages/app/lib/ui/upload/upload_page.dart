@@ -340,9 +340,11 @@ class _UploadPageState extends State<UploadPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Overall Progress',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                         Text('${_progress!.overallProgress}%'),
                       ],
@@ -350,7 +352,7 @@ class _UploadPageState extends State<UploadPage> {
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: _progress!.overallProgress / 100,
-                      backgroundColor: Colors.grey.shade800,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
@@ -365,9 +367,7 @@ class _UploadPageState extends State<UploadPage> {
                             decoration: BoxDecoration(
                               color: fp.status == 'error'
                                   ? Colors.red.withValues(alpha: 0.1)
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.surfaceContainerHighest,
+                                  : Theme.of(context).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Column(
@@ -389,9 +389,9 @@ class _UploadPageState extends State<UploadPage> {
                                     ),
                                     Text(
                                       '${_formatBytes(fp.bytesUploaded)} / ${_formatBytes(fp.bytesTotal)}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey,
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -401,7 +401,7 @@ class _UploadPageState extends State<UploadPage> {
                                   LinearProgressIndicator(
                                     value: fp.bytesUploaded / fp.bytesTotal,
                                     minHeight: 4,
-                                    backgroundColor: Colors.grey.shade800,
+                                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                                   ),
                                 ],
                                 if (fp.error != null)
@@ -430,8 +430,8 @@ class _UploadPageState extends State<UploadPage> {
                 onPressed: _uploading ? null : _upload,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: _uploading
                     ? (_progress != null

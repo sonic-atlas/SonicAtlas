@@ -115,12 +115,12 @@ class _SearchPageState extends State<SearchPage> {
         title: TextField(
           controller: _searchController,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Search tracks, artists, albums...',
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white54),
+            hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           onChanged: _onSearchChanged,
           textInputAction: TextInputAction.search,
         ),
@@ -153,15 +153,19 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     if (_lastQuery.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(
+              Icons.search,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
             Text(
               'Search for tracks, artists, or albums',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -173,11 +177,15 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
             Text(
               'No results found for "$_lastQuery"',
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),

@@ -23,6 +23,9 @@ static int interrupt_cb(void* ctx) {
   if (state && state->should_stop) {
     return 1;
   }
+  if (g_sonic.player.should_interrupt) {
+    return 1;
+  }
   return 0;
 }
 
@@ -194,13 +197,19 @@ int decoder_open(DecoderState* state, const char* url, const char* headers, int 
     state->duration = 0.0;
   }
 
-  LOGI("SonicAudio Decoder: Opened %s (duration: %.2fs, %dHz, %d ch)\n", url, state->duration,
-       state->codec_ctx->sample_rate, state->codec_ctx->ch_layout.nb_channels);
+  int bits = state->codec_ctx->bits_per_raw_sample;
+  if (bits == 0) {
+    bits = av_get_bytes_per_sample(state->codec_ctx->sample_fmt) * 8;
+  }
+  const char* fmt_str = (bits > 16) ? "s32" : "s16";
+
+  LOGI("SonicAudio Decoder: Opened %s (duration: %.2fs, %dHz, %d bit, %s)\n", url, state->duration,
+       state->codec_ctx->sample_rate, bits, fmt_str);
 
   return 0;
 }
 
-int decoder_read_frames(DecoderState* state, ma_pcm_rb* buffer, int max_frames) {
+int decoder_read_frames(DecoderState* state, ma_audio_ring_buffer* buffer, int max_frames) {
   if (!state || !state->fmt_ctx || !buffer) return -1;
 
   int total_frames_written = 0;
@@ -273,21 +282,19 @@ int decoder_read_frames(DecoderState* state, ma_pcm_rb* buffer, int max_frames) 
             void* write_ptr;
             ma_uint32 frames_to_write = frames_remaining;
 
-            if (ma_pcm_rb_acquire_write(buffer, &frames_to_write, &write_ptr) == MA_SUCCESS) {
-              if (frames_to_write > 0) {
-                size_t bytes_per_frame = ma_get_bytes_per_frame(buffer->format, buffer->channels);
+            ma_uint32 mapped = ma_audio_ring_buffer_map_produce(buffer, frames_to_write, &write_ptr);
+            if (mapped > 0) {
+              size_t bytes_per_frame = ma_get_bytes_per_frame(buffer->format, buffer->channels);
 
-                memcpy(write_ptr, out_buffer + (frames_offset * bytes_per_frame), frames_to_write * bytes_per_frame);
+              memcpy(write_ptr, out_buffer + (frames_offset * bytes_per_frame), mapped * bytes_per_frame);
 
-                ma_pcm_rb_commit_write(buffer, frames_to_write);
+              ma_audio_ring_buffer_unmap_produce(buffer, mapped);
 
-                total_frames_written += frames_to_write;
-                frames_remaining -= frames_to_write;
-                frames_offset += frames_to_write;
-              } else {
-                av_usleep(1000);
-              }
+              total_frames_written += mapped;
+              frames_remaining -= mapped;
+              frames_offset += mapped;
             } else {
+              if (state->should_stop) return total_frames_written;
               av_usleep(1000);
             }
           }

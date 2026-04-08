@@ -431,7 +431,7 @@ class _FullScreenPlayerPageState extends State<FullScreenPlayerPage> {
                           onPressed: () => _showVolumePopup(buttonContext),
                           tooltip: 'Volume',
                         );
-                      }
+                      },
                     ),
                   ],
                 );

@@ -6,7 +6,8 @@ import 'oss_licenses.dart';
 const generatedExtraPackages = <Package>[
   Package(
     name: 'FFmpeg',
-    description: 'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
+    description:
+        'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
     authors: ['FFmpeg developers'],
     version: '8.0.1',
     license: '''
@@ -481,7 +482,7 @@ DAMAGES.
     name: 'miniaudio',
     description: 'Audio playback and capture library written in C, in a single source file.',
     authors: ['David Reid'],
-    version: '0.11.25',
+    version: '0.12.0-dev+a513b52',
     license: '''
 This is free and unencumbered software released into the public domain.
 
@@ -515,7 +516,8 @@ For more information, please refer to <http://unlicense.org/>
   ),
   Package(
     name: 'OpenSSL',
-    description: 'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
+    description:
+        'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
     authors: ['OpenSSL Project Authors'],
     version: '3.6.1',
     license: '''

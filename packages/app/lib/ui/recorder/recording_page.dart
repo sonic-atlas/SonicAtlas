@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sonic_audio/sonic_audio.dart';
+import 'package:path/path.dart' as path;
 import '/core/services/recorder/recorder_service.dart';
 import 'components/device_selector.dart';
 import 'components/vu_meter.dart';
@@ -173,53 +174,68 @@ class _AnalogTabState extends State<_AnalogTab> {
                         },
                       ),
 
-                      if (!recorderService.isRecording && recorderService.sessionFiles.isNotEmpty) ...[
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+
+                      if (!recorderService.isRecording) ...[
+                        const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Colors.grey.withValues(alpha: 0.2),
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                'Session: ${recorderService.sessionFiles.length} file(s) recorded',
-                                style: const TextStyle(
-                                  color: Colors.grey,
+                                recorderService.sessionFiles.isEmpty
+                                    ? 'No active session'
+                                    : 'Session: ${recorderService.sessionFiles.length} file(s)',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  OutlinedButton.icon(
-                                    icon: const Icon(Icons.delete_sweep),
-                                    label: const Text('Clear Session'),
-                                    onPressed: () {
-                                      recorderService.clearSession();
-                                    },
-                                  ),
-                                  const SizedBox(width: 16),
-                                  FilledButton.icon(
-                                    icon: const Icon(Icons.content_cut),
-                                    label: const Text('Open Editor & Process'),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: Colors.amber.shade800,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 16,
-                                      ),
+                              if (recorderService.sessionFiles.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                ...recorderService.sessionFiles.map(
+                                  (file) => Text(
+                                    path.basename(file),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                     ),
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, '/editor');
-                                    },
+                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                ),
+                              ],
+                              const SizedBox(height: 16),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  if (recorderService.sessionFiles.isNotEmpty) ...[
+                                    OutlinedButton.icon(
+                                      icon: const Icon(Icons.delete_sweep),
+                                      label: const Text('Clear'),
+                                      onPressed: () => recorderService.clearSession(),
+                                    ),
+                                    FilledButton.icon(
+                                      icon: const Icon(Icons.content_cut),
+                                      label: const Text('Editor'),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.amber.shade800,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      onPressed: () => Navigator.pushNamed(context, '/editor'),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ],

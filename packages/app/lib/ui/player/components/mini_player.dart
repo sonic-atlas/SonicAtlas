@@ -52,7 +52,7 @@ class MiniPlayer extends StatelessWidget {
                 imageUrl: imageUrl,
                 httpHeaders: apiService.headers,
                 fit: BoxFit.cover,
-                color: Colors.black.withValues(alpha: 0.4),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
                 colorBlendMode: BlendMode.darken,
                 fadeInDuration: Duration.zero,
                 errorWidget: (context, url, error) {
@@ -62,7 +62,9 @@ class MiniPlayer extends StatelessWidget {
                     ).colorScheme.surfaceContainerHighest,
                   );
                 },
-                placeholder: (context, url) => Container(color: Colors.black),
+                placeholder: (context, url) => Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                ),
               ),
             ),
             Container(

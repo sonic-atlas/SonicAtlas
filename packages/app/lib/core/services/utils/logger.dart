@@ -29,6 +29,6 @@ Logger logger = Logger(
     lineLength: _getLineLength(),
     colors: /* stdout.supportsAnsiEscapes */ true,
     printEmojis: false,
-    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart
-  )
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+  ),
 );

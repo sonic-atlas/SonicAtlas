@@ -97,7 +97,7 @@ typedef struct {
   ma_device device;
   int is_initialized;
   SonicPlayerState state;
-  ma_pcm_rb pcm_buffer;
+  ma_audio_ring_buffer pcm_buffer;
   DecoderState decoder;
   float volume;
   double position;
@@ -107,6 +107,7 @@ typedef struct {
   ma_format format;
 
   int has_selected_device;
+  int device_ever_initialized;
   ma_device_id selected_device_id;
 
   int use_native_sample_rate;
@@ -121,10 +122,9 @@ typedef struct {
   volatile int seek_in_progress;
   volatile double seek_target;
 
+  volatile int load_generation;
+  volatile int should_interrupt;
   volatile int load_status; /* SA_LOAD_IDLE | SA_LOAD_RUNNING | SA_LOAD_OK | SA_LOAD_ERR */
-  sa_thread_t load_thread;
-  char load_url[4096];
-  char load_headers[4096];
 } PlayerState;
 
 #define SA_LOAD_IDLE (-1)
@@ -135,11 +135,11 @@ typedef struct {
 typedef struct {
   ma_device device;
   int is_initialized;
-  ma_pcm_rb capture_buffer;
+  ma_audio_ring_buffer capture_buffer;
 
   ma_device monitor_device;
   int is_monitor_initialized;
-  ma_pcm_rb monitor_buffer;
+  ma_audio_ring_buffer monitor_buffer;
 
   ma_format format;
   int sample_rate;
@@ -163,6 +163,7 @@ typedef struct {
   PlayerState player;
   RecorderState recorder;
   sa_thread_mutex_t lock;
+  sa_thread_mutex_t load_mutex;
 } SonicContext;
 
 extern SonicContext g_sonic;

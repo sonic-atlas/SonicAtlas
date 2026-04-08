@@ -136,6 +136,8 @@ class SonicRecorder {
         return 'AAudio';
       case 5:
         return 'OpenSL';
+      case 6:
+        return 'PipeWire';
       default:
         return 'Unknown';
     }

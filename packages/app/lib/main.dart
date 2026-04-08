@@ -68,12 +68,11 @@ void main(List<String> args) async {
     discordService.setApiService(apiService);
 
     audioHandler = await audio_service.AudioService.init(
-      builder: () =>
-          MediaSessionHandler(
-            audioService.player,
-            onSkipNext: audioService.skipNext,
-            onSkipPrevious: audioService.skipPrevious,
-          ),
+      builder: () => MediaSessionHandler(
+        audioService.player,
+        onSkipNext: audioService.skipNext,
+        onSkipPrevious: audioService.skipPrevious,
+      ),
       config: const audio_service.AudioServiceConfig(
         androidNotificationChannelId: 'dev.heggo.sonic_atlas.channel',
         androidNotificationChannelName: 'Sonic Atlas Playback',
@@ -101,14 +100,12 @@ void main(List<String> args) async {
           ChangeNotifierProvider(create: (_) => SonicRecorderService()),
           ChangeNotifierProvider(create: (_) => ProcessingService(apiService)),
           ProxyProvider2<SettingsService, AuthService, ApiService>(
-            update: (context, settings, auth, previous) =>
-                ApiService(settings, auth),
+            update: (context, settings, auth, previous) => ApiService(settings, auth),
           ),
           ChangeNotifierProvider<SocketService>(
-            create: (context) =>
-                SocketService(
-                  Provider.of<SettingsService>(context, listen: false),
-                ),
+            create: (context) => SocketService(
+              Provider.of<SettingsService>(context, listen: false),
+            ),
           ),
         ],
         child: const SonicAtlasApp(),

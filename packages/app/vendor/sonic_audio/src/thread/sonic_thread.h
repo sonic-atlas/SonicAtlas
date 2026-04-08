@@ -57,6 +57,21 @@ static sa_thread_result_t sa_thread_create(sa_thread_t* t, sa_thread_fn fn, void
 #endif
 }
 
+static sa_thread_result_t sa_thread_detach(sa_thread_t* t) {
+  if (!t || !t->handle) return SA_THREAD_ERR_INVALID;
+
+#ifdef _WIN32
+  CloseHandle(t->handle);
+  t->handle = NULL;
+  return SA_THREAD_OK;
+#else
+  int rc = pthread_detach(t->handle);
+  if (rc != 0) return SA_THREAD_ERR_UNKNOWN;
+  t->handle = 0;
+  return SA_THREAD_OK;
+#endif
+}
+
 static sa_thread_result_t sa_thread_join(sa_thread_t* t, void** retval) {
   if (!t) return SA_THREAD_ERR_INVALID;
 
@@ -81,6 +96,15 @@ static sa_thread_result_t sa_thread_join(sa_thread_t* t, void** retval) {
   int rc = pthread_join(t->handle, retval);
   if (rc != 0) return SA_THREAD_ERR_JOIN;
   return SA_THREAD_OK;
+#endif
+}
+
+static int sa_thread_is_current(sa_thread_t* t) {
+  if (!t) return 0;
+#ifdef _WIN32
+  return GetThreadId(t->handle) == GetCurrentThreadId();
+#else
+  return pthread_equal(t->handle, pthread_self());
 #endif
 }
 
