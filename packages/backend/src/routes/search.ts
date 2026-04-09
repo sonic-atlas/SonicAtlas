@@ -32,7 +32,7 @@ function genSearchSQL(qc: string, pq: string | null, limit: number, offset: numb
 SELECT ${trackMetadata.trackId},
        ${trackMetadata.title},
        ${trackMetadata.artist},
-       ${releases.title},
+       ${releases.title} AS release_title,
        ${tracks.duration},
        ${releases.id},
        ${releases.primaryArtist},
