@@ -10,7 +10,7 @@
   <Identity
     Name="dev.sonicatlas.gamebar"
     Publisher="CN=Sonic Atlas"
-    Version="0.1.4.0" />
+    Version="0.1.5.0" />
 
   <mp:PhoneIdentity PhoneProductId="d7ff698c-5db1-4620-99fe-010f40b2cb65" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

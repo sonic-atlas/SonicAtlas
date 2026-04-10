@@ -54,7 +54,8 @@
       </VisualStateGroup>
     </VisualStateManager.VisualStateGroups>
     
-    <Border CornerRadius="16"
+    <Border x:Name="ApplicationBorder"
+            CornerRadius="16"
             Background="{ThemeResource SystemControlAcrylicWindowBrush}"
             Padding="12">
       
@@ -140,17 +141,25 @@
 
           <StackPanel Grid.Column="1"
                       VerticalAlignment="Center"
-                      Spacing="4">
+                      Spacing="2">
 
             <TextBlock Text="{Binding ElementName=SongTitle, Path=Text}"
                        FontSize="12"
+                       FontWeight="SemiBold"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="White"/>
+
+            <TextBlock Text="{Binding ElementName=Artist, Path=Text}"
+                       FontSize="11"
+                       Opacity="0.7"
                        TextTrimming="CharacterEllipsis"
                        Foreground="White"/>
 
             <ProgressBar x:Name="MiniProgressBar"
                          Height="3"
-                         Minimum="0"
-                         Maximum="100"/>
+                         Minimum="{Binding ElementName=ProgressBar, Path=Minimum}"
+                         Maximum="{Binding ElementName=ProgressBar, Path=Maximum}"
+                         Value="{Binding ElementName=ProgressBar, Path=Value}"/>
           </StackPanel>
 
         </Grid>

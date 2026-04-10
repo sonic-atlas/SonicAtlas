@@ -52,7 +52,7 @@ Function InstallGameBarWidget
     DetailPrint "Installing Xbox Game Bar widget..."
 
     SetOutPath "$TEMP\SonicAtlasGameBar"
-    File /r "..\..\gamebar\AppPackages\gamebar_0.1.4.0_x64_Test\*"
+    File /r "..\..\gamebar\AppPackages\gamebar_0.1.5.0_x64_Test\*"
 
     ExecWait 'powershell -ExecutionPolicy Bypass -File "$TEMP\SonicAtlasGameBar\Add-AppDevPackage.ps1" -Silent'
 FunctionEnd

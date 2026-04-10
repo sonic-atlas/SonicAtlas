@@ -9,6 +9,9 @@ using System.Threading;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Input;
 using Microsoft.Gaming.XboxGameBar;
+using Windows.System;
+using Windows.Foundation;
+using Windows.Graphics.Display;
 
 namespace gamebar
 {
@@ -19,6 +22,7 @@ namespace gamebar
     {
         private readonly PlayerController _controller = new PlayerController();
         private XboxGameBarWidget _widget;
+        private bool _isYHeld = false;
 
         public Widget1()
         {
@@ -36,6 +40,9 @@ namespace gamebar
             _controller.ProgressUpdated += OnProgressUpdated;
             _controller.AvailabilityChanged += OnAvailabilityChanged;
 
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
+
             await _controller.InitialiseAsync();
         }
 
@@ -44,6 +51,9 @@ namespace gamebar
             _controller.StateUpdated -= OnStateUpdated;
             _controller.ProgressUpdated -= OnProgressUpdated;
             _controller.Dispose();
+
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyUp -= CoreWindow_KeyUp;
         }
 
         private async void Widget1_VisibilityChanged(object sender, VisibilityChangedEventArgs e)
@@ -51,6 +61,10 @@ namespace gamebar
             if (e.Visible)
             {
                 await _controller.RefreshStateAsync(CancellationToken.None);
+            }
+            else
+            {
+                _isYHeld = false;
             }
         }
 
@@ -67,6 +81,7 @@ namespace gamebar
             if (_widget != null)
             {
                 _widget.PinnedChanged += Widget1_PinnedChanged;
+                _widget.WindowBoundsChanged += Widget1_WindowBoundsChanged;
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -94,6 +109,42 @@ namespace gamebar
             }
         }
 
+        private static void Widget1_WindowBoundsChanged(XboxGameBarWidget sender, object args)
+        {
+            UpdateMiniViewCorners(sender.WindowBounds);
+        }
+
+        private async void UpdateMiniViewCorners(Rect window)
+        {
+            double x = window.X;
+            double y = window.Y;
+            double width = window.Width;
+            double height = window.Height;
+
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var displayInfo = DisplayInformation.GetForCurrentView();
+                double screenWidth = displayInfo.ScreenWidthInRawPixels / displayInfo.RawPixelsPerViewPixel;
+                double screenHeight = displayInfo.ScreenHeightInRawPixels / displayInfo.RawPixelsPerViewPixel;
+
+                bool touchesTop = y <= 0;
+                bool touchesLeft = x <= 0;
+                bool touchesRight = x + width >= screenWidth;
+                bool touchesBottom = y + height >= screenHeight;
+
+                double defaultRadius = 16;
+
+                Artist.Text = $"{touchesRight} {touchesBottom}";
+
+                ApplicationBorder.CornerRadius = new CornerRadius(
+                    touchesTop && touchesLeft ? 0 : defaultRadius,
+                    touchesTop && touchesRight ? 0 : defaultRadius,
+                    touchesBottom && touchesRight ? 0 : defaultRadius,
+                    touchesBottom && touchesLeft ? 0 : defaultRadius
+                );
+            });
+        }
+
         private async void OnStateUpdated(PlayerState state)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -104,9 +155,6 @@ namespace gamebar
 
                 ProgressBar.Maximum = state.Duration;
                 ProgressBar.Value = state.Position;
-
-                MiniProgressBar.Maximum = state.Duration;
-                MiniProgressBar.Value = state.Position;
 
                 NextButton.IsEnabled = state.HasNext;
                 PrevButton.IsEnabled = state.HasPrev;
@@ -121,7 +169,6 @@ namespace gamebar
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 ProgressBar.Value = value;
-                MiniProgressBar.Value = value;
             });
         }
 
@@ -183,7 +230,7 @@ namespace gamebar
         private async void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint(null).Properties.MouseWheelDelta;
-            var ctrl = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control);
+            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
 
             if (ctrl.HasFlag(CoreVirtualKeyStates.Down))
             {
@@ -216,6 +263,56 @@ namespace gamebar
             else
             {
                 await _controller.PlayPauseAsync();
+            }
+        }
+
+        private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        {
+            if (MiniView.Visibility != Visibility.Visible) return;
+
+            switch (args.VirtualKey)
+            {
+                case VirtualKey.GamepadY:
+                    _isYHeld = true;
+                    break;
+                case VirtualKey.GamepadA:
+                    await _controller.PlayPauseAsync();
+                    break;
+                // TODO: Fix holding 'y' not working correctly for this
+                case VirtualKey.GamepadRightShoulder:
+                    if (_isYHeld)
+                    {
+                        await _controller.SeekAsync(+5);
+                    }
+                    else
+                    {
+                        await _controller.NextAsync();
+                    }
+                    break;
+                case VirtualKey.GamepadLeftShoulder:
+                    if (_isYHeld)
+                    {
+                        await _controller.SeekAsync(-5);
+                    }
+                    else
+                    {
+                        await _controller.PrevAsync();
+                    }
+                    break;
+                case VirtualKey.GamepadRightThumbstickUp:
+                    await _controller.AdjustVolumeAsync(+0.05);
+                    break;
+                case VirtualKey.GamepadRightThumbstickDown:
+                    await _controller.AdjustVolumeAsync(-0.05);
+                    break;
+            }
+        }
+
+        private void CoreWindow_KeyUp(CoreWindow sender, KeyEventArgs args)
+        {
+            if (args.VirtualKey == VirtualKey.GamepadY)
+            {
+                _isYHeld = false;
             }
         }
     }

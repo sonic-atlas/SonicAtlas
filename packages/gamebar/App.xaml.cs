@@ -80,14 +80,6 @@ namespace gamebar
         }
 
         /// <summary>
-        /// Returns the static (compile-time) type of a variable
-        /// </summary>
-        public static Type GetStaticType<T>(T _)
-        {
-            return typeof(T);
-        }
-
-        /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
