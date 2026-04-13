@@ -33,7 +33,7 @@ function determineSourceQuality(track: any): Quality {
 }
 
 router.get('/:trackId', authMiddleware, async (req, res) => {
-    const { trackId } = req.params;
+    const trackId = req.params.trackId as string;
 
     if (!isUUID(trackId!)) {
         return res.status(422).json({
@@ -108,7 +108,7 @@ router.get('/:trackId', authMiddleware, async (req, res) => {
 });
 
 router.patch('/:trackId', authMiddleware, async (req, res) => {
-    const { trackId } = req.params;
+    const trackId = req.params.trackId as string;
     const { title, artist } = req.body;
 
     if (!isUUID(trackId!)) {
@@ -166,7 +166,7 @@ router.patch('/:trackId', authMiddleware, async (req, res) => {
 const storagePath = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'metadata');
 
 router.get('/:trackId/cover', async (req, res) => {
-    const { trackId } = req.params;
+    const trackId = req.params.trackId as string;
     const { size } = req.query;
 
     if (!isUUID(trackId)) {

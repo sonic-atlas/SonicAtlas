@@ -85,7 +85,7 @@ router.post('/init', async (req, res) => {
 
 router.post('/:uploadId/file', upload.single('file'), async (req, res) => {
     try {
-        const session = getSession(req.params.uploadId!);
+        const session = getSession(req.params.uploadId as string);
         if (!session) {
             return res.status(404).json({ error: 'NOT_FOUND', message: 'Upload session not found or expired' });
         }
@@ -142,7 +142,7 @@ router.post('/:uploadId/file', upload.single('file'), async (req, res) => {
 
 router.post('/:uploadId/chunk', upload.single('chunk'), async (req, res) => {
     try {
-        const session = getSession(req.params.uploadId!);
+        const session = getSession(req.params.uploadId as string);
         if (!session) {
             return res.status(404).json({ error: 'NOT_FOUND', message: 'Upload session not found or expired' });
         }
@@ -179,12 +179,12 @@ router.post('/:uploadId/chunk', upload.single('chunk'), async (req, res) => {
 
 router.post('/:uploadId/file/:fileId/complete', async (req, res) => {
     try {
-        const session = getSession(req.params.uploadId!);
+        const session = getSession(req.params.uploadId as string);
         if (!session) {
             return res.status(404).json({ error: 'NOT_FOUND', message: 'Upload session not found or expired' });
         }
 
-        const file = session.files.get(req.params.fileId!);
+        const file = session.files.get(req.params.fileId as string);
         if (!file) {
             return res.status(400).json({ error: 'BAD_REQUEST', message: 'Unknown fileId' });
         }
@@ -237,7 +237,7 @@ router.post('/:uploadId/file/:fileId/complete', async (req, res) => {
 
 router.post('/:uploadId/complete', upload.single('cover'), async (req, res) => {
     try {
-        const session = getSession(req.params.uploadId!);
+        const session = getSession(req.params.uploadId as string);
         if (!session) {
             return res.status(404).json({ error: 'Upload session not found' });
         }
@@ -320,7 +320,7 @@ router.post('/:uploadId/complete', upload.single('cover'), async (req, res) => {
             };
         }));
 
-        cleanupSession(req.params.uploadId!);
+        cleanupSession(req.params.uploadId as string);
 
         return res.json({
             release,
@@ -335,7 +335,7 @@ router.post('/:uploadId/complete', upload.single('cover'), async (req, res) => {
 // GET /api/uploads/:uploadId/status
 
 router.get('/:uploadId/status', (req, res) => {
-    const session = getSession(req.params.uploadId!);
+    const session = getSession(req.params.uploadId as string);
     if (!session) {
         return res.status(404).json({ error: 'NOT_FOUND', message: 'Upload session not found or expired' });
     }
