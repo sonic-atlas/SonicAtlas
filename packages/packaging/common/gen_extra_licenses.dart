@@ -49,7 +49,7 @@ void main() {
     if (licenseFile != null) {
       final txtFile = File('$rootDir/packages/shared/licenses/$licenseFile');
       if (txtFile.existsSync()) {
-        licenseText = txtFile.readAsStringSync().replaceAll('\$', '\\\$').replaceAll('\'', '\\\'');
+        licenseText = txtFile.readAsStringSync();
       }
     }
 
@@ -58,16 +58,14 @@ void main() {
     buffer.writeln('    description: \'$description\',');
     buffer.writeln('    authors: $authors,');
     buffer.writeln('    version: \'$version\',');
-    
-    buffer.writeln('    license: \'\'\'');
-    buffer.writeln(licenseText.replaceAll('\'\'\'', '\'\'\\\'')); // Escaping triple quotes just in case
-    buffer.writeln('\'\'\',');
-
     buffer.writeln('    isMarkdown: false,');
     buffer.writeln('    isSdk: false,');
     buffer.writeln('    dependencies: [],');
     buffer.writeln('    devDependencies: [],');
     buffer.writeln('    homepage: \'$homepage\',');
+    buffer.writeln('    license: \'\'\'');
+    buffer.writeln(licenseText);
+    buffer.writeln('\'\'\',');
     buffer.writeln('    spdxIdentifiers: $spdx,');
     buffer.writeln('  ),');
   }

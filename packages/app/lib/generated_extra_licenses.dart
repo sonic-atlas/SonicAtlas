@@ -6,10 +6,14 @@ import 'oss_licenses.dart';
 const generatedExtraPackages = <Package>[
   Package(
     name: 'FFmpeg',
-    description:
-        'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
+    description: 'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
     authors: ['FFmpeg developers'],
     version: '8.0.1',
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [],
+    devDependencies: [],
+    homepage: 'https://ffmpeg.org/',
     license: '''
                   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999
@@ -66,7 +70,7 @@ permission to copy, distribute and/or modify the library.
 there is no warranty for the free library.  Also, if the library is
 modified by someone else and passed on, the recipients should know
 that what they have is not the original version, so that the original
-author\'s reputation will not be affected by problems that might be
+author's reputation will not be affected by problems that might be
 introduced by others.
 
   Finally, software patents pose a constant threat to the existence of
@@ -92,7 +96,7 @@ Public License permits more lax criteria for linking other code with
 the library.
 
   We call this license the "Lesser" General Public License because it
-does Less to protect the user\'s freedom than the ordinary General
+does Less to protect the user's freedom than the ordinary General
 Public License.  It also provides other free software developers Less
 of an advantage over competing non-free programs.  These disadvantages
 are the reason we use the ordinary General Public License for many
@@ -115,7 +119,7 @@ operating system, as well as its variant, the GNU/Linux operating
 system.
 
   Although the Lesser General Public License is Less protective of the
-users\' freedom, it does ensure that the user of a program that is
+users' freedom, it does ensure that the user of a program that is
 linked with the Library has the freedom and the wherewithal to run
 that program using a modified version of the Library.
 
@@ -160,7 +164,7 @@ on the Library (independent of the use of the Library in a tool for
 writing it).  Whether that is true depends on what the Library does
 and what the program that uses the Library does.
 
-  1. You may copy and distribute verbatim copies of the Library\'s
+  1. You may copy and distribute verbatim copies of the Library's
 complete source code as you receive it, in any medium, provided that
 you conspicuously and appropriately publish on each copy an
 appropriate copyright notice and disclaimer of warranty; keep intact
@@ -285,7 +289,7 @@ whether or not they are linked directly with the Library itself.
 link a "work that uses the Library" with the Library to produce a
 work containing portions of the Library, and distribute that work
 under terms of your choice, provided that the terms permit
-modification of the work for the customer\'s own use and reverse
+modification of the work for the customer's own use and reverse
 engineering for debugging such modifications.
 
   You must give prominent notice with each copy of the work that the
@@ -310,7 +314,7 @@ of these things:
 
     b) Use a suitable shared library mechanism for linking with the
     Library.  A suitable mechanism is one that (1) uses at run time a
-    copy of the library already present on the user\'s computer system,
+    copy of the library already present on the user's computer system,
     rather than copying library functions into the executable, and (2)
     will operate properly with a modified version of the library, if
     the user installs one, as long as the modified version is
@@ -380,7 +384,7 @@ the Library or works based on it.
 Library), the recipient automatically receives a license from the
 original licensor to copy, distribute, link with or modify the Library
 subject to these terms and conditions.  You may not impose any further
-restrictions on the recipients\' exercise of the rights granted herein.
+restrictions on the recipients' exercise of the rights granted herein.
 You are not responsible for enforcing compliance by third parties with
 this License.
 
@@ -471,11 +475,6 @@ DAMAGES.
                      END OF TERMS AND CONDITIONS
 
 ''',
-    isMarkdown: false,
-    isSdk: false,
-    dependencies: [],
-    devDependencies: [],
-    homepage: 'https://ffmpeg.org/',
     spdxIdentifiers: ['LGPL-2.1'],
   ),
   Package(
@@ -483,6 +482,11 @@ DAMAGES.
     description: 'Audio playback and capture library written in C, in a single source file.',
     authors: ['David Reid'],
     version: '0.12.0-dev+a513b52',
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [],
+    devDependencies: [],
+    homepage: 'https://miniaud.io/',
     license: '''
 This is free and unencumbered software released into the public domain.
 
@@ -507,19 +511,18 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 
 ''',
-    isMarkdown: false,
-    isSdk: false,
-    dependencies: [],
-    devDependencies: [],
-    homepage: 'https://miniaud.io/',
     spdxIdentifiers: ['Unlicense'],
   ),
   Package(
     name: 'OpenSSL',
-    description:
-        'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
+    description: 'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
     authors: ['OpenSSL Project Authors'],
     version: '3.6.1',
+    isMarkdown: false,
+    isSdk: false,
+    dependencies: [],
+    devDependencies: [],
+    homepage: 'https://www.openssl.org/',
     license: '''
 
                                  Apache License
@@ -699,11 +702,6 @@ For more information, please refer to <http://unlicense.org/>
 
    END OF TERMS AND CONDITIONS
 ''',
-    isMarkdown: false,
-    isSdk: false,
-    dependencies: [],
-    devDependencies: [],
-    homepage: 'https://www.openssl.org/',
     spdxIdentifiers: ['Apache-2.0'],
   ),
 ];
