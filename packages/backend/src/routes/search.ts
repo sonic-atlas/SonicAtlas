@@ -29,16 +29,17 @@ function genSearchSQL(qc: string, pq: string | null, limit: number, offset: numb
     const whereSQL = conditions.length ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
 
     return sql`
-SELECT ${trackMetadata.trackId},
+SELECT ${trackMetadata.trackId} AS id,
        ${trackMetadata.title},
        ${trackMetadata.artist},
-       ${releases.title} AS release_title,
+       ${releases.title} AS "releaseTitle",
        ${tracks.duration},
-       ${releases.id},
-       ${releases.primaryArtist},
-       ${releases.year},
-       ${releases.coverArtPath},
-       ${tracks.uploadedAt},
+       ${releases.id} AS "releaseId",
+       ${releases.primaryArtist} AS "releaseArtist",
+       ${releases.year} AS "releaseYear",
+       ${releases.coverArtPath} AS "releaseCoverArtPath",
+       ${tracks.coverArtPath} AS "trackCoverArtPath",
+       ${tracks.uploadedAt} AS "uploadedAt",
        ${qc ? sql`ts_rank(${trackMetadata.searchVector}, websearch_to_tsquery('english', ${qc}))
            ${pq ? sql`+ 0.5 * ts_rank(${trackMetadata.searchVector}, to_tsquery('english', ${pq}))` : sql``}
            + 0.2 * similarity(${trackMetadata.title}, ${qc})
@@ -138,7 +139,8 @@ router.get('/', authMiddleware, async (req, res) => {
         const testResults = await db.execute(testSQL);
 
         const results = testResults.map(t => {
-            const coverArtPath = t.coverArtPath ? `/api/metadata/${t.id}/cover` : null;
+            const hasReleaseCover = !!t.releaseCoverArtPath;
+            const coverArtPath = t.trackCoverArtPath ?? (hasReleaseCover ? `/api/metadata/${t.id}/cover` : null);
 
             return {
                 ...t,
