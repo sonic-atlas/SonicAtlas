@@ -33,7 +33,7 @@ class _UploadPageState extends State<UploadPage> {
   String? _error;
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: [
         'mp3',
@@ -55,7 +55,7 @@ class _UploadPageState extends State<UploadPage> {
   }
 
   Future<void> _pickCover() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: false,
     );

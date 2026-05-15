@@ -33,7 +33,9 @@ class QueuePage extends StatelessWidget {
           ? const Center(child: Text('Queue is empty'))
           : ReorderableListView.builder(
               itemCount: queue.length,
-              onReorder: (oldIndex, newIndex) {},
+              onReorder: (oldIndex, newIndex) {
+                audioService.reorderQueue(oldIndex, newIndex);
+              },
               itemBuilder: (context, index) {
                 final track = queue[index];
                 final isCurrentTrack = index == currentIndex;

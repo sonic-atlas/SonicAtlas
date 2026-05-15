@@ -254,7 +254,7 @@ class _EditorPageState extends State<EditorPage> with SingleTickerProviderStateM
                     IconButton(
                       icon: const Icon(Icons.image),
                       onPressed: () async {
-                        final result = await FilePicker.platform.pickFiles(
+                        final result = await FilePicker.pickFiles(
                           type: FileType.image,
                         );
                         if (result != null) {

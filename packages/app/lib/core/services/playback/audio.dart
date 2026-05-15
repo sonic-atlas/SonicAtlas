@@ -353,6 +353,30 @@ Quality: ${selectedQuality.value}''');
     }
   }
 
+  void reorderQueue(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || newIndex > _queue.length || newIndex < 0) {
+      logger.w('Item out of bounds');
+      return;
+    }
+
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
+    final track = _queue.removeAt(oldIndex);
+    _queue.insert(newIndex, track);
+
+    if (_currentIndex == oldIndex) {
+      _currentIndex = newIndex;
+    } else if (oldIndex < _currentIndex && newIndex >= _currentIndex) {
+      _currentIndex -= 1;
+    } else if (oldIndex > _currentIndex && newIndex <= _currentIndex) {
+      _currentIndex += 1;
+    }
+
+    notifyListeners();
+  }
+
   void clearQueue() {
     _optimisticPosition = null;
     _optimisticDuration = null;
