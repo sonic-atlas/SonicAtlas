@@ -8,20 +8,12 @@ const router = Router();
 router.post('/login', async (req, res) => {
     const { password } = req.body;
 
-    if (!password) {
-        return res.status(400).json({
-            error: 'BAD_REQUEST',
-            code: 'AUTH_001',
-            message: 'Password is required'
-        });
-    }
-
     if (password !== process.env.SERVER_PASSWORD) {
         loginAttemptsTotal.inc({ status: 'failure' });
 
         return res.status(401).json({
             error: 'UNAUTHORIZED',
-            code: 'AUTH_002',
+            code: 'AUTH_001',
             message: 'Invalid password'
         });
     }

@@ -36,3 +36,4 @@ build/
 /openssl*/
 cmake-build-debug/
 .cxx/
+*.tar*

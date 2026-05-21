@@ -1,16 +1,11 @@
 <script lang="ts">
     import '@material/web/select/outlined-select.js';
     import '@material/web/select/select-option.js';
-    import type { Quality, TrackMetadata } from '$lib/types';
+    import type { Quality } from '$lib/types';
     import { apiGet } from '$lib/api';
     import { onMount } from 'svelte';
-
-    interface Props {
-        quality: Quality;
-        metadata: TrackMetadata | null;
-        trackId: string;
-    }
-    let { quality = $bindable(), trackId }: Props = $props();
+    import { engineState } from '$lib/stores/engineStore';
+    import { audioPlayer } from '$lib/engine';
 
     const qualities: { value: Quality; label: string; description: string }[] = [
         { value: 'auto', label: 'Auto', description: 'Adaptive Bitrate' },
@@ -20,9 +15,11 @@
         { value: 'hires', label: 'Hi-Res', description: 'FLAC Original' }
     ];
 
-    let sourceQuality = $state<Quality>(quality);
     let availableQualities = $state<Quality[]>([]);
     let isFirefox = $state<boolean>(false);
+
+    const currentTrack = $derived($engineState.track);
+    const currentQuality = $derived($engineState.quality);
 
     onMount(() => {
         isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
@@ -30,10 +27,10 @@
 
     async function loadAvailableQualities() {
         try {
-            const res = await apiGet(`/api/stream/${trackId}/quality`);
+            const res = await apiGet(`/api/stream/${audioPlayer.state.track!.id}/quality`);
             if (res.ok) {
                 const data = await res.json();
-                sourceQuality = data.sourceQuality || 'auto';
+                audioPlayer.setQuality(data.sourceQuality || 'auto');
                 availableQualities = data.availableQualities || [];
             }
         } catch (err) {
@@ -43,13 +40,15 @@
     }
 
     $effect(() => {
-        if (trackId) {
+        if (currentTrack?.id) {
             loadAvailableQualities().then(() => {
+                const quality = audioPlayer.state.quality;
+
                 if (quality !== 'auto' && !availableQualities.includes(quality)) {
-                    quality = 'auto';
+                    audioPlayer.setQuality('auto');
                 }
                 if (isFirefox && quality === 'hires') {
-                    quality = 'cd';
+                    audioPlayer.setQuality('cd');
                 }
             });
         }
@@ -74,10 +73,10 @@
     <md-outlined-select
         label="Playback Quality"
         class="qualityDropdown"
-        value={quality}
+        value={currentQuality}
         onchange={(e: Event) => {
             const target = e.target as HTMLSelectElement;
-            quality = target.value as Quality;
+            audioPlayer.setQuality(target.value as Quality);
         }}
     >
         {#each qualities as q (q.value)}
@@ -85,7 +84,7 @@
             <md-select-option value={q.value} disabled={!available}>
                 <div slot="headline">
                     {q.label}
-                    {#if q.value === sourceQuality}
+                    {#if q.value === currentQuality}
                         <span class="sourceBadge">Source</span>
                     {/if}
                 </div>

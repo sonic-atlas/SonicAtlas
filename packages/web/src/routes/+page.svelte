@@ -10,10 +10,11 @@
     import { apiGet } from '$lib/api';
     import { auth } from '$lib/stores/auth.svelte';
     import { onMount } from 'svelte';
+    import { audioPlayer } from '$lib/engine';
+    import { engineState } from '$lib/stores/engineStore';
 
     let tracks = $state<Track[]>([]);
-    let currentTrack = $state<Track | null>(null);
-    let selectedQuality = $state<'efficiency' | 'high' | 'cd' | 'hires'>('hires');
+    const currentTrack = $derived($engineState.track?.id);
 
     async function loadTracks() {
         if (!auth.isAuthenticated) return;
@@ -30,19 +31,15 @@
         }
     }
 
-    function handleTrackSelected(track: Track) {
-        currentTrack = track;
-    }
-
     function handleClosePlayer() {
         console.log('Player error, closing player.');
-        currentTrack = null;
+        audioPlayer.setTrack(null);
     }
 
     function handleLogout() {
         auth.clearToken();
         tracks = [];
-        currentTrack = null;
+        audioPlayer.setTrack(null);
     }
 
     function navigateToUpload() {
@@ -107,13 +104,13 @@
             </div>
 
             <div class="trackListContainer">
-                <TrackList {tracks} onTrackSelect={handleTrackSelected} currentTrackId={currentTrack?.id} />
+                <TrackList {tracks} />
             </div>
         </div>
 
         <div class="playerColumn">
             {#if currentTrack}
-                <Player bind:track={currentTrack} bind:quality={selectedQuality} oncloseplayer={handleClosePlayer} />
+                <Player oncloseplayer={handleClosePlayer} />
             {:else}
                 <div class="playerPlaceholder">
                     <h2>Now Playing</h2>

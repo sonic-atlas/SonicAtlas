@@ -9,17 +9,19 @@
     import '@material/web/checkbox/checkbox.js';
     import type { Track } from '$lib/types';
     import TrackItem from './TrackItem.svelte';
+    import { engineState } from '$lib/stores/engineStore';
+    import { audioPlayer } from '$lib/engine';
 
     interface Props {
         tracks: Track[];
-        onTrackSelect: (track: Track) => void;
-        currentTrackId?: string;
     }
 
-    let { tracks, onTrackSelect, currentTrackId }: Props = $props();
+    let { tracks }: Props = $props();
 
     let sortBy = $state<'year' | 'name' | 'artist'>('year');
     let sortMenuOpen = $state(false);
+
+    const currentTrackId = $derived($engineState.track?.id);
 
     type GroupedTrack =
         | { type: 'header'; title: string; subtitle: string; id: string }
@@ -180,7 +182,7 @@
                     <TrackItem
                         track={item.track}
                         isPlaying={currentTrackId === item.track.id}
-                        onClick={() => onTrackSelect(item.track)}
+                        onClick={() => audioPlayer.setTrack(item.track)}
                     />
                 {/if}
             {/each}

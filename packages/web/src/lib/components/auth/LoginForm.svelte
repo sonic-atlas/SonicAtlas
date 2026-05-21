@@ -1,15 +1,18 @@
 <script lang="ts">
     import { login } from '$lib/api';
+    import { audioPlayer } from '$lib/engine';
+    import { engineState } from '$lib/stores/engineStore';
+    import { onMount } from 'svelte';
 
     let password = $state('');
     let error = $state<string | null>(null);
-    let loading = $state(false);
+    const loading = $derived($engineState.loading);
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
         if (!password) return;
 
-        loading = true;
+        audioPlayer.setLoading(true);
         error = null;
 
         const result = await login(password);
@@ -18,8 +21,14 @@
             error = result.error || 'Authentication failed';
         }
 
-        loading = false;
+        audioPlayer.setLoading(false);
     }
+
+    onMount(async () => {
+        audioPlayer.setLoading(true);
+        await login(password);
+        audioPlayer.setLoading(false);
+    });
 </script>
 
 <div class="loginContainer">
