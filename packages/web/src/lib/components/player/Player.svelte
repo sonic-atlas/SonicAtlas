@@ -211,7 +211,7 @@
 
         <div class="volumeControls">
             <md-icon-button
-                onclick={audioPlayer.toggleMute}
+                onclick={audioPlayer.toggleMute.bind(audioPlayer)}
                 onkeydown={(e: KeyboardEvent) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         audioPlayer.toggleMute();
@@ -223,7 +223,7 @@
             >
                 <md-icon>{volume === 0 || isMuted ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}</md-icon>
             </md-icon-button>
-            <md-slider min="0" max="100" value={volume} oninput={audioPlayer.handleVolumeChange}></md-slider>
+            <md-slider min="0" max="100" value={volume} oninput={audioPlayer.handleVolumeChange.bind(audioPlayer)}></md-slider>
             <span class="volumeText">{Math.round(volume)}%</span>
         </div>
     </div>
