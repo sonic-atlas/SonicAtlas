@@ -20,7 +20,7 @@
     "generate-licenses": "node packages/shared/npm-licenses.js"
   },
   "devDependencies": {
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "concurrently": "^9.2.1"
