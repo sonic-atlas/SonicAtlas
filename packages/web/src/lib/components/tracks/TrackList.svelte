@@ -166,7 +166,7 @@
     {#if tracks.length === 0}
         <p>No tracks uploaded yet</p>
     {:else}
-        <md-list>
+        <md-list role="list">
             {#each displayItems as item (item.type === 'header' ? `h-${item.id}` : item.type === 'disc-header' ? `d-${item.id}` : item.track.id)}
                 {#if item.type === 'header'}
                     <div class="groupHeader">

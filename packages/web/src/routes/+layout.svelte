@@ -72,6 +72,7 @@
 
 <svelte:head>
     <link rel="icon" href={favicon} />
+    <title>Sonic Atlas</title>
 </svelte:head>
 
 {@render children?.()}

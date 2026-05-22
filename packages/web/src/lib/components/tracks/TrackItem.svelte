@@ -73,16 +73,8 @@
                 <img use:lazyLoad={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
                 <md-icon
                     class="overlayIcon"
-                    tabindex="0"
-                    role="button"
+                    aria-hidden="true"
                     onclick={coverArtClicked}
-                    aria-label={`${isPlayingAudio && isPlaying ? `Pause ` : `Play`} ${track.metadata?.title}`}
-                    onkeydown={(e: KeyboardEvent) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        coverArtClicked();
-                        }
-                    }}
                     filled
                 >
                     {isPlayingAudio && isPlaying ? 'pause' : 'play_arrow'}
