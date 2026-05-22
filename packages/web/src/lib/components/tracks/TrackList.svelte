@@ -74,7 +74,7 @@
                 result.push({
                     type: 'header',
                     title: rep.releaseTitle,
-                    subtitle: `${rep.releaseArtist} • ${rep.releaseYear}`,
+                    subtitle: `${rep.releaseArtist ? `${rep.releaseArtist}  •  `: ''}${rep.releaseYear}`,
                     id: key
                 });
             }
@@ -227,6 +227,7 @@
     .groupSubtitle {
         font-family: var(--md-sys-typescale-body-small-font);
         color: var(--text-secondary-color);
+        white-space: pre;
     }
 
     .discHeader {

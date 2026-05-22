@@ -51,3 +51,7 @@
   --md-sys-typescale-display-medium-font: 'Barlow', sans-serif;
   --md-sys-typescale-display-small-font: 'Barlow', sans-serif;
 }
+
+/* md-outlined-button md-ripple .surface::before {
+  transition: opacity 300ms linear, background-color 300ms linear;
+} */

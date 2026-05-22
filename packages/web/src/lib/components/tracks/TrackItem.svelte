@@ -4,6 +4,8 @@
     import type { Track } from '$lib/types';
 
     import { API_BASE_URL } from '$lib/api';
+    import { audioPlayer } from '$lib/engine';
+    import { engineState } from '$lib/stores/engineStore';
 
     interface Props {
         track: Track;
@@ -12,6 +14,17 @@
     }
 
     let { track, isPlaying, onClick }: Props = $props();
+
+    const isPlayingAudio = $derived($engineState.isPlaying);
+
+    function coverArtClicked() {
+        if (!audioPlayer.state.track || audioPlayer.state.track.id != track.id) {
+            audioPlayer.setTrack(track);
+            audioPlayer.setIsPlaying(false);
+        }
+
+        audioPlayer.togglePlay();
+    }
 
     function formatDuration(seconds: number): string {
         const min = Math.floor(seconds / 60);
@@ -58,6 +71,22 @@
         <div class="thumbnail">
             {#if track.coverArtPath}
                 <img use:lazyLoad={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
+                <md-icon
+                    class="overlayIcon"
+                    tabindex="0"
+                    role="button"
+                    onclick={coverArtClicked}
+                    aria-label={`${isPlayingAudio && isPlaying ? `Pause ` : `Play`} ${track.metadata?.title}`}
+                    onkeydown={(e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        coverArtClicked();
+                        }
+                    }}
+                    filled
+                >
+                    {isPlayingAudio && isPlaying ? 'pause' : 'play_arrow'}
+                </md-icon>
             {:else}
                 <div class="placeholder">
                     <md-icon>music_note</md-icon>
@@ -138,12 +167,46 @@
         overflow: hidden;
         background: var(--surface-variant);
         flex-shrink: 0;
+
+        position: relative;
+    }
+
+    .thumbnail::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: black;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+
+    .thumbnail:hover::after {
+        opacity: 0.35;
     }
 
     .thumbnail img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    .thumbnail .overlayIcon {
+        position: absolute;
+        inset: 0;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #e3e3e3;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .thumbnail:hover .overlayIcon {
+        opacity: 1;
     }
 
     .placeholder {
@@ -205,6 +268,11 @@
         border-radius: 4px;
         font-family: var(--md-sys-typescale-label-small-font);
         opacity: 0.8;
+        transition: background 0.3s ease;
+    }
+    
+    .badge:hover {
+        background: var(--surface-highest);
     }
 
     .duration {

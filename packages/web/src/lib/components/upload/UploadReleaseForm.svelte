@@ -301,7 +301,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1rem;
         background: var(--surface-color);
         color: var(--text-secondary-color);
     }
@@ -356,6 +355,10 @@
         gap: 1rem;
     }
 
+    .fileInputWrapper md-outlined-button {
+        transition: background 0.3s ease;
+    }
+
     .fileName {
         color: var(--text-secondary-color);
         font-size: 0.9rem;
@@ -365,6 +368,8 @@
     }
 
     .uploadIcon {
+        height: 48px;
+        width: 48px;
         font-size: 48px;
     }
 

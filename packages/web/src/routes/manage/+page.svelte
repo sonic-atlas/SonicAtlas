@@ -3,10 +3,20 @@
     import { invalidateAll } from '$app/navigation';
     import '@material/web/button/filled-button.js';
     import '@material/web/button/outlined-button.js';
+    import '@material/web/icon/icon.js'
 
     let { data } = $props();
     let releases = $derived(data.releases);
     let deleting = $state<string | null>(null);
+
+    let brokenImages = $state<Set<string>>(new Set());
+
+    // In future use SVG for no coverArt and red version of SVG for failure to make
+    // this more apparent
+    function markBrokenImage(id: string) {
+        brokenImages = new Set(brokenImages).add(id);
+        console.log('Image failed to load: ', id);
+    }
 
     async function deleteRelease(id: string) {
         if (!confirm('Are you sure you want to delete this release? This will delete all associated tracks and files.'))
@@ -33,18 +43,21 @@
         {#each releases as release (release.id)}
             <div class="releaseItem">
                 <div class="releaseContent">
-                    {#if release.coverArtPath}
+                    {#if release.coverArtPath && !brokenImages.has(release.id)}
                         <img
                             src="{API_BASE_URL}{release.coverArtPath}?size=small"
                             alt={release.title}
                             class="coverArt"
+                            onerror={() => markBrokenImage(release.id)}
                         />
+                    {:else if !brokenImages.has(release.id)}
+                        <md-icon class="coverPlaceholder">album</md-icon>
                     {:else}
-                        <div class="coverPlaceholder">💿</div>
+                        <md-icon class="coverPlaceholder error">broken_image</md-icon>
                     {/if}
                     <div class="info">
                         <h3>{release.title}</h3>
-                        <p>{release.primaryArtist} • {release.year} • {release.releaseType}</p>
+                        <p style="white-space:pre">{release.primaryArtist}  •  {release.year}  •  {release.releaseType}</p>
                     </div>
                 </div>
                 <div class="actions">
@@ -119,6 +132,11 @@
         background: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
         font-size: 24px;
+    }
+
+    .coverPlaceholder.error {
+        color: var(--error-color);
+        opacity: 0.7;
     }
 
     .info h3 {
