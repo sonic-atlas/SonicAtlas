@@ -2,4 +2,4 @@
 NIXPACKS_NODE_VERSION = "25"
 
 [phases.setup]
-nixPkgs = ["...", "ffmpeg"]
+nixPkgs = ["nodejs_25", "ffmpeg"]
