@@ -1,5 +1,7 @@
-[variables]
-NIXPACKS_NODE_VERSION = "25"
-
 [phases.setup]
-nixPkgs = ["nodejs_25", "ffmpeg"]
+nixPkgs = ["ffmpeg", "curl"]
+
+cmd = [
+    "curl -fsSL https://deb.nodesource.com/setup_26.x | bash -",
+    "apt-get install -y nodejs"
+]
