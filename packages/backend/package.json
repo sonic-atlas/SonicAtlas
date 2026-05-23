@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node check-node-version.js && node --env-file=../../.env --conditions development --watch src/index.ts",
     "build": "tsc",
-    "start": "node --env-file=../../.env dist/src/index.js",
+    "start": "node --env-file-if-exists=../../.env dist/src/index.js",
     "check": "tsc --noEmit",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
