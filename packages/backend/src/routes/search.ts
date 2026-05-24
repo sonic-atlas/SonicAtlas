@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '#db/db';
 import { trackMetadata, releases, releaseTracks, tracks } from '#db/schema';
-import { sql, SQL } from 'drizzle-orm';
+import { Column, sql, SQL } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.ts';
 import { logger } from '../utils/logger.ts';
 import type { PgColumn } from 'drizzle-orm/pg-core';
@@ -55,6 +55,55 @@ LIMIT ${limit} OFFSET ${offset}
 `;
 }
 
+function parseStringField(values: string[], column: Column): SQL[] {
+    const orGroups: { and: string[], not: string[] }[] = [];
+
+    for (const raw of values) {
+        const tokens = raw.split('+').map(v => v.trim().replace(/^["']|["']$/g, ''));
+
+        let and: string[] = [];
+        let not: string[] = [];
+
+        for (const t of tokens) {
+            if (!t) continue;
+
+            if (t.startsWith('-')) {
+                not.push(t.slice(1));
+            } else {
+                and.push(t);
+            }
+        }
+
+        if (and.length || not.length) {
+            orGroups.push({ and, not });
+        }
+    }
+
+    const sqlGroups = orGroups.map(g => {
+        const andPart = g.and.length
+            ? sql`(${sql.join(
+                g.and.map(x =>
+                    sql`${column}::text ILIKE '%' || ${x} || '%'`
+                ),
+                sql` AND `
+            )})`
+            : sql``;
+
+        const notPart = g.not.length
+            ? sql`NOT (${sql.join(
+                g.not.map(x =>
+                    sql`${column}::text ILIKE '%' || ${x} || '%'`
+                ),
+                sql` OR `
+            )})`
+            : sql``;
+
+        return g.not.length ? g.and.length ? sql`(${andPart} AND ${notPart})` : notPart : andPart;
+    });
+
+    return sqlGroups;
+}
+
 router.get('/', authMiddleware, async (req, res) => {
     try {
         let { q, limit, offset } = req.query;
@@ -64,21 +113,38 @@ router.get('/', authMiddleware, async (req, res) => {
         const numLimit = Number.isFinite(Number(limit)) ? Number(limit) : 50;
         const numOffset = Number.isFinite(Number(offset)) ? Number(offset) : 0;
 
-        const fieldRegex = /(\w+):([^\s]+)/g;
+        const fieldRegex = /(-?)(\w+):(["'].*?["']|[^ ]+)/g;
         const generalTerms: string[] = [];
-        const filters: Record<string, string[]> = {}
+        const filters: Record<string, { values: string[], negated: boolean }> = {}
 
         let match: RegExpExecArray | null;
         let remainingQuery = q;
 
         while ((match = fieldRegex.exec(q)) !== null) {
-            // I hate this cast I hate TypeScript but I don't want a runtime check that will never not happen
-            const [full, field, value] = match as unknown as [string, string, string];
-            filters[field.toLowerCase()] = value.split(',');
-            remainingQuery = remainingQuery.replace(full, '').trim();
+            const [full, neg, field, value] = match;
+            
+            const key = field!.toLowerCase();
+            const isNegated = neg === '-';
+
+            if (!filters[key]) filters[key] = { values: [], negated: isNegated };
+            
+            filters[key].values.push(
+                ...value!
+                    .split(',')
+                    .flatMap(v => v.split('+'))
+                    .map(v => v.trim().replace(/^["']|["']$/g, ''))
+                    .filter(Boolean)
+            );
+
+            // Make whole field negated if one instance of it is negated
+            // Can change later to allow field:name -field:name2
+            filters[key].negated = filters[key].negated || isNegated;
+            
+            remainingQuery = remainingQuery.replace(full, '');
         }
 
-        generalTerms.push(...remainingQuery.split(/\s+/).filter(Boolean));
+        remainingQuery = remainingQuery.replace(/\s+/, ' ').trim();
+        generalTerms.push(...remainingQuery.split(' ').filter(Boolean));
 
         // Sanitise the to_tsquery term so syntax errors don't occur and error by removing all tsquery operators
         const sanitiseTsTerm = (term: string) => term.toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
@@ -111,17 +177,32 @@ router.get('/', authMiddleware, async (req, res) => {
             }
         }
 
-        for (const [field, values] of Object.entries(filters)) {
+        const handleStringField = (field: string, col: Column) => {
+            const groups = parseStringField(filters[field]!.values, col);
+
+            if (groups.length) {
+                if (filters[field]!.negated) {
+                    whereClauses.push(sql`NOT ${sql.join(groups, sql` AND `)}`);
+                } else {
+                    whereClauses.push(sql.join(groups, sql` AND `));
+                }
+            }
+        }
+
+        for (const [field, { values }] of Object.entries(filters)) {
+
             switch (field) {
-                case 'artist':
-                    whereClauses.push(sql`${sql.join(values.map(v => sql`${trackMetadata.artist} ILIKE '%' || ${v} || '%'`), sql` OR `)})`);
+                case 'artist': {
+                    handleStringField('artist', trackMetadata.artist);
                     break;
+                }
                 case 'album':
-                    whereClauses.push(sql`(${sql.join(values.map(v => sql`${releases.title} ILIKE '%' || ${v} || '%'`), sql` OR `)})`);
+                    handleStringField('album', releases.title);
                     break;
-                case 'genre':
-                    whereClauses.push(sql`(${sql.join(values.map(v => sql`${trackMetadata.genres}::text ILIKE '%' || ${v} || '%'`), sql` OR `)})`);
+                case 'genre': {
+                    handleStringField('genre', trackMetadata.genres);
                     break;
+                }
                 case 'year':
                     whereClauses.push(sql`(${sql.join(values.map(v => {
                         return handleNumberFields(releases.year, v);
