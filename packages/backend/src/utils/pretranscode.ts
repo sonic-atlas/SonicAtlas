@@ -106,7 +106,8 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
     }
 
     const masterFile = path.join(outputDir, 'master.m3u8');
-    const masterContent = Object.entries(qualities).map(([quality, opts]) => {
+    const masterContent = availableQualities.map((quality) => {
+        const opts = qualities[quality];
         const bandwidth = opts.bitrate ? parseInt(opts.bitrate) * 8 : quality === 'high' ? 5000000 : 1411000;
         return (
             `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},NAME="${quality.toUpperCase()}"\n` +

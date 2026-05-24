@@ -206,27 +206,28 @@ router.get('/:trackId/:quality/:segment', async (req, res) => {
 
     const stats = await fs.promises.stat(filepath);
 
-    const headers = {
-        'Content-Type': segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4',
-        'Cache-Control': 'public, max-age=31536000, immutable'
-    };
+    res.setHeader('Content-Type', segment.endsWith('.ts') ? 'video/mp2t' : 'audio/mp4');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
     if (sessionId) {
         registerPlaybackActivity(sessionId);
     }
 
-    res.sendFile(filepath, { headers }, (err) => {
-        if (err) {
-            console.error(`Error serving file ${filepath}:`, err);
-            if (!res.headersSent) {
-                res.status(500).send('Stream error');
-            }
-        } else {
-            streamBytesTotal.inc({
-                quality
-            }, stats.size);
-        }
+    const stream = fs.createReadStream(filepath);
+
+    stream.on('open', () => {
+        streamBytesTotal.inc({ quality }, stats.size);
     });
+
+    stream.on('error', (err) => {
+        console.error('Segment stream error', err);
+    });
+
+    res.on('close', () => {
+        stream.destroy();
+    });
+
+    stream.pipe(res);
 });
 
 export default router;
