@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '#db/db';
 import { trackMetadata, releases, releaseTracks, tracks } from '#db/schema';
-import { Column, sql, SQL } from 'drizzle-orm';
+import { sql, SQL } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.ts';
 import { logger } from '../utils/logger.ts';
 import type { PgColumn } from 'drizzle-orm/pg-core';
@@ -55,7 +55,7 @@ LIMIT ${limit} OFFSET ${offset}
 `;
 }
 
-function parseStringField(values: string[], column: Column): SQL[] {
+function parseStringField(values: string[], column: PgColumn): SQL[] {
     const orGroups: { and: string[], not: string[] }[] = [];
 
     for (const raw of values) {
@@ -177,7 +177,7 @@ router.get('/', authMiddleware, async (req, res) => {
             }
         }
 
-        const handleStringField = (field: string, col: Column) => {
+        const handleStringField = (field: string, col: PgColumn) => {
             const groups = parseStringField(filters[field]!.values, col);
 
             if (groups.length) {
@@ -192,17 +192,15 @@ router.get('/', authMiddleware, async (req, res) => {
         for (const [field, { values }] of Object.entries(filters)) {
 
             switch (field) {
-                case 'artist': {
+                case 'artist':
                     handleStringField('artist', trackMetadata.artist);
                     break;
-                }
                 case 'album':
                     handleStringField('album', releases.title);
                     break;
-                case 'genre': {
+                case 'genre':
                     handleStringField('genre', trackMetadata.genres);
                     break;
-                }
                 case 'year':
                     whereClauses.push(sql`(${sql.join(values.map(v => {
                         return handleNumberFields(releases.year, v);
