@@ -6,7 +6,8 @@ import 'oss_licenses.dart';
 const generatedExtraPackages = <Package>[
   Package(
     name: 'FFmpeg',
-    description: 'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
+    description:
+        'FFmpeg is a collection of libraries and tools to process multimedia content such as audio, video, subtitles and related metadata.',
     authors: ['FFmpeg developers'],
     version: '8.0.1',
     isMarkdown: false,
@@ -515,7 +516,8 @@ For more information, please refer to <http://unlicense.org/>
   ),
   Package(
     name: 'OpenSSL',
-    description: 'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
+    description:
+        'OpenSSL is a robust, commercial-grade, full-featured Open Source Toolkit for the Transport Layer Security (TLS, formerly SSL), Datagram TLS (DTLS), and QUIC protocols.',
     authors: ['OpenSSL Project Authors'],
     version: '3.6.1',
     isMarkdown: false,

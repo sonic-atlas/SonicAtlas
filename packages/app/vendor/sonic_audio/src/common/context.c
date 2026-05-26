@@ -74,8 +74,6 @@ int sonic_audio_init_context(void) {
   g_sonic.player.volume = 1.0f;
   g_sonic.player.is_initialized = 0;
 
-  g_sonic.recorder.is_initialized = 0;
-
   g_sonic.is_initialized = 1;
   return 0;
 }
@@ -85,7 +83,6 @@ void sonic_audio_dispose_context(void) {
 
   sonic_audio_player_stop();
 
-  sonic_audio_recorder_stop();
 
   ma_context_uninit(&g_sonic.ma_ctx);
 

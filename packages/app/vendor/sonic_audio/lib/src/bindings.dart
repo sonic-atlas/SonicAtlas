@@ -72,52 +72,6 @@ typedef GetCaptureDeviceInfoC =
 typedef GetCaptureDeviceInfoDart =
     void Function(int index, Pointer<SonicDeviceInfo> info);
 
-typedef RecorderStartC =
-    Int32 Function(
-      Int32 deviceIndex,
-      Int32 sampleRate,
-      Int32 channels,
-      Int32 bitDepth,
-    );
-typedef RecorderStartDart =
-    int Function(int deviceIndex, int sampleRate, int channels, int bitDepth);
-
-typedef RecorderStartFileC =
-    Int32 Function(
-      Int32 deviceIndex,
-      Int32 sampleRate,
-      Int32 channels,
-      Int32 bitDepth,
-      Pointer<Utf8> filePath,
-    );
-typedef RecorderStartFileDart =
-    int Function(
-      int deviceIndex,
-      int sampleRate,
-      int channels,
-      int bitDepth,
-      Pointer<Utf8> filePath,
-    );
-
-typedef RecorderSetMonitorC = Void Function(Int32 enable);
-typedef RecorderSetMonitorDart = void Function(int enable);
-
-typedef RecorderGetRmsC = Float Function();
-typedef RecorderGetRmsDart = double Function();
-
-typedef RecorderStopC = Int32 Function();
-typedef RecorderStopDart = int Function();
-
-typedef RecorderReadS16C =
-    Int32 Function(Pointer<Int16> output, Int32 frameCount);
-typedef RecorderReadS16Dart =
-    int Function(Pointer<Int16> output, int frameCount);
-
-typedef RecorderReadS32C =
-    Int32 Function(Pointer<Int32> output, Int32 frameCount);
-typedef RecorderReadS32Dart =
-    int Function(Pointer<Int32> output, int frameCount);
-
 final class SonicDeviceInfo extends Struct {
   @Array(256)
   external Array<Uint8> name;
@@ -159,14 +113,6 @@ class SonicAudioBindings {
   late final GetPlaybackDeviceInfoDart getPlaybackDeviceInfo;
   late final GetCaptureDeviceCountDart getCaptureDeviceCount;
   late final GetCaptureDeviceInfoDart getCaptureDeviceInfo;
-
-  late final RecorderStartDart recorderStart;
-  late final RecorderStartFileDart recorderStartFile;
-  late final RecorderStopDart recorderStop;
-  late final RecorderReadS16Dart recorderReadS16;
-  late final RecorderReadS32Dart recorderReadS32;
-  late final RecorderSetMonitorDart recorderSetMonitor;
-  late final RecorderGetRmsDart recorderGetRms;
 
   SonicAudioBindings(this._lib) {
     init = _lib.lookupFunction<SonicInitC, SonicInitDart>('sonic_audio_init');
@@ -246,32 +192,6 @@ class SonicAudioBindings {
         .lookupFunction<GetCaptureDeviceInfoC, GetCaptureDeviceInfoDart>(
           'sonic_audio_get_capture_device_info',
         );
-
-    recorderStart = _lib.lookupFunction<RecorderStartC, RecorderStartDart>(
-      'sonic_audio_recorder_start',
-    );
-    recorderStartFile = _lib
-        .lookupFunction<RecorderStartFileC, RecorderStartFileDart>(
-          'sonic_audio_recorder_start_file',
-        );
-    recorderStop = _lib.lookupFunction<RecorderStopC, RecorderStopDart>(
-      'sonic_audio_recorder_stop',
-    );
-    recorderReadS16 = _lib
-        .lookupFunction<RecorderReadS16C, RecorderReadS16Dart>(
-          'sonic_audio_recorder_read_s16',
-        );
-    recorderReadS32 = _lib
-        .lookupFunction<RecorderReadS32C, RecorderReadS32Dart>(
-          'sonic_audio_recorder_read_s32',
-        );
-    recorderSetMonitor = _lib
-        .lookupFunction<RecorderSetMonitorC, RecorderSetMonitorDart>(
-          'sonic_audio_recorder_set_monitor',
-        );
-    recorderGetRms = _lib.lookupFunction<RecorderGetRmsC, RecorderGetRmsDart>(
-      'sonic_audio_recorder_get_rms',
-    );
   }
 }
 

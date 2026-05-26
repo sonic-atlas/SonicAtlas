@@ -3,7 +3,6 @@ set(SOURCE_FILES
         internal.h
         common/context.c
         common/discovery.c
-        recorder/capture.c
         player/decoder.h
         player/decoder.c
         player/player.c

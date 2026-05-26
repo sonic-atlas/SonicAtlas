@@ -133,35 +133,9 @@ typedef struct {
 #define SA_LOAD_ERR (2)
 
 typedef struct {
-  ma_device device;
-  int is_initialized;
-  ma_audio_ring_buffer capture_buffer;
-
-  ma_device monitor_device;
-  int is_monitor_initialized;
-  ma_audio_ring_buffer monitor_buffer;
-
-  ma_format format;
-  int sample_rate;
-  int channels;
-
-  AVFormatContext* out_fmt_ctx;
-  AVCodecContext* out_codec_ctx;
-  AVStream* out_stream;
-
-  int is_recording_to_file;
-  sa_thread_t encoder_thread;
-  volatile int should_stop_encoder;
-
-  volatile int is_monitoring;
-  volatile float current_rms;
-} RecorderState;
-
-typedef struct {
   ma_context ma_ctx;
   int is_initialized;
   PlayerState player;
-  RecorderState recorder;
   sa_thread_mutex_t lock;
   sa_thread_mutex_t load_mutex;
 } SonicContext;
