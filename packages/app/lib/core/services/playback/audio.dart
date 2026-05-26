@@ -359,10 +359,6 @@ Quality: ${selectedQuality.value}''');
       return;
     }
 
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-
     final track = _queue.removeAt(oldIndex);
     _queue.insert(newIndex, track);
 

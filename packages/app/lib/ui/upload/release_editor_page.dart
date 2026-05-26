@@ -264,8 +264,7 @@ class _ReleaseEditorPageState extends State<ReleaseEditorPage> {
                     physics: const NeverScrollableScrollPhysics(),
                     buildDefaultDragHandles: true,
                     itemCount: discTracks.length,
-                    onReorder: (oldIndex, newIndex) {
-                      if (oldIndex < newIndex) newIndex -= 1;
+                    onReorderItem: (int oldIndex, int newIndex) {
                       final item = discTracks.removeAt(oldIndex);
                       discTracks.insert(newIndex, item);
 
