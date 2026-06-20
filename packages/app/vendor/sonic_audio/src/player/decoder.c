@@ -83,8 +83,8 @@ int decoder_open(DecoderState* state, const char* url, const char* headers, int 
   av_dict_set(&options, "reconnect_streamed", "1", 0);
   av_dict_set(&options, "reconnect_on_network_error", "1", 0);
   av_dict_set(&options, "reconnect_delay_max", "5", 0);
-  av_dict_set(&options, "probesize", "10000000", 0);       // 10MB
-  av_dict_set(&options, "analyzeduration", "5000000", 0);  // 5s
+  av_dict_set(&options, "probesize", "500000", 0);         // 500KB
+  av_dict_set(&options, "analyzeduration", "1000000", 0);  // 500ms
   av_dict_set(&options, "rw_timeout", "20000000", 0);      // 20s timeout
 
 #ifndef _WIN32
