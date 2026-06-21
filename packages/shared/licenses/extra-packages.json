@@ -5,7 +5,7 @@
     "authors": [
       "FFmpeg developers"
     ],
-    "version": "8.0.1",
+    "version": "8.1.1",
     "licenseFile": "ffmpeg.txt",
     "isMarkdown": false,
     "isSdk": false,
@@ -35,7 +35,7 @@
     "authors": [
       "OpenSSL Project Authors"
     ],
-    "version": "3.6.1",
+    "version": "3.6.3",
     "licenseFile": "openssl.txt",
     "isMarkdown": false,
     "isSdk": false,

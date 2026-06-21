@@ -4,8 +4,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-FFMPEG_VERSION="8.0.1"
-OPENSSL_VERSION="3.6.1"
+FFMPEG_VERSION="8.1.1"
+OPENSSL_VERSION="3.6.3"
 ARCH="linux-x64"
 PREFIX="$(pwd)/dependencies/$ARCH"
 
