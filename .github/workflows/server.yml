@@ -36,7 +36,7 @@ jobs:
         with:
           images: ghcr.io/sonic-atlas/sonicatlas-backend
           tags: |
-            type=edge,branch=$repo.default_branch
+            type=edge
             type=sha,format=short
             type=semver,pattern={{version}}
 
@@ -46,7 +46,7 @@ jobs:
         with:
           images: ghcr.io/sonic-atlas/sonicatlas-web
           tags: |
-            type=edge,branch=$repo.default_branch
+            type=edge
             type=sha,format=short
             type=semver,pattern={{version}}
 
