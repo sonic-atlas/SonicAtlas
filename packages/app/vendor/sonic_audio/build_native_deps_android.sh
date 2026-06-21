@@ -4,8 +4,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-FFMPEG_VERSION="8.0.1"
-OPENSSL_VERSION="3.6.1"
+FFMPEG_VERSION="8.1.1"
+OPENSSL_VERSION="3.6.3"
 HOST_TAG="linux-x86_64"
 # This is the version flutter currently uses.
 TOOLCHAIN="$NDK_HOME/28.2.13676358/toolchains/llvm/prebuilt/$HOST_TAG"
