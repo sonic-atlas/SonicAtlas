@@ -1,8 +1,8 @@
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { auth } from './stores/auth.svelte';
 import type { Quality } from './types';
 
-const API_BASE_URL = PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
 
 export function getAuthHeaders(): HeadersInit {
     const token = auth.token;

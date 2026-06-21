@@ -1,0 +1,69 @@
+name: Server Registry Workflow
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Backend
+        id: metadata-backend
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/sonic-atlas/sonicatlas-backend
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=sha,format=short
+            type=semver,pattern={{version}}
+
+      - name: Extract metadata for Web
+        id: metadata-web
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/sonic-atlas/sonicatlas-web
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=sha,format=short
+            type=semver,pattern={{version}}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: true
+          tags: ${{ steps.metadata-backend.outputs.tags }}
+          labels: ${{ steps.metadata-backend.outputs.labels }}
+
+      - name: Build and Push Web
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.web
+          push: true
+          tags: ${{ steps.metadata-web.outputs.tags }}
+          labels: ${{ steps.metadata-web.outputs.labels }}

@@ -1,5 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 class SocketStore {
     socket: Socket | null = $state(null);
@@ -8,7 +8,7 @@ class SocketStore {
     connect() {
         if (this.socket) return;
 
-        let url = PUBLIC_API_URL;
+        let url = env.PUBLIC_API_URL;
         if (!url && typeof window !== 'undefined') {
             const protocol = window.location.protocol;
             const hostname = window.location.hostname;
