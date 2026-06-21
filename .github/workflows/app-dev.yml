@@ -9,7 +9,7 @@ on:
       - 'packages/packaging/**'
 
 jobs:
-  build-linux:
+  build_linux:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
@@ -24,8 +24,8 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
           cache: true
+          channel: 'stable'
 
       - name: Build Linux targets
         run: |
@@ -33,9 +33,10 @@ jobs:
           flutter pub get
           dart run dart_pubspec_licenses:generate
           dart run ../packaging/common/gen_extra_licenses.dart
+          ./vendor/sonic_audio/build_native_deps_linux.sh
           flutter build linux --release
           cd ../../
-          
+
           ./packages/packaging/linux/tarball.sh
           ./packages/packaging/linux/appimage.sh
 
@@ -45,7 +46,7 @@ jobs:
           name: linux-artifacts
           path: packages/packaging/dist/*
 
-  build-android:
+  build_android:
     name: Build Android
     runs-on: ubuntu-latest
     steps:
@@ -55,29 +56,29 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
+          cache: 'gradle'
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
           cache: true
+          channel: 'stable'
 
       - name: Decode Keystore and create Properties
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > packages/app/android/app/release-keystore.jks
-          
+
           cat <<EOF > packages/app/android/key.properties
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEYSTORE_PASSWORD
           keyAlias=release
           storeFile=app/release-keystore.jks
           EOF
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
       - name: Generate Licenses
         run: |
@@ -87,9 +88,9 @@ jobs:
           dart run ../packaging/common/gen_extra_licenses.dart
 
       - name: Build Native Dependencies
-        env:
-          NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk
-        run: ./packages/app/vendor/sonic_audio/build_native_deps_android.sh
+        run: |
+          export NDK_HOME="$ANDROID_HOME/ndk"
+          ./packages/app/vendor/sonic_audio/build_native_deps_android.sh
 
       - name: Build Android APKs
         run: ./packages/packaging/linux/android.sh
