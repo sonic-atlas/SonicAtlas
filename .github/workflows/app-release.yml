@@ -24,13 +24,23 @@ jobs:
           cache: true
           channel: 'stable'
 
+      - name: Cache Native Dependencies (Linux)
+        id: cache_linux_deps
+        uses: actions/cache@v5
+        with:
+          key: linux-deps-${{ hashFiles('packages/app/vendor/sonic_audio/build_native_deps_linux.sh') }}
+          path: packages/app/vendor/sonic_audio/dependencies/linux-x64
+
+      - name: Build Native Dependencies
+        if: steps.cache_linux_deps.outputs.cache-hit != 'true'
+        run: ./packages/app/vendor/sonic_audio/build_native_deps_linux.sh
+
       - name: Build Linux targets
         run: |
           cd packages/app
           flutter pub get
           dart run dart_pubspec_licenses:generate
           dart run ../packaging/common/gen_extra_licenses.dart
-          ./vendor/sonic_audio/build_native_deps_linux.sh
           flutter build linux --release
           cd ../../
 
@@ -52,7 +62,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           cache: 'gradle'
           distribution: 'zulu'
@@ -85,7 +95,15 @@ jobs:
           dart run dart_pubspec_licenses:generate
           dart run ../packaging/common/gen_extra_licenses.dart
 
+      - name: Cache Native Dependencies (Android)
+        id: cache_android_deps
+        uses: actions/cache@v5
+        with:
+          key: android-deps-${{ hashFiles('packages/app/vendor/sonic_audio/build_native_deps_android.sh') }}
+          path: packages/app/vendor/sonic_audio/dependencies/android
+
       - name: Build Native Dependencies
+        if: steps.cache_android_deps.outputs.cache-hit != 'true'
         run: |
           export NDK_HOME="$ANDROID_HOME/ndk"
           ./packages/app/vendor/sonic_audio/build_native_deps_android.sh

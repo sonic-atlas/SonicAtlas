@@ -12,10 +12,10 @@ import { getFolderSize, storageBytes } from '../services/metrics/storageMetrics.
 const STORAGE_PATH = path.join($rootDir, process.env.STORAGE_PATH || 'storage', 'hls');
 const useFmp4 = Boolean(process.env.HLS_USE_FMP4 ?? true);
 
-const qualities: Record<Exclude<Quality, 'auto'>, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, bufsize?: string, audioBitrate?: string | null }> = {
+const qualities: Record<Exclude<Quality, 'auto'>, { bitrate?: string, codec: string, maxRate?: string, sampleRate?: string, sampleFmt?: string, bufsize?: string, audioBitrate?: string | null }> = {
     efficiency: { bitrate: '128k', codec: 'libopus', maxRate: '128k', bufsize: '256k' },
     high: { bitrate: '320k', codec: 'libopus', maxRate: '320k', bufsize: '640k' },
-    cd: { codec: 'flac', sampleRate: '44100', audioBitrate: null },
+    cd: { codec: 'flac', sampleRate: '44100', sampleFmt: 's16', audioBitrate: null },
     hires: { codec: 'flac', audioBitrate: null }
 }
 
@@ -42,6 +42,7 @@ export async function generateHLS(track: InferSelectModel<typeof tracks>, inputF
             '-acodec', opts.codec,
             ...(opts.bitrate ? ['-b:a', opts.bitrate] : []),
             ...(opts.sampleRate ? ['-ar', opts.sampleRate] : []),
+            ...(opts.sampleFmt ? ['-sample_fmt', opts.sampleFmt] : []),
             '-f', 'hls',
             '-hls_time', '10',
             '-hls_playlist_type', 'vod',
