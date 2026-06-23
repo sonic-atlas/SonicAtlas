@@ -113,20 +113,18 @@ else
   log_info "Docker missing or outdated."
   
   log_step "Updating package lists..."
-  apt-get update
+  apt-get update -qq
 
   OS_ID=$(. /etc/os-release && echo "$ID")
   
   if [ "$OS_ID" = "ubuntu" ]; then
-    COMPOSE_PKG="docker-compose-v2"
-    DOCKER_PKG="docker.io"
+    DOCKER_PKGS="docker.io docker-compose-v2"
   else
-    COMPOSE_PKG="docker-compose"
-    DOCKER_PKG="docker-cli"
+    DOCKER_PKGS="docker.io docker-cli docker-compose"
   fi
 
   log_step "Installing Docker"
-  apt-get install -y "$DOCKER_PKG" "$COMPOSE_PKG"
+  apt-get install -y -qq $DOCKER_PKGS
 
   log_success "Docker installed successfully."
 fi
@@ -137,10 +135,10 @@ else
   log_info "ffmpeg missing or outdated."
 
   log_step "Updating package lists..."
-  apt-get update
+  apt-get update -qq
    
   log_step "Installing ffmpeg"
-  apt-get install -y ffmpeg
+  apt-get install -y -qq ffmpeg
   
   log_success "ffmpeg installed successfully."
 fi
