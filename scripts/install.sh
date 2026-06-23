@@ -4,19 +4,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# --- Validation ---
-
-if [ "$EUID" -ne 0 ]; then
-  log_error "Please run this script as root or with sudo."
-  exit 1
-fi
-
-OS_ID=$(. /etc/os-release && echo "$ID")
-if [[ "$OS_ID" != "ubuntu" && "$OS_ID" != "debian" ]]; then
-  log_error "This script currently only supports Debian and Ubuntu."
-  exit 1
-fi
-
 # --- Helpers ---
 
 export RED='\033[0;31m'
@@ -69,6 +56,21 @@ print_section() {
   echo -e "${BOLD}$1${NC}"
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
+
+# --- Validation ---
+
+if [ "$EUID" -ne 0 ]; then
+  log_error "Please run this script as root or with sudo."
+  exit 1
+fi
+
+OS_ID=$(. /etc/os-release && echo "$ID")
+if [[ "$OS_ID" != "ubuntu" && "$OS_ID" != "debian" ]]; then
+  log_error "This script currently only supports Debian and Ubuntu."
+  exit 1
+fi
+
+# --- Functions ---
 
 check_command() {
   if ! command -v "$1" &>/dev/null; then
