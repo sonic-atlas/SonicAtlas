@@ -84,11 +84,11 @@ check_command() {
 ask_password() {
   while true; do
     log_input "Please enter the server password you wish to use: "
-    read SERVER_PASSWORD
+    read -r SERVER_PASSWORD </dev/tty
     echo ""
     
     log_input "Do you want to use $SERVER_PASSWORD? [y/n]: "
-    read -n 1 CONTINUE
+    read -r -n 1 CONTINUE </dev/tty
     echo ""
 
     if [[ "${CONTINUE,,}" == "y" ]]; then
@@ -101,13 +101,12 @@ ask_password() {
   done
 }
 
-
 # --- Install ---
 
 print_header "Sonic Atlas installation script"
 print_section "Checking prerequisites"
 
-if check_command docker "" && docker compose version >/dev/null 2>&1; then
+if check_command docker "" >/dev/null && docker compose version >/dev/null 2>&1; then
   log_success "Docker already found."
 else
   log_info "Docker missing or outdated."
