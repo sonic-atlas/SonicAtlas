@@ -1,10 +1,21 @@
 $ErrorActionPreference = "Stop"
 
-if (-not $env:VCToolsRedistDir) {
-    throw "VCToolsRedistDir is not set. Try running this from a Developer PowerShell"
+$cl = (Get-Command cl.exe -ErrorAction SilentlyContinue)
+
+if (-not $cl) {
+    throw "cl.exe not found. Make sure MSVC environment is loaded (ilammy/msvc-dev-cmd)"
 }
 
-$crtPath = Join-Path $env:VCToolsRedistDir "x64\Microsoft.VC143.CRT"
+$msvcRoot = Split-Path (Split-Path $cl.Source -Parent) -Parent
+$msvcRoot = Split-Path $msvcRoot -Parent
+
+$redistRoot = Join-Path $msvcRoot "..\..\..\..\Redist\MSVC"
+
+$redistRoot = Resolve-Path $redistRoot
+
+$versionDir = Get-ChildItem $redistRoot | Sort-Object Name -Descending | Select-Object -First 1
+
+$crtPath = Join-Path $versionDir.FullName "x64\Microsoft.VC143.CRT"
 
 if (-not (Test-Path $crtPath)) {
     throw "CRT path not found: $crtPath"
