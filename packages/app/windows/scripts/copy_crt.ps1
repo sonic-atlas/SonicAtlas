@@ -13,11 +13,15 @@ $redistRoot = Join-Path $msvcRoot "..\..\..\..\Redist\MSVC"
 
 $redistRoot = Resolve-Path $redistRoot
 
-$versionDir = Get-ChildItem $redistRoot | Sort-Object Name -Descending | Select-Object -First 1
+$crtPath = Get-ChildItem $redistRoot -Directory -Recurse |
+    Where-Object { $_.Name -eq "Microsoft.VC143.CRT" } |
+    Select-Object -First 1
 
-$crtPath = Join-Path $versionDir.FullName "x64\Microsoft.VC143.CRT"
+if (-not $crtPath) {
+    throw "Microsoft.VC143.CRT not found."
+}
 
-Write-Host "VCToolsRedistDir = $env:VCToolsRedistDir"
+$crtPath = $crtPath.FullName
 
 if (-not (Test-Path $crtPath)) {
     throw "CRT path not found: $crtPath"
