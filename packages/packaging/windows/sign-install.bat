@@ -18,17 +18,17 @@ if "%1"=="" (
     exit /b 1
 )
 
+IF NOT EXIST "%CERT_PATH%" (
+    echo Skipping sign: no cert path
+    exit /b 0
+)
+
 set "FILE_TO_SIGN=%~1"
 
 where signtool >nul 2>nul
 if errorlevel 1 (
     echo signtool not found
     exit /b 1
-)
-
-IF NOT EXIST "%CERT_PATH%" (
-    echo Skipping sign: no cert path
-    exit /b 0
 )
 
 echo Signing file: %FILE_TO_SIGN% ...
