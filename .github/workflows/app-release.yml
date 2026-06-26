@@ -132,6 +132,8 @@ jobs:
 
       - name: Install Windows Desktop Dependencies
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: 14.42.34433
 
       - name: Verify build tools
         shell: pwsh
