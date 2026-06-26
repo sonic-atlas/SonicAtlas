@@ -26,6 +26,11 @@ if errorlevel 1 (
     exit /b 1
 )
 
+IF NOT EXIST "%CERT_PATH%" (
+    echo Skipping sign: no cert path
+    exit /b 0
+)
+
 echo Signing file: %FILE_TO_SIGN% ...
 signtool sign ^
     /f "%CERT_PATH%" ^
