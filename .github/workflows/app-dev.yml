@@ -148,7 +148,7 @@ jobs:
         run: |
           choco install nsis -y
 
-          echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
+          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\NSIS"
 
           where.exe makensis
           makensis /VERSION
