@@ -125,7 +125,7 @@ jobs:
 
   build_windows:
     name: Build Windows
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
