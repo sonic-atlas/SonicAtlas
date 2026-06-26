@@ -139,6 +139,14 @@ jobs:
           cmake --version
           where.exe cl
 
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          choco install nsis -y
+
+          where.exe makensis
+          makensis /VERSION
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
