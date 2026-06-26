@@ -17,6 +17,8 @@ $versionDir = Get-ChildItem $redistRoot | Sort-Object Name -Descending | Select-
 
 $crtPath = Join-Path $versionDir.FullName "x64\Microsoft.VC143.CRT"
 
+Write-Host "VCToolsRedistDir = $env:VCToolsRedistDir"
+
 if (-not (Test-Path $crtPath)) {
     throw "CRT path not found: $crtPath"
 }
