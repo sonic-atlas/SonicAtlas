@@ -1,3 +1,4 @@
+/// Crash log 'event' format
 class CrashEvent {
   final DateTime time;
   final String error;
