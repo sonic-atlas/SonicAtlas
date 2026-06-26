@@ -123,9 +123,60 @@ jobs:
           name: android-artifacts
           path: packages/packaging/dist/*
 
+  build_windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Install Windows Desktop Dependencies
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Verify build tools
+        shell: pwsh
+        run: |
+          cmake --version
+          where.exe cl
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          cache: true
+          channel: 'stable'
+
+      - name: Cache Native Dependencies (Windows)
+        id: cache_windows_deps
+        uses: actions/cache@v5
+        with:
+          key: windows-deps-${{ hashFiles('packages/app/vendor/sonic_audio/build_ffmpeg_windows.ps1') }}
+          path: packages/app/vendor/sonic_audio/dependencies/windows
+
+      - name: Build Native Dependencies
+        if: steps.cache_windows_deps.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          ./packages/app/vendor/sonic_audio/build_ffmpeg_windows.ps1
+
+      - name: Build Windows targets
+        shell: pwsh
+        run: |
+          cd packages/app
+          flutter pub get
+          flutter build windows --release
+          cd ../packaging/windows
+
+          ./pack_windows.ps1
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-artifacts
+          path: packages/packaging/windows/dist/*
+
   publish_release:
     name: Publish GitHub Release
-    needs: [build_android, build_linux]
+    needs: [build_android, build_linux, build_windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -146,5 +197,6 @@ jobs:
           files: |
             linux-artifacts/*
             android-artifacts/*
+            windows-artifacts/*
             checksums.txt
           working_directory: artifacts
