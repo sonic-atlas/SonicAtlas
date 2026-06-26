@@ -12,4 +12,5 @@ finally {
 }
 
 & (Join-Path $PSScriptRoot "gen_nsis_version.ps1")
+New-Item -ItemType Directory -Force -Path "$PSScriptRoot\build" | Out-Null
 makensis "./installer.nsi"
