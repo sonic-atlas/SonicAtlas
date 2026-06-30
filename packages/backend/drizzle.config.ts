@@ -1,7 +1,11 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig } from 'drizzle-kit';
-process.loadEnvFile(path.resolve(__dirname, '../../.env'));
 
+const envPath = path.resolve(import.meta.dirname, '../../.env');
+if (fs.existsSync(envPath)) {
+    process.loadEnvFile(envPath);
+}
 export default defineConfig({
     out: './drizzle',
     schema: 'db/schema.ts',

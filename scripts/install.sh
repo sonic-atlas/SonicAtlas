@@ -326,7 +326,7 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - sonic-atlas-db:/var/lib/postgresql/data
+      - sonic-atlas-db:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \${POSTGRES_USER} -d \${POSTGRES_DB}"]
       interval: 5s
