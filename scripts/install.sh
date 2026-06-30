@@ -242,7 +242,7 @@ log_success "Public address set to: ${BOLD}${PUBLIC_ADDRESS}${NC}"
 
 print_section "Generating Credentials"
 
-POSTGRES_PASSWORD="$(openssl rand -base64 18)"
+POSTGRES_PASSWORD="$(openssl rand -hex 24)"
 JWT_SECRET="$(openssl rand -base64 32)"
 WATCHTOWER_TOKEN="$(openssl rand -base64 32)"
 
