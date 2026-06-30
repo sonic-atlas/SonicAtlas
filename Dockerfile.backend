@@ -14,4 +14,4 @@ RUN npm run build -w=packages/backend
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start", "-w=packages/backend"]
+CMD ["sh", "-c", "npm run db:migrate -w=packages/backend && npm run start -w=packages/backend"]
