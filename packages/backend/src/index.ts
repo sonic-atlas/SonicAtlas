@@ -12,7 +12,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import compression from 'compression';
 import http from 'node:http';
 import { SocketServer } from './socket/ws.ts';
-import { register } from 'prom-client';
+import { register } from './services/metrics/registry.ts';
 import { metricsMiddleware } from './middleware/metrics.ts';
 import { rebuildStorageMetrics } from './services/metrics/storageMetrics.ts';
 import helmet from 'helmet';
@@ -111,9 +111,14 @@ app.head('/api/stream/:trackId{/*path}', (req, res) => res.sendStatus(200));
 app.get('/health', healthRoute);
 logger.info('Loaded route: /health');
 
-app.get('/metrics', async (req, res) => {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
+app.get('/metrics', async (req, res, next) => {
+    try {
+        res.set('Content-Type', register.contentType);
+        res.send(await register.metrics());
+    } catch (err) {
+        logger.error(`Metrics error: ${err}`);
+        next(err);
+    }
 });
 
 //* Load api routes dynamically
