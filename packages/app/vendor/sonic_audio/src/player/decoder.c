@@ -84,7 +84,8 @@ int decoder_open(DecoderState* state, const char* url, const char* headers, int 
   av_dict_set(&options, "reconnect_on_network_error", "1", 0);
   av_dict_set(&options, "reconnect_delay_max", "5", 0);
   av_dict_set(&options, "probesize", "500000", 0);         // 500KB
-  av_dict_set(&options, "analyzeduration", "1000000", 0);  // 500ms
+  av_dict_set(&options, "analyzeduration", "250000", 0);   // 250ms
+  av_dict_set(&options, "multiple_requests", "1", 0);      // HTTP Keep-Alive
   av_dict_set(&options, "rw_timeout", "20000000", 0);      // 20s timeout
 
 #ifndef _WIN32

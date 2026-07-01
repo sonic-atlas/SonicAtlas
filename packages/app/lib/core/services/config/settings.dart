@@ -11,7 +11,7 @@ class SettingsService with ChangeNotifier {
   static const _discordRPCEnabledKey = 'discord_rpc_enabled';
   static const _relativeDurationKey = 'relative_duration';
   static const _themeModeKey = 'theme_mode';
-  static const _audioBufferDurationKey = 'audio_buffer_duration';
+
   static const _useNativeSampleRateKey = 'use_native_sample_rate';
   static const _useExclusiveAudioKey = 'use_exclusive_audio';
   static const _audioVolumeKey = 'audio_volume';
@@ -35,8 +35,6 @@ class SettingsService with ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
 
-  double _audioBufferDuration = 4.0;
-  double get audioBufferDuration => _audioBufferDuration;
 
   bool _useNativeSampleRate = true;
   bool get useNativeSampleRate => _useNativeSampleRate;
@@ -56,7 +54,7 @@ class SettingsService with ChangeNotifier {
     _serverType = _prefs.getString(_serverTypeKey) ?? 'ip';
     _discordRPCEnabled = _prefs.getBool(_discordRPCEnabledKey) ?? true;
     _relativeDuration = _prefs.getBool(_relativeDurationKey) ?? false;
-    _audioBufferDuration = _prefs.getDouble(_audioBufferDurationKey) ?? 4.0;
+
     _useNativeSampleRate = _prefs.getBool(_useNativeSampleRateKey) ?? true;
     _useExclusiveAudio = _prefs.getBool(_useExclusiveAudioKey) ?? false;
     _audioVolume = _prefs.getDouble(_audioVolumeKey) ?? 1.0;
@@ -108,11 +106,6 @@ class SettingsService with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setAudioBufferDuration(double seconds) async {
-    _audioBufferDuration = seconds;
-    await _prefs.setDouble(_audioBufferDurationKey, seconds);
-    notifyListeners();
-  }
 
   Future<void> setUseNativeSampleRate(bool enabled) async {
     _useNativeSampleRate = enabled;

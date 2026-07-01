@@ -83,7 +83,6 @@ void sonic_audio_dispose_context(void) {
 
   sonic_audio_player_stop();
 
-
   ma_context_uninit(&g_sonic.ma_ctx);
 
   sa_thread_mutex_destroy(&g_sonic.lock);
