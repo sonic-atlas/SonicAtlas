@@ -189,4 +189,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: windows-artifacts
-          path: packages/packaging/windows/dist/*
+          path: packages/packaging/windows\build\*

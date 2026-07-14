@@ -240,7 +240,7 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* heade
     player->total_buffer_seconds = 30.0f;
   }
   if (player->start_threshold_seconds <= 0.1f) {
-    player->start_threshold_seconds = 2.0f;
+    player->start_threshold_seconds = 1.0f;
   }
 
   player->channels = 2;
@@ -320,6 +320,9 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_load(const char* url, const char* heade
     config.sampleRate = player->sample_rate;
     config.dataCallback = playback_callback;
     config.pUserData = player;
+    config.noFixedSizedCallback = MA_TRUE;
+    config.pipewire.pMediaRole = "Music";
+    config.pipewire.pStreamName = "SonicAtlas";
 
     if (player->has_selected_device) {
       config.playback.pDeviceID = &player->selected_device_id;
@@ -599,6 +602,9 @@ FFI_PLUGIN_EXPORT int sonic_audio_player_set_output_device(int index) {
       config.dataCallback = playback_callback;
       config.pUserData = &g_sonic.player;
       config.playback.pDeviceID = pDeviceID;
+      config.noFixedSizedCallback = MA_TRUE;
+      config.pipewire.pMediaRole = "Music";
+      config.pipewire.pStreamName = "SonicAtlas";
 
       if (ma_device_init(&g_sonic.ma_ctx, &config, &g_sonic.player.device) != MA_SUCCESS) {
         LOGE("SonicAudio Player: Failed to re-initialize playback device\n");

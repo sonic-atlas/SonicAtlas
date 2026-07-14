@@ -225,7 +225,7 @@ while true; do
         read -r USER_DOMAIN </dev/tty
         if [ -n "$USER_DOMAIN" ]; then
           PUBLIC_ADDRESS="$USER_DOMAIN"
-          PUBLIC_API_URL="https://${PUBLIC_ADDRESS}/api"
+          PUBLIC_API_URL="https://${PUBLIC_ADDRESS}"
           CORS_ORIGIN="https://${PUBLIC_ADDRESS}"
           break
         else
@@ -362,7 +362,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   watchtower:
-    image: containrrr/watchtower
+    image: nickfedor/watchtower
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

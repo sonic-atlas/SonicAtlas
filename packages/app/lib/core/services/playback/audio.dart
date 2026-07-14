@@ -150,7 +150,7 @@ class AudioService with ChangeNotifier {
 
       logger.i('AudioService initialised');
 
-      _player.setBufferDuration(_settingsService.audioBufferDuration);
+
       _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
       _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
       _player.setVolume(_settingsService.audioVolume);
@@ -188,7 +188,7 @@ class AudioService with ChangeNotifier {
   }
 
   void _onSettingsChanged() async {
-    _player.setBufferDuration(_settingsService.audioBufferDuration);
+
     _player.setNativeRateEnabled(_settingsService.useNativeSampleRate);
     _player.setExclusiveAudioEnabled(_settingsService.useExclusiveAudio);
     _player.setVolume(_settingsService.audioVolume);

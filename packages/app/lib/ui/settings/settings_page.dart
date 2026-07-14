@@ -159,27 +159,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   : null,
             ),
             ListTile(
-              title: const Text('Song Start Buffer Duration'),
-              subtitle: Text(
-                'This changes how much a song buffers when starting (This will probably will removed later on).',
-              ),
-              trailing: DropdownButton<double>(
-                value: settings.audioBufferDuration,
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setAudioBufferDuration(value);
-                  }
-                },
-                items: const [
-                  DropdownMenuItem(value: 1.0, child: Text('Low (1s)')),
-                  DropdownMenuItem(value: 2.0, child: Text('Default (2s)')),
-                  DropdownMenuItem(value: 4.0, child: Text('Stable (4s)')),
-                  DropdownMenuItem(value: 7.0, child: Text('Long (7s)')),
-                  DropdownMenuItem(value: 10.0, child: Text('Max (10s)')),
-                ],
-              ),
-            ),
-            ListTile(
               title: const Text('Default Volume'),
               subtitle: Text('${(settings.audioVolume * 100).toInt()}%'),
             ),

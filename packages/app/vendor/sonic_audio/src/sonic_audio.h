@@ -43,5 +43,4 @@ FFI_PLUGIN_EXPORT void sonic_audio_get_playback_device_info(int index, SonicDevi
 FFI_PLUGIN_EXPORT int sonic_audio_get_capture_device_count(void);
 FFI_PLUGIN_EXPORT void sonic_audio_get_capture_device_info(int index, SonicDeviceInfo* info);
 
-
 #endif
