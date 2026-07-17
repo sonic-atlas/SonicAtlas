@@ -24,5 +24,8 @@
   },
   "dependencies": {
     "concurrently": "^10.0.3"
+  },
+  "allowScripts": {
+    "esbuild@*": true
   }
 }

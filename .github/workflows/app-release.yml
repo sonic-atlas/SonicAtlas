@@ -56,7 +56,6 @@ jobs:
   build_android:
     name: Build Android
     runs-on: ubuntu-latest
-    environment: release
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6

@@ -1,8 +1,4 @@
-FROM node:26-trixie
-
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
+FROM node:26-alpine AS build
 
 WORKDIR /app
 
@@ -11,6 +7,24 @@ COPY . .
 RUN npm ci
 
 RUN npm run build -w=packages/backend
+
+FROM node:26-alpine AS runner
+
+RUN apk add ffmpeg
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=build /app/package.json ./
+COPY --from=build /app/package-lock.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/shared ./packages/shared
+COPY --from=build /app/packages/backend/package.json ./packages/backend/
+COPY --from=build /app/packages/backend/drizzle ./packages/backend/drizzle
+COPY --from=build /app/packages/backend/drizzle.config.ts ./packages/backend/drizzle.config.ts
+COPY --from=build /app/packages/backend/db ./packages/backend/db
+COPY --from=build /app/packages/backend/dist ./packages/backend/dist
 
 EXPOSE 3000
 

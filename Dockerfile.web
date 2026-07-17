@@ -1,4 +1,4 @@
-FROM node:26-trixie
+FROM node:26-alpine AS build
 
 WORKDIR /app
 
@@ -7,6 +7,19 @@ COPY . .
 RUN npm ci
 
 RUN npm run build -w=packages/web
+
+FROM node:26-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=build /app/package.json ./
+COPY --from=build /app/package-lock.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages/shared ./packages/shared
+COPY --from=build /app/packages/web/package.json ./packages/web/
+COPY --from=build /app/packages/web/build ./packages/web/build
 
 EXPOSE 3000
 
