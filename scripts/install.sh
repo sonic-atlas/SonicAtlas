@@ -393,8 +393,11 @@ server {
     listen 80;
     server_name ${PUBLIC_ADDRESS};
 
+    resolver 127.0.0.11 valid=10s;
+
     location /api {
-        proxy_pass http://backend:3000;
+        set \$backend "http://backend:3000";
+        proxy_pass \$backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -407,7 +410,8 @@ server {
     }
 
     location /ws {
-        proxy_pass http://backend:3000;
+        set \$backend "http://backend:3000";
+        proxy_pass \$backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -420,13 +424,15 @@ server {
     }
 
     location /health {
-        proxy_pass http://backend:3000;
+        set \$backend "http://backend:3000";
+        proxy_pass \$backend;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
     }
 
     location / {
-        proxy_pass http://web:3001;
+        set \$frontend "http://web:3001";
+        proxy_pass \$frontend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
