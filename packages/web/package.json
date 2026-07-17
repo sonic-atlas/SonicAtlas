@@ -35,7 +35,9 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
+    "@jamescoyle/svelte-icon": "^0.1.1",
     "@material/web": "^2.4.1",
+    "@mdi/js": "^7.4.47",
     "hls.js": "^1.6.16",
     "socket.io-client": "^4.8.3",
     "svelte-dnd-action": "^0.9.70"

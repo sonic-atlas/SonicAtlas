@@ -1,6 +1,6 @@
 <script lang="ts">
     import '@material/web/list/list-item.js';
-    import '@material/web/icon/icon.js';
+    import { SvgIcon, mdiEqualizer, mdiPause, mdiPlay, mdiMusicNote } from '$lib/icons';
     import type { Track } from '$lib/types';
 
     import { API_BASE_URL } from '$lib/api';
@@ -63,7 +63,7 @@
     <div slot="start" class="startSlot">
         <div class="trackIndex">
             {#if isPlaying}
-                <md-icon class="playingIcon">equalizer</md-icon>
+                <span class="playingIcon"><SvgIcon type="mdi" path={mdiEqualizer} size={18} /></span>
             {:else}
                 <span class="number">{track.trackNumber || '-'}</span>
             {/if}
@@ -71,17 +71,21 @@
         <div class="thumbnail">
             {#if track.coverArtPath}
                 <img use:lazyLoad={`${API_BASE_URL}${track.coverArtPath}?size=small`} alt="Cover" />
-                <md-icon
+                <div
                     class="overlayIcon"
                     aria-hidden="true"
                     onclick={coverArtClicked}
-                    filled
+                    role="button"
+                    tabindex="0"
+                    onkeydown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') coverArtClicked();
+                    }}
                 >
-                    {isPlayingAudio && isPlaying ? 'pause' : 'play_arrow'}
-                </md-icon>
+                    <SvgIcon type="mdi" path={isPlayingAudio && isPlaying ? mdiPause : mdiPlay} />
+                </div>
             {:else}
                 <div class="placeholder">
-                    <md-icon>music_note</md-icon>
+                    <SvgIcon type="mdi" path={mdiMusicNote} size={30} />
                 </div>
             {/if}
         </div>
@@ -164,7 +168,7 @@
     }
 
     .thumbnail::after {
-        content: "";
+        content: '';
         position: absolute;
         inset: 0;
         background: black;
@@ -210,16 +214,14 @@
         color: var(--text-secondary-color);
     }
 
-    .placeholder md-icon {
-        font-size: 20px;
-    }
-
     .number {
         font-size: 14px;
     }
 
     .playingIcon {
-        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--primary-color);
     }
 
@@ -262,7 +264,7 @@
         opacity: 0.8;
         transition: background 0.3s ease;
     }
-    
+
     .badge:hover {
         background: var(--surface-highest);
     }

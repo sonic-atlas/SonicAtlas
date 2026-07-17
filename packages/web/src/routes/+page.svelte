@@ -12,6 +12,7 @@
     import { onMount } from 'svelte';
     import { audioPlayer } from '$lib/engine';
     import { engineState } from '$lib/stores/engineStore';
+    import { SvgIcon, mdiMusicOff } from '$lib/icons';
 
     let tracks = $state<Track[]>([]);
     const currentTrack = $derived($engineState.track?.id);
@@ -115,7 +116,7 @@
                 <div class="playerPlaceholder">
                     <h2>Now Playing</h2>
                     <div class="placeholderContent">
-                        <md-icon class="placeholderIcon">music_off</md-icon>
+                        <SvgIcon type="mdi" path={mdiMusicOff} size={48}></SvgIcon>
                         <p>Select a track to start listening</p>
                     </div>
                 </div>
@@ -233,12 +234,8 @@
         flex-direction: column;
         align-items: center;
         gap: 16px;
-        margin-top: 100px;
+        margin-top: 80px;
         opacity: 0.7;
-    }
-
-    .placeholderIcon {
-        font-size: 64px;
         color: var(--text-secondary-color);
     }
 </style>

@@ -56,7 +56,7 @@
 
         audioPlayer.setStreamUrl(`${getStreamUrl(track, quality)}?session=${playbackSession}`);
 
-        const mustUseHlsJs = true;// audioPlayer.state.isAdaptive || !audioPlayer.nativelySupported;
+        const mustUseHlsJs = true; // audioPlayer.state.isAdaptive || !audioPlayer.nativelySupported;
 
         console.log(
             `Loading stream. Quality: ${quality}, Adaptive: ${audioPlayer.state.isAdaptive}, URL: ${audioPlayer.state.streamUrl}, UseHlsJS: ${mustUseHlsJs}, NativelySupported: ${audioPlayer.nativelySupported}`

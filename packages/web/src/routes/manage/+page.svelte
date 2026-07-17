@@ -3,7 +3,7 @@
     import { invalidateAll } from '$app/navigation';
     import '@material/web/button/filled-button.js';
     import '@material/web/button/outlined-button.js';
-    import '@material/web/icon/icon.js'
+    import { SvgIcon, mdiAlbum, mdiImageBroken } from '$lib/icons';
 
     let { data } = $props();
     let releases = $derived(data.releases);
@@ -51,13 +51,17 @@
                             onerror={() => markBrokenImage(release.id)}
                         />
                     {:else if !brokenImages.has(release.id)}
-                        <md-icon class="coverPlaceholder">album</md-icon>
+                        <div class="coverPlaceholder">
+                            <SvgIcon type="mdi" path={mdiAlbum} size={24} />
+                        </div>
                     {:else}
-                        <md-icon class="coverPlaceholder error">broken_image</md-icon>
+                        <div class="coverPlaceholder error">
+                            <SvgIcon type="mdi" path={mdiImageBroken} size={24} />
+                        </div>
                     {/if}
                     <div class="info">
                         <h3>{release.title}</h3>
-                        <p style="white-space:pre">{release.primaryArtist}  •  {release.year}  •  {release.releaseType}</p>
+                        <p style="white-space:pre">{release.primaryArtist} • {release.year} • {release.releaseType}</p>
                     </div>
                 </div>
                 <div class="actions">
@@ -131,7 +135,6 @@
         justify-content: center;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
-        font-size: 24px;
     }
 
     .coverPlaceholder.error {

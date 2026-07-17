@@ -13,20 +13,20 @@ export class AudioPlayer {
     #oncloseplayer: (() => void) | null = null;
     #previousVolume: number = 100;
 
-    setLoading = (loading: boolean) => engineState.update(s => ({ ...s, loading }));
-    setIsPlaying = (isPlaying: boolean) => engineState.update(s => ({ ...s, isPlaying }));
-    setCurrentTime = (currentTime: number) => engineState.update(s => ({ ...s, currentTime }));
-    setDuration = (duration: number) => engineState.update(s => ({ ...s, duration }));
-    setNativeErrorCount = (nativeErrorCount: number) => engineState.update(s => ({ ...s, nativeErrorCount }));
-    setIsAdaptive = (isAdaptive: boolean) => engineState.update(s => ({ ...s, isAdaptive }));
-    setStreamUrl = (streamUrl: string) => engineState.update(s => ({ ...s, streamUrl }));
-    setQuality = (quality: Quality) => engineState.update(s => ({ ...s, quality }));
-    setTrack = (track: Track | null) => engineState.update(s => ({ ...s, track }));
-    #setVolume = (volume: number) => engineState.update(s => ({ ...s, volume }));
-    #setIsMuted = (isMuted: boolean) => engineState.update(s => ({ ...s, isMuted }));
-    #setMetadata = (metadata: any) => engineState.update(s => ({ ...s, metadata }));
+    setLoading = (loading: boolean) => engineState.update((s) => ({ ...s, loading }));
+    setIsPlaying = (isPlaying: boolean) => engineState.update((s) => ({ ...s, isPlaying }));
+    setCurrentTime = (currentTime: number) => engineState.update((s) => ({ ...s, currentTime }));
+    setDuration = (duration: number) => engineState.update((s) => ({ ...s, duration }));
+    setNativeErrorCount = (nativeErrorCount: number) => engineState.update((s) => ({ ...s, nativeErrorCount }));
+    setIsAdaptive = (isAdaptive: boolean) => engineState.update((s) => ({ ...s, isAdaptive }));
+    setStreamUrl = (streamUrl: string) => engineState.update((s) => ({ ...s, streamUrl }));
+    setQuality = (quality: Quality) => engineState.update((s) => ({ ...s, quality }));
+    setTrack = (track: Track | null) => engineState.update((s) => ({ ...s, track }));
+    #setVolume = (volume: number) => engineState.update((s) => ({ ...s, volume }));
+    #setIsMuted = (isMuted: boolean) => engineState.update((s) => ({ ...s, isMuted }));
+    #setMetadata = (metadata: any) => engineState.update((s) => ({ ...s, metadata }));
 
-    init(audio: HTMLAudioElement, opts?: { maxErrors: number, oncloseplayer: () => void }) {
+    init(audio: HTMLAudioElement, opts?: { maxErrors: number; oncloseplayer: () => void }) {
         this.#audio = audio;
         this.#attachOnError();
 
@@ -95,9 +95,9 @@ export class AudioPlayer {
 
         const artwork: MediaImage[] = track.coverArtPath
             ? [
-                {
-                    src: `${API_BASE_URL}${track.coverArtPath}`
-                }
+                  {
+                      src: `${API_BASE_URL}${track.coverArtPath}`
+                  }
               ]
             : [];
 
@@ -199,7 +199,6 @@ export class AudioPlayer {
         if (this.#hls) {
             this.#hls.destroy();
             this.#hls = null;
-
         }
 
         if (this.#audio) {
@@ -229,7 +228,9 @@ export class AudioPlayer {
             console.warn(`Native HLS error count: ${this.state.nativeErrorCount}`);
 
             if (this.state.nativeErrorCount >= this.#maxErrors) {
-                console.error(`Native HLS failed ${this.#maxErrors} time${this.#maxErrors === 1 ? '' : 's'}. Retrying with HLS.js...`);
+                console.error(
+                    `Native HLS failed ${this.#maxErrors} time${this.#maxErrors === 1 ? '' : 's'}. Retrying with HLS.js...`
+                );
                 this.load(this.#url, true);
             } else {
                 console.warn(`Retrying native HLS load (attempt ${this.state.nativeErrorCount + 1})...`);
@@ -325,7 +326,7 @@ export class AudioPlayer {
     }
 
     get audioDuration() {
-        return this.#audio!.duration
+        return this.#audio!.duration;
     }
 
     get audioAddListener() {

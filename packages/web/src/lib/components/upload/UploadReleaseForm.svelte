@@ -8,6 +8,8 @@
     import '@material/web/select/outlined-select.js';
     import '@material/web/select/select-option.js';
 
+    import { SvgIcon, mdiCloudUpload, mdiTimerSandEmpty, mdiCog, mdiCheckCircle, mdiAlertCircle, mdiImage } from '$lib/icons';
+
     let { onUploadComplete } = $props<{ onUploadComplete: (data: any) => void }>();
 
     let files: FileList | null = $state(null);
@@ -81,15 +83,15 @@
     function getStatusIcon(status: FileUploadProgress['status']): string {
         switch (status) {
             case 'pending':
-                return 'hourglass_empty';
+                return mdiTimerSandEmpty;
             case 'uploading':
-                return 'cloud_upload';
+                return mdiCloudUpload;
             case 'processing':
-                return 'settings';
+                return mdiCog;
             case 'complete':
-                return 'check_circle';
+                return mdiCheckCircle;
             case 'error':
-                return 'error';
+                return mdiAlertCircle;
         }
     }
 
@@ -119,7 +121,9 @@
             tabindex="0"
             aria-label="Drop audio files here"
         >
-            <md-icon class="uploadIcon">cloud_upload</md-icon>
+            <div class="uploadIcon">
+                <SvgIcon type="mdi" path={mdiCloudUpload} size={48} />
+            </div>
             <p>
                 {#if files && files.length > 0}
                     {files.length} files selected
@@ -141,7 +145,7 @@
     </div>
 
     <div class="formGroup">
-        <label for="cover">Release Cover (Optional)</label>
+        <label for="cover" style="display: flex; align-items: center;"><span class="coverIcon"><SvgIcon type="mdi" path={mdiImage}/></span>Release Cover (Optional)</label>
         <div class="fileInputWrapper">
             <md-outlined-button
                 type="button"
@@ -241,7 +245,9 @@
                 {#each uploadProgress.files as fp}
                     <div class="fileProgress" class:error={fp.status === 'error'}>
                         <div class="fileProgressHeader">
-                            <md-icon class="statusIcon {fp.status}">{getStatusIcon(fp.status)}</md-icon>
+                            <span class="statusIcon {fp.status}">
+                                <SvgIcon type="mdi" path={getStatusIcon(fp.status)} size={18} />
+                            </span>
                             <span class="fileProgressName" title={fp.fileName}>{fp.fileName}</span>
                             <span class="fileProgressSize">
                                 {formatBytes(fp.bytesUploaded)} / {formatBytes(fp.bytesTotal)}
@@ -368,9 +374,14 @@
     }
 
     .uploadIcon {
-        height: 48px;
-        width: 48px;
-        font-size: 48px;
+        color: var(--primary-color);
+    }
+
+    .coverIcon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.5rem;
     }
 
     .progressSection {
@@ -437,7 +448,9 @@
     }
 
     .statusIcon {
-        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .statusIcon.complete {

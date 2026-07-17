@@ -1,5 +1,5 @@
 <script lang="ts">
-    import '@material/web/icon/icon.js';
+    import { SvgIcon, mdiMusicNote, mdiPause, mdiPlay, mdiVolumeOff, mdiVolumeMedium, mdiVolumeHigh } from '$lib/icons';
     import '@material/web/progress/linear-progress.js';
     import '@material/web/progress/circular-progress.js';
     import '@material/web/slider/slider.js';
@@ -91,7 +91,9 @@
                 break;
             case 'ArrowRight':
                 e.preventDefault();
-                audioPlayer.setAudioCurrentTime(Math.min(audioPlayer.state.duration, audioPlayer.audioCurrentTime + step));
+                audioPlayer.setAudioCurrentTime(
+                    Math.min(audioPlayer.state.duration, audioPlayer.audioCurrentTime + step)
+                );
                 break;
             case 'Home':
                 e.preventDefault();
@@ -129,7 +131,7 @@
             <img src={`${API_BASE_URL}${track.coverArtPath}`} alt="Album cover" />
         {:else}
             <div class="icon">
-                <md-icon class="coverIcon">music_note</md-icon>
+                <SvgIcon type="mdi" path={mdiMusicNote} size={64} />
             </div>
         {/if}
     </div>
@@ -188,7 +190,7 @@
             }}
             aria-label={isPlaying ? 'Pause' : 'Play'}
         >
-            <md-icon class="playIcon">{isPlaying ? 'pause' : 'play_arrow'}</md-icon>
+            <SvgIcon type="mdi" path={isPlaying ? mdiPause : mdiPlay} size={38} />
         </button>
     </div>
 
@@ -221,9 +223,13 @@
                 role="button"
                 tabindex="0"
             >
-                <md-icon>{volume === 0 || isMuted ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}</md-icon>
+                <SvgIcon
+                    type="mdi"
+                    path={volume === 0 || isMuted ? mdiVolumeOff : volume < 50 ? mdiVolumeMedium : mdiVolumeHigh}
+                />
             </md-icon-button>
-            <md-slider min="0" max="100" value={volume} oninput={audioPlayer.handleVolumeChange.bind(audioPlayer)}></md-slider>
+            <md-slider min="0" max="100" value={volume} oninput={audioPlayer.handleVolumeChange.bind(audioPlayer)}
+            ></md-slider>
             <span class="volumeText">{Math.round(volume)}%</span>
         </div>
     </div>
@@ -488,16 +494,8 @@
         color: var(--text-secondary-color);
     }
 
-    .coverIcon {
-        font-size: 80px;
-    }
-
     .trackInfo {
         margin-bottom: 20px;
         text-align: center;
-    }
-
-    .playIcon {
-        font-size: 32px;
     }
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
     import '@material/web/list/list.js';
-    import '@material/web/icon/icon.js';
+    import { SvgIcon, mdiSort, mdiAlbum } from '$lib/icons';
     import '@material/web/iconbutton/icon-button.js';
     import '@material/web/button/text-button.js';
     import '@material/web/menu/menu.js';
@@ -74,7 +74,7 @@
                 result.push({
                     type: 'header',
                     title: rep.releaseTitle,
-                    subtitle: `${rep.releaseArtist ? `${rep.releaseArtist}  •  `: ''}${rep.releaseYear}`,
+                    subtitle: `${rep.releaseArtist ? `${rep.releaseArtist}  •  ` : ''}${rep.releaseYear}`,
                     id: key
                 });
             }
@@ -118,7 +118,9 @@
                     role="button"
                     tabindex="0"
                 >
-                    <md-icon slot="icon">sort</md-icon>
+                    <span slot="icon" style="display: flex; align-items: center; justify-content: center;"
+                        ><SvgIcon type="mdi" path={mdiSort} size={18} /></span
+                    >
                     Sort by: {sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
                 </md-text-button>
 
@@ -175,7 +177,7 @@
                     </div>
                 {:else if item.type === 'disc-header'}
                     <div class="discHeader">
-                        <md-icon class="discIcon">album</md-icon>
+                        <span class="discIcon"><SvgIcon type="mdi" path={mdiAlbum} size={18} /></span>
                         <span>{item.title}</span>
                     </div>
                 {:else if item.type === 'track'}
@@ -242,13 +244,11 @@
     }
 
     .discIcon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-    }
-
-    .menuContent {
-        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary-color);
+        opacity: 0.8;
     }
 
     md-list {

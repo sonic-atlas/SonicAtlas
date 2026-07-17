@@ -33,15 +33,3 @@ body {
 * {
   box-sizing: border-box;
 }
-
-:root {
-  --md-icon-font: 'Material Symbols Rounded';
-}
-
-md-icon {
-  font-family: 'Material Symbols Rounded';
-}
-
-md-icon[filled] {
-  font-variation-settings: 'FILL' 1;
-}

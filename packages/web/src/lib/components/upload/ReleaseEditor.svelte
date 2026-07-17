@@ -9,7 +9,7 @@
     import '@material/web/button/outlined-button.js';
     import '@material/web/select/outlined-select.js';
     import '@material/web/select/select-option.js';
-    import '@material/web/icon/icon.js';
+    import { SvgIcon, mdiDrag, mdiCheckCircle, mdiAlertCircle, mdiCircleOutline } from '$lib/icons';
     import '@material/web/progress/linear-progress.js';
     import '@material/web/progress/circular-progress.js';
 
@@ -301,23 +301,24 @@
                     {#each disc.items as track (track.id)}
                         <div class="trackItem" animate:flip={{ duration: 300 }}>
                             <div class="dragHandle">
-                                <md-icon>drag_indicator</md-icon>
+                                <SvgIcon type="mdi" path={mdiDrag} size={28}/>
                             </div>
-                            <div
-                                class="status"
+                            <div class="status"
                                 class:done={track.transcodeStatus === 'done'}
                                 class:processing={track.transcodeStatus === 'processing'}
                                 class:error={track.transcodeStatus === 'error'}
                             >
                                 {#if track.transcodeStatus === 'done'}
-                                    <md-icon class="iconDone">check_circle</md-icon>
+                                    <SvgIcon type="mdi" path={mdiCheckCircle} size={18} />
                                 {:else if track.transcodeStatus === 'processing'}
                                     <md-circular-progress indeterminate class="processingSpinner"
                                     ></md-circular-progress>
                                 {:else if track.transcodeStatus === 'error'}
-                                    <md-icon class="iconError">error</md-icon>
+                                    <SvgIcon type="mdi" path={mdiAlertCircle} size={18} />
                                 {:else}
-                                    <md-icon class="iconPending">radio_button_unchecked</md-icon>
+                                    <span style="opacity: 0.5; color: var(--text-secondary-color); display: flex;"
+                                        ><SvgIcon type="mdi" path={mdiCircleOutline} size={18} /></span
+                                    >
                                 {/if}
                             </div>
                             <div class="inputs">
@@ -380,13 +381,14 @@
     }
 
     .status {
-        width: 24px;
-        height: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background: var(--surface-dim);
+        color: var(--text-secondary-color);
         font-weight: bold;
     }
 
@@ -394,10 +396,12 @@
         color: var(--success-color);
         background: #00ff0020;
     }
+
     .status.processing {
         color: var(--primary-color);
         animation: spin 1s linear infinite;
     }
+
     .status.error {
         color: var(--error-color);
         background: #ff000020;
@@ -510,21 +514,6 @@
         --md-linear-progress-track-shape: 4px;
         --md-linear-progress-active-indicator-height: 8px;
         --md-linear-progress-track-height: 8px;
-    }
-
-    .status md-icon {
-        font-size: 18px;
-    }
-
-    .iconDone {
-        color: var(--success-color);
-    }
-    .iconError {
-        color: var(--error-color);
-    }
-    .iconPending {
-        color: var(--text-secondary-color);
-        opacity: 0.5;
     }
 
     .removeDiscButton {
