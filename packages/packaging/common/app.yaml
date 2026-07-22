@@ -1,6 +1,6 @@
 name: SonicAtlas
 displayName: Sonic Atlas
-exeName: sonic_atlas
+exeName: SonicAtlas
 id: dev.heggo.sonic_atlas
 
 version:

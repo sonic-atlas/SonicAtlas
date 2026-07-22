@@ -1,0 +1,74 @@
+# CMake/Make and similar
+CMakeFiles/
+CMakeCache.txt
+CMakeUserPresets.json
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+
+# Code editor files
+.idea/
+.qtcreator/
+.vs/
+.vscode/
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build
+build/
+
+# Temp files
+*.tmp
+*.log
+*.bak
+*.swp # vi/vim temp
+
+# Testing and cache
+Testing/
+.cache/
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Debugger files
+*.pdb
+
+# Compiled Object Files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Object Dependency files
+*.d
+
+# Compiled Dynamic Libraries
+*.so
+*.dylib
+*.dll
+*.so.*
+
+# Compiled Static Libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Linker files
+*.ilk
+
+# Android signing secrets
+android/key.properties
+android/**/*.jks
+android/**/*.keystore
+
+# Android build output
+android-build/
+*.apk
+*.aab

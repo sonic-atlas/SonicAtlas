@@ -1,0 +1,2 @@
+module SonicAtlas
+singleton Theme ../../src/ui/Theme.qml

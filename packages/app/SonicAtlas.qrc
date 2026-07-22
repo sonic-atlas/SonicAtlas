@@ -1,0 +1,6 @@
+<RCC>
+    <qresource>
+        <file>SonicAtlas.qmlproject</file>
+        <file>src/ui/Main.qml</file>
+    </qresource>
+</RCC>

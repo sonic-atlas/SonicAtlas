@@ -1,0 +1,152 @@
+{
+  "version": 8,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    },
+    {
+      "name": "debug-base",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-base",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "gcc-base",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "inherits": [
+        "gcc-base",
+        "debug-base"
+      ]
+    },
+    {
+      "name": "gcc-release",
+      "inherits": [
+        "gcc-base",
+        "release-base"
+      ]
+    },
+    {
+      "name": "msvc-base",
+      "hidden": true,
+      "inherits": "base"
+    },
+    {
+      "name": "msvc-debug",
+      "inherits": [
+        "msvc-base",
+        "debug-base"
+      ]
+    },
+    {
+      "name": "msvc-release",
+      "inherits": [
+        "msvc-base",
+        "release-base"
+      ]
+    },
+    {
+      "name": "android-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake",
+        "ANDROID_SDK_ROOT": "$env{ANDROID_SDK_ROOT}",
+        "ANDROID_NDK_ROOT": "$env{ANDROID_NDK_ROOT}",
+        "QT_HOST_PATH": "$env{QT_HOST_PATH}",
+        "CMAKE_PREFIX_PATH": "$env{QT_ROOT}/android_arm64_v8a;$env{QT_ROOT}/android_armv7;$env{QT_ROOT}/android_x86_64;$env{QT_HOST_PATH}",
+        "CMAKE_FIND_ROOT_PATH": "$env{QT_ROOT}/android_arm64_v8a;$env{QT_ROOT}/android_armv7;$env{QT_ROOT}/android_x86_64;$env{QT_HOST_PATH}",
+        "CMAKE_FIND_ROOT_PATH_MODE_PACKAGE": "BOTH",
+        "ANDROID_ABI": "arm64-v8a",
+        "QT_ANDROID_ABIS": "arm64-v8a;armeabi-v7a;x86_64",
+        "ANDROID_PLATFORM": "android-27"
+      },
+      "warnings": {
+        "deprecated": false,
+        "dev": false
+      }
+    },
+    {
+      "name": "android-debug",
+      "inherits": [
+        "android-base",
+        "debug-base"
+      ]
+    },
+    {
+      "name": "android-release",
+      "inherits": [
+        "android-base",
+        "release-base"
+      ],
+      "cacheVariables": {
+        "QT_ANDROID_SIGN_APK": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug",
+      "displayName": "GCC Debug"
+    },
+    {
+      "name": "gcc-debug-clean",
+      "configurePreset": "gcc-debug",
+      "displayName": "GCC Debug (Clean First)",
+      "cleanFirst": true
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release",
+      "displayName": "GCC Release",
+      "cleanFirst": true
+    },
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
+      "displayName": "MSVC Debug"
+    },
+    {
+      "name": "msvc-debug-clean",
+      "configurePreset": "msvc-debug",
+      "displayName": "MSVC Debug (Clean First)",
+      "cleanFirst": true
+    },
+    {
+      "name": "msvc-release",
+      "configurePreset": "msvc-release",
+      "displayName": "MSVC Release",
+      "cleanFirst": true
+    },
+    {
+      "name": "android-debug",
+      "configurePreset": "android-debug",
+      "displayName": "Android Debug"
+    },
+    {
+      "name": "android-release",
+      "configurePreset": "android-release",
+      "displayName": "Android Release",
+      "cleanFirst": true
+    }
+  ]
+}

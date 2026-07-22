@@ -1,0 +1,32 @@
+import QmlProject
+
+Project {
+    mainFile: "src/ui/Main.qml"
+    mainUiFile: "src/ui/Main.qml"
+
+    QmlFiles {
+        directory: "src/ui"
+    }
+
+    JavaScriptFiles {
+        directory: "src/ui"
+    }
+
+    ImageFiles {
+        directory: "src/ui"
+    }
+
+    qt6Project: true
+    importPaths: [ ".", "QDS_Imports" ]
+    qdsVersion: "4.8"
+    quickVersion: "6.8"
+
+    Files {
+        filter: "*.conf"
+        files: ["qtquickcontrols2.conf"]
+    }
+
+    Environment {
+        QT_QUICK_CONTROLS_CONF: "qtquickcontrols2.conf"
+    }
+}
