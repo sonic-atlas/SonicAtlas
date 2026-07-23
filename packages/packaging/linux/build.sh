@@ -23,35 +23,26 @@ print_menu() {
   echo ""
   echo -e "  ${BLUE}1)${NC} Build Tarball           ${YELLOW}(Generic Linux)${NC}"
   echo -e "  ${BLUE}2)${NC} Build AppImage          ${YELLOW}(+ Tarball)${NC}"
-  echo -e "  ${BLUE}3)${NC} Build Android APKs      ${YELLOW}(Split per ABI)${NC}"
+  echo -e "  ${BLUE}3)${NC} Build Android APK       ${YELLOW}(Signed single APK)${NC}"
   echo -e "  ${BLUE}4)${NC} Build All"
   echo ""
-  echo -e "  ${BLUE}5)${NC} Clean                   ${YELLOW}(Remove build artifacts)${NC}"
+  echo -e "  ${BLUE}5)${NC} Clean Packaging         ${YELLOW}(Remove packaging/build & dist)${NC}"
+  echo -e "  ${BLUE}6)${NC} Clean All               ${YELLOW}(Remove all build artifacts)${NC}"
   echo -e "  ${BLUE}0)${NC} Exit"
   echo ""
 }
 
-# --- Flutter Builders ---
+# --- Qt Builders ---
 
-build_flutter_linux() {
-  log_step "Building Flutter Linux release..."
+build_qt_linux() {
+  log_step "Building Qt CMake Linux release..."
   cd "$APP_DIR"
-  dart run dart_pubspec_licenses:generate
-  dart run ../packaging/common/gen_extra_licenses.dart
-  flutter build linux --release
+  # TODO: Generate open source licenses
+  cmake --preset gcc-release
+  cmake --build --preset gcc-release
   cd "$SCRIPT_DIR"
 
-  log_success "Flutter Linux build complete"
-}
-
-build_flutter_android() {
-  log_step "Building Flutter Android release (split-per-abi)..."
-  cd "$APP_DIR"
-  dart run dart_pubspec_licenses:generate
-  dart run ../packaging/common/gen_extra_licenses.dart
-  flutter build apk --release --split-per-abi
-  cd "$SCRIPT_DIR"
-  log_success "Flutter Android build complete"
+  log_success "Qt Linux build complete"
 }
 
 # --- Build Targets ---
@@ -59,7 +50,7 @@ build_flutter_android() {
 do_build_tarball() {
   print_section "Building Tarball..."
 
-  build_flutter_linux
+  build_qt_linux
   ./tarball.sh
 
   log_success "Tarball built successfully!"
@@ -77,20 +68,20 @@ do_build_appimage() {
 }
 
 do_build_android() {
-  print_section "Building Android APKs..."
+  print_section "Building Android APK..."
 
-  check_command "flutter" "Install from: https://flutter.dev" || return 1
-
+  check_command "cmake" "Install cmake" || return 1
+  # TODO: Generate open source licenses
   ./android.sh
 
-  log_success "Android APKs built successfully!"
+  log_success "Android APK built successfully!"
   echo -e "  Output: ${BLUE}$RELEASE_DIR/${NC}"
 }
 
 do_build_all() {
   print_section "Building All Targets..."
 
-  build_flutter_linux
+  build_qt_linux
 
   print_section "Packaging Tarball..."
   ./tarball.sh
@@ -108,17 +99,17 @@ do_build_all() {
   echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
 }
 
-# --- Main ---
+# Main
 
 main() {
   print_build_header
 
   check_command "yq" "Install with: sudo pacman -S yq" || exit 1
-  check_command "flutter" "Install from: https://flutter.dev" || exit 1
+  check_command "cmake" "Install cmake" || exit 1
 
   while true; do
     print_menu
-    read -rp "Enter choice [0-5]: " choice
+    read -rp "Enter choice [0-6]: " choice
 
     case $choice in
     1)
@@ -142,7 +133,12 @@ main() {
       read -rp "Press Enter to continue..."
       ;;
     5)
-      ./clean.sh
+      ./clean.sh packaging
+      echo ""
+      read -rp "Press Enter to continue..."
+      ;;
+    6)
+      ./clean.sh all
       echo ""
       read -rp "Press Enter to continue..."
       ;;

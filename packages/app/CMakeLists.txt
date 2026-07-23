@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.22...4.3)
 project(SonicAtlas LANGUAGES CXX)
 
+# Touch Qt internal variable to silence CMake
+if(DEFINED QT_USE_ANDROID_TARGET_BUILD_DIR)
+endif()
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS TRUE CACHE BOOL "" FORCE)
 set(Qt6TaskTree_FOUND TRUE CACHE BOOL "" FORCE)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Quick Qml QuickControls2)

@@ -25,8 +25,8 @@ export VERSION="$(get_yaml '.version.major').$(get_yaml '.version.minor').$(get_
 export ROOT_DIR="$SCRIPT_DIR/../.."
 export APP_DIR="$ROOT_DIR/app"
 export RELEASE_DIR="$SCRIPT_DIR/../dist"
-export BUILD_OUT="$APP_DIR/build/linux/x64/release/bundle"
-export ANDROID_BUILD_OUT="$APP_DIR/build/app/outputs/flutter-apk"
+export BUILD_OUT="$APP_DIR/build/gcc-release/bin"
+export ANDROID_BUILD_OUT="$APP_DIR/build/android-release"
 
 # --- Icons ---
 export ICON_PNG="$APP_DIR/assets/icon/icon.png"
