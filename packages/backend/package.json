@@ -22,7 +22,7 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mime-types": "^3.0.2",
-    "multer": "^2.2.0",
+    "multer": "^2.3.0",
     "music-metadata": "^11.13.0",
     "postgres": "^3.4.9",
     "prom-client": "^15.1.3",
