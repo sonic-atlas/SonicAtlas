@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "cors": "^2.8.6",
     "drizzle-orm": "^1.0.0-beta.11-05230d9",
     "express": "^5.2.1",
