@@ -1,21 +1,25 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import adapter from '@sveltejs/adapter-node';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-    plugins: [sveltekit(), visualizer({ filename: 'stats.html' })],
+    plugins: [
+        sveltekit({
+            adapter: adapter(),
+            env: {
+                dir: '../../'
+            },
+            preprocess: vitePreprocess(),
+            alias: {
+                '$lib': 'src/lib'
+            }
+        }),
+        visualizer({ filename: 'stats.html' })
+    ],
     envDir: '../../',
     build: {
-        chunkSizeWarningLimit: 500,
-        rollupOptions: {
-            output: {
-                manualChunks(id) {
-                    if (id.includes('node_modules')) {
-                        const pkg = id.split('node_modules/')[1].split('/')[0];
-                        return pkg;
-                    }
-                }
-            }
-        }
+        chunkSizeWarningLimit: 500
     }
 });

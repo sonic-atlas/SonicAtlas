@@ -15,29 +15,29 @@
     "start": "node --env-file-if-exists=.env build"
   },
   "devDependencies": {
-    "@eslint/compat": "^2.1.0",
+    "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "@sveltejs/adapter-node": "^5.5.4",
-    "@sveltejs/kit": "^2.66.0",
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "@types/node": "^26.0.0",
-    "eslint": "^10.5.0",
+    "@sveltejs/adapter-node": "^6.0.0",
+    "@sveltejs/kit": "^3.0.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.19.0",
-    "globals": "^17.6.0",
-    "prettier": "^3.8.4",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
-    "rollup-plugin-visualizer": "^7.0.1",
-    "svelte": "^5.56.3",
-    "svelte-check": "^4.6.0",
+    "rollup-plugin-visualizer": "^7.1.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.1",
-    "vite": "^8.0.16"
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4"
   },
   "dependencies": {
-    "@material/web": "^2.4.1",
-    "hls.js": "^1.6.16",
-    "socket.io-client": "^4.8.3",
-    "svelte-dnd-action": "^0.9.70"
+    "@material/web": "^2.5.0",
+    "hls.js": "^1.7.3",
+    "socket.io-client": "^4.8.4",
+    "svelte-dnd-action": "^0.9.80"
   }
 }

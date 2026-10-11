@@ -246,6 +246,10 @@ router.post('/:uploadId/complete', upload.single('cover'), async (req, res) => {
             return res.status(400).json({ error: 'Not all files are complete' });
         }
 
+        if (!session.releaseId) {
+            return res.status(400).json({ error: 'BAD_REQUEST', message: 'No release created for session' });
+        }
+
         const release = await db.query.releases.findFirst({
             where: { id: session.releaseId },
         });
