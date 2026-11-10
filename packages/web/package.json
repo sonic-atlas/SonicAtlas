@@ -17,26 +17,26 @@
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "@sveltejs/adapter-node": "^6.0.0",
-    "@sveltejs/kit": "^3.1.0",
+    "@sveltejs/adapter-node": "^6.0.1",
+    "@sveltejs/kit": "^3.1.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@types/node": "^26.6.5",
-    "eslint": "^10.13.0",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.23.1",
-    "globals": "^17.13.0",
+    "eslint-plugin-svelte": "^3.24.1",
+    "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
-    "rollup-plugin-visualizer": "^7.1.1",
-    "svelte": "^5.57.2",
-    "svelte-check": "^4.7.7",
+    "rollup-plugin-visualizer": "^7.1.2",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.2",
-    "vite": "^8.3.4"
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6"
   },
   "dependencies": {
     "@material/web": "^2.5.0",
-    "hls.js": "^1.7.3",
+    "hls.js": "^1.7.4",
     "socket.io-client": "^4.8.4",
     "svelte-dnd-action": "^0.9.80"
   }
